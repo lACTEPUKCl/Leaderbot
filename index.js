@@ -3,7 +3,7 @@ import { config } from "dotenv";
 config();
 import creater from "./vip-creater.js";
 import cleaner from "./vip-cleaner.js";
-
+import fetch from "node-fetch";
 import {
   setTimeout as setTimeoutPromise,
   setInterval,
@@ -23,7 +23,6 @@ let stats = [];
 let injectKd = [];
 let statsSort = [];
 let players = [];
-
 client.on("ready", () => {
   console.log(`Logged in as ${client.user.tag}!`);
   const channel = client.channels.cache.get("1069615679281561600");
