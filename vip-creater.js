@@ -1,6 +1,6 @@
 import fs from "fs";
 
-const adminsCfgPath = "./";
+const adminsCfgPath = process.env.ADMINS_URL;
 const vipCreater = async (steamID, nickname, time, summ, discordId) => {
   const summPerDay = summ / 9.863;
   const currentTime = new Date().getTime();

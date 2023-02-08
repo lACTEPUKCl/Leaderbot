@@ -8,7 +8,7 @@ const getUserRegExp = (steamID) => {
     `Admin=(?<steamID>${steamID}):Reserved [//]* DiscordID (?<discordId>[0-9]*) do (?<date>[0-9]{2}\\.[0-9]{2}\\.[0-9]{4})`
   );
 };
-const adminsCfgPath = "./";
+const adminsCfgPath = process.env.ADMINS_URL;
 const vipCleaner = (callback) => {
   setInterval(() => {
     const isPaidDate = (date) => {
