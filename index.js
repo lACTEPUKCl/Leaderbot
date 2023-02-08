@@ -162,9 +162,7 @@ client.on("ready", () => {
 
     message.awaitReactions({ filter, max: 1 }).then((collected) => {
       const reaction = collected.first();
-      console.log("any reaction");
       if (reaction?.emoji?.name === "👍") {
-        console.log(".i.");
         const objMessage = message.content.split("\n");
         const nickname = objMessage[0].trim();
         const steamID = objMessage[1].trim();
