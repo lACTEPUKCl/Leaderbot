@@ -9,6 +9,9 @@ const vipCreater = async (steamID, nickname, time, summ, discordId) => {
   const currentTime = new Date().getTime();
   const updatedTIme = new Date(currentTime + summPerDay * 24 * 60 * 60 * 1000);
   const endTime = updatedTIme.toLocaleDateString();
+  const reformData = endTime.split("/");
+  const newdate = reformData[1] + "/" + reformData[0] + "." + reformData[2];
+  console.log(newdate);
   console.log(updatedTIme.toLocaleDateString());
   fs.readFile(`${adminsCfgPath}Admins.cfg`, "utf-8", (err, data) => {
     if (err) {
@@ -37,13 +40,13 @@ const vipCreater = async (steamID, nickname, time, summ, discordId) => {
             "\r\n Создан бэкап файла AdminsBackup.cfg\r\n"
           );
 
-          exec("../syncconfig.sh", (err, stdout, stderr) => {
-            if (err) {
-              console.error(err);
-              return;
-            }
-            console.log(stdout);
-          });
+          // exec("../syncconfig.sh", (err, stdout, stderr) => {
+          //   if (err) {
+          //     console.error(err);
+          //     return;
+          //   }
+          //   console.log(stdout);
+          // });
         });
       });
     }
