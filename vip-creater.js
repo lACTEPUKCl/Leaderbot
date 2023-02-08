@@ -9,6 +9,7 @@ const vipCreater = async (steamID, nickname, time, summ, discordId) => {
   const currentTime = new Date().getTime();
   const updatedTIme = new Date(currentTime + summPerDay * 24 * 60 * 60 * 1000);
   const endTime = updatedTIme.toLocaleDateString();
+  console.log(updatedTIme.toLocaleDateString());
   fs.readFile(`${adminsCfgPath}Admins.cfg`, "utf-8", (err, data) => {
     if (err) {
       console.error(err);
