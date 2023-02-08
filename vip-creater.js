@@ -9,7 +9,6 @@ const vipCreater = async (steamID, nickname, time, summ, discordId) => {
     month: "numeric",
     day: "numeric",
   };
-  console.log("vipcreated");
   const summPerDay = summ / 9.863;
   const currentTime = new Date().getTime();
   const updatedTIme = new Date(currentTime + summPerDay * 24 * 60 * 60 * 1000);
