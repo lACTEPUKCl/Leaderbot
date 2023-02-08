@@ -1,5 +1,7 @@
 import fs from "fs";
 import { exec } from "node:child_process";
+import { config } from "dotenv";
+config();
 const adminsCfgPath = process.env.ADMINS_URL;
 const vipCreater = async (steamID, nickname, time, summ, discordId) => {
   console.log("vipcreated");
