@@ -8,17 +8,26 @@ const vipCreater = async (steamID, nickname, time, summ, discordId) => {
   const updatedTIme = new Date(currentTime + summPerDay * 24 * 60 * 60 * 1000);
   const endTime = updatedTIme.toLocaleDateString();
   fs.readFile(`${adminsCfgPath}Admins.cfg`, "utf-8", (err, data) => {
-    if (err) return;
+    if (err) {
+      console.error(err);
+      return;
+    }
     const newData = data.concat(
       `\r\nAdmin=${steamID}:Reserved // DiscordID ${discordId} do ${endTime}`
     );
     if (newData.length) {
       fs.writeFile(`${adminsCfgPath}Admins.cfg`, newData, (err) => {
-        if (err) return;
+        if (err) {
+          console.error(err);
+          return;
+        }
         console.log(`Игрок ${nickname} добавлен`);
 
         fs.writeFile(`${adminsCfgPath}AdminsBackup.cfg`, data, (err) => {
-          if (err) return;
+          if (err) {
+            console.error(err);
+            return;
+          }
 
           console.log(
             "\x1b[33m",
