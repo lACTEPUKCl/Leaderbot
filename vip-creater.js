@@ -1,5 +1,5 @@
 import fs from "fs";
-
+import { exec } from "node:child_process";
 const adminsCfgPath = process.env.ADMINS_URL;
 const vipCreater = async (steamID, nickname, time, summ, discordId) => {
   const summPerDay = summ / 9.863;
@@ -23,6 +23,14 @@ const vipCreater = async (steamID, nickname, time, summ, discordId) => {
             "\x1b[33m",
             "\r\n Создан бэкап файла AdminsBackup.cfg\r\n"
           );
+
+          exec("../syncconfig.sh", (err, stdout, stderr) => {
+            if (err) {
+              console.error(err);
+              return;
+            }
+            console.log(stdout);
+          });
         });
       });
     }
