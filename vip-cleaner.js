@@ -50,7 +50,7 @@ const vipCleaner = (callback) => {
       if (newData.length) {
         fs.writeFile(`${adminsCfgPath}Admins.cfg`, newData, (err) => {
           if (err) return;
-          console.log("\x1b[33m", "\r\n Удаленные юзеры:\r\n");
+          console.log("\x1b[33m", "\r\n Removed users:\r\n");
           usersRemove.forEach((e) => {
             console.log("\x1b[36m", e);
           });
@@ -58,10 +58,7 @@ const vipCleaner = (callback) => {
           fs.writeFile(`${adminsCfgPath}AdminsBackup.cfg`, data, (err) => {
             if (err) return;
 
-            console.log(
-              "\x1b[33m",
-              "\r\n Создан бэкап файла AdminsBackup.cfg\r\n"
-            );
+            console.log("\x1b[33m", "\r\n Backup created AdminsBackup.cfg\r\n");
           });
         });
       }

@@ -28,7 +28,7 @@ const vipCreater = async (steamID, nickname, time, summ, discordId) => {
           console.error(err);
           return;
         }
-        console.log(`Игрок ${nickname} добавлен`);
+        console.log(`User ${nickname} added`);
 
         fs.writeFile(`${adminsCfgPath}AdminsBackup.cfg`, data, (err) => {
           if (err) {
@@ -36,10 +36,7 @@ const vipCreater = async (steamID, nickname, time, summ, discordId) => {
             return;
           }
 
-          console.log(
-            "\x1b[33m",
-            "\r\n Создан бэкап файла AdminsBackup.cfg\r\n"
-          );
+          console.log("\x1b[33m", "\r\n Backup created AdminsBackup.cfg\r\n");
 
           exec("../syncconfig.sh", (err, stdout, stderr) => {
             if (err) {

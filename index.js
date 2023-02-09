@@ -139,7 +139,7 @@ client.on("ready", () => {
   async function startEmbedEdit() {
     const interval = 3600000;
     for await (const startTime of setInterval(interval, getStats())) {
-      console.log("Статистика обновлена");
+      console.log("Statistics updated");
       getStats();
     }
   }
@@ -170,11 +170,14 @@ client.on("ready", () => {
       }
     }
     const filter = (reaction, user) => {
-      const id = ["132225869698564096", "365562331121582090"];
+      const id = [
+        "132225869698564096",
+        "365562331121582090",
+        "887358770211082250",
+      ];
       const userId = user.id;
       return ["👍"].includes(reaction.emoji.name) && id.includes(userId);
     };
-    console.log(message.content);
     message.awaitReactions({ filter, max: 1 }).then((collected) => {
       const reaction = collected.first();
       if (typeof reaction == "undefined") return;
