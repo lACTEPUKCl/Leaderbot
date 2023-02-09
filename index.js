@@ -154,6 +154,21 @@ client.on("ready", () => {
   );
   //reaction
   client.on("messageCreate", (message) => {
+    if (message.author.id === "755025905595842570") return;
+    if (message.channelId === "819484295709851649") {
+      console.log(message.content);
+      const content = message.content;
+      let result = content.match(
+        /[A-Za-z0-9_-]+\n[0-9]{17}\n[0-9]{2}\.[0-9]{2}\.[0-9]{4}\n[0-9]+/g
+      );
+      if (!result) {
+        message.reply({
+          content:
+            "`Проверьте правильность заполнения сообщения\nНик в игре\nSTEAMID64` (можно получить на сайте https://steamid.io/)\n`Дата доната\nСумма доната\nПример сообщения:\nMelomory\n76561198979435382\n08.02.2023\n300`",
+        });
+        return;
+      }
+    }
     const filter = (reaction, user) => {
       return (
         ["👍"].includes(reaction.emoji.name) && user.id === "132225869698564096"
@@ -161,8 +176,8 @@ client.on("ready", () => {
     };
 
     message.awaitReactions({ filter, max: 1 }).then((collected) => {
-      const reaction = collected.first();
-      if (reaction?.emoji?.name === "👍") {
+      if (typeof reaction == "undefined") return;
+      if (reaction.emoji?.name === "👍") {
         const objMessage = message.content.split("\n");
         const nickname = objMessage[0].trim();
         const steamID = objMessage[1].trim();
