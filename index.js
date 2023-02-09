@@ -156,7 +156,6 @@ client.on("ready", () => {
   client.on("messageCreate", (message) => {
     if (message.author.id === "755025905595842570") return;
     if (message.channelId === "819484295709851649") {
-      console.log(message.content);
       const content = message.content;
       let result = content.match(
         /[A-Za-z0-9_-]+\n[0-9]{17}\n[0-9]{2}\.[0-9]{2}\.[0-9]{4}\n[0-9]+/g
