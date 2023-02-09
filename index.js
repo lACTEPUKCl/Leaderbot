@@ -154,7 +154,8 @@ client.on("ready", () => {
   );
   //reaction
   client.on("messageCreate", (message) => {
-    if (message.author.id === "755025905595842570") return;
+    if (message.author.bot) return;
+    if (message.channelId !== "819484295709851649") return;
     if (message.channelId === "819484295709851649") {
       const content = message.content;
       let result = content.match(
@@ -169,12 +170,13 @@ client.on("ready", () => {
       }
     }
     const filter = (reaction, user) => {
-      return (
-        ["👍"].includes(reaction.emoji.name) && user.id === "132225869698564096"
-      );
+      const id = ["132225869698564096", "365562331121582090"];
+      const userId = user.id;
+      return ["👍"].includes(reaction.emoji.name) && id.includes(userId);
     };
-
+    console.log(message.content);
     message.awaitReactions({ filter, max: 1 }).then((collected) => {
+      const reaction = collected.first();
       if (typeof reaction == "undefined") return;
       if (reaction.emoji?.name === "👍") {
         const objMessage = message.content.split("\n");
