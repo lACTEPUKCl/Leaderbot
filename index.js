@@ -8,6 +8,7 @@ import {
   setTimeout as setTimeoutPromise,
   setInterval,
 } from "node:timers/promises";
+import { type } from "node:os";
 
 const client = new Client({
   intents: [
@@ -169,6 +170,48 @@ client.on("ready", () => {
         return;
       }
     }
+
+    async function getDonate() {
+      let json;
+      let res;
+      let lastDonate = "";
+      try {
+        let response = await fetch(
+          "https://donatepay.ru/api/v1/transactions?access_token=FGQ0h6vAsbvDtBn3d0NZTeKvN93D7bDZ33IKlqck52xhpWU6MyZFaEsLMeuG&limit=10&type=donation&status=success"
+        );
+        if (response.ok) {
+          json = await response.json();
+          for (let i = 0; i < 5; i++) {
+            let data = json.data[i];
+            res = `ID транзакции: ${data.id}\nИмя: ${data.what}\nСумма: ${
+              data.sum
+            }\nКомментарий: ${data.comment}\nДата: ${data.created_at.slice(
+              0,
+              19
+            )}\n\n`;
+            lastDonate = lastDonate + res;
+          }
+          console.log(lastDonate);
+          const channel = client.channels.cache.get("1073712072220754001");
+          let exampleEmbed = new EmbedBuilder()
+            .setColor(0x0099ff)
+            .setAuthor({
+              name: "Последние 5 донатов",
+              iconURL:
+                "https://cdn.discordapp.com/icons/735515208348598292/21416c8e956be0ffed0b7fc49afc5624.webp",
+            })
+            .setDescription(`${lastDonate}`);
+          channel.send({ embeds: [exampleEmbed] });
+        } else {
+          console.log(`${response.status}: ${response.statusText}`);
+          getDonate();
+        }
+      } catch (e) {
+        console.log(e.message);
+      }
+    }
+    getDonate();
+
     const filter = (reaction, user) => {
       const id = [
         "132225869698564096",
