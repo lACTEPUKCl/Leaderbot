@@ -163,10 +163,12 @@ client.on("ready", () => {
         /[А-Яа-яA-Za-z0-9_-]+\n[0-9]{17}\n[0-9]+\.[0-9]+\.[0-9]+\n[0-9]+/g
       );
       if (!result) {
-        message.reply({
-          content:
-            "`Проверьте правильность заполнения сообщения\nНик в игре\nSTEAMID64` (можно получить на сайте https://steamid.io/)\n`Дата доната\nСумма доната\nПример сообщения:\nMelomory\n76561198979435382\n08.02.2023\n300`",
-        });
+        client.users.send(
+          message.author,
+          "`Для переноса строки используйте SHIFT+ENTER\nПроверьте правильность заполнения сообщения\nНик в игре\nSTEAMID64` (можно получить на сайте https://steamid.io/)\n`Дата доната\nСумма доната\nПример сообщения:\nMelomory\n76561198979435382\n08.02.2023\n300`"
+        );
+
+        message.delete();
         return;
       }
     }
@@ -191,7 +193,6 @@ client.on("ready", () => {
             )}\n\n`;
             lastDonate = lastDonate + res;
           }
-          console.log(lastDonate);
           const channel = client.channels.cache.get("1073712072220754001");
           let exampleEmbed = new EmbedBuilder()
             .setColor(0x0099ff)
@@ -238,6 +239,7 @@ client.on("ready", () => {
         message.channel.send({
           content: `Игроку ${nickname} - выдан VIP статус, спасибо за поддержку!`,
         });
+
         message.delete();
       }
     });
