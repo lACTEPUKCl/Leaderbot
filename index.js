@@ -192,6 +192,9 @@ client.on("ready", () => {
         let role = message.guild.roles.cache.get("1072902141666136125");
         let user = message.guild.members.cache.get(message.author.id);
         user.roles.add(role);
+        message.channel.send({
+          content: `Игроку ${nickname} - выдан VIP статус, спасибо за поддержку!`,
+        });
         message.delete();
       }
     });
