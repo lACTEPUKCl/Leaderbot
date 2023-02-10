@@ -192,7 +192,7 @@ client.on("ready", () => {
         let role = message.guild.roles.cache.get("1072902141666136125");
         let user = message.guild.members.cache.get(message.author.id);
         user.roles.add(role);
-        //message.delete();
+        message.delete();
       }
     });
   });
