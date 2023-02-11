@@ -191,7 +191,9 @@ client.on("ready", () => {
             )}\n\n`;
             lastDonate = lastDonate + res;
           }
-          const channel = client.channels.cache.get("1073712072220754001");
+          const donateChannel = client.channels.cache.get(
+            "1073712072220754001"
+          );
           let exampleEmbed = new EmbedBuilder()
             .setColor(0x0099ff)
             .setAuthor({
@@ -200,7 +202,7 @@ client.on("ready", () => {
                 "https://cdn.discordapp.com/icons/735515208348598292/21416c8e956be0ffed0b7fc49afc5624.webp",
             })
             .setDescription(`${lastDonate}`);
-          channel.send({ embeds: [exampleEmbed] });
+          donateChannel.send({ embeds: [exampleEmbed] });
         } else {
           console.log(`${response.status}: ${response.statusText}`);
           getDonate();
