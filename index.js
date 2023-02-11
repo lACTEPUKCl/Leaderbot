@@ -8,7 +8,6 @@ import {
   setTimeout as setTimeoutPromise,
   setInterval,
 } from "node:timers/promises";
-import { type } from "node:os";
 
 const client = new Client({
   intents: [
