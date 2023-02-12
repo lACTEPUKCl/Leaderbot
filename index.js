@@ -137,7 +137,7 @@ client.on("ready", () => {
   // Редактирование Embed
 
   async function startEmbedEdit() {
-    const interval = 3600000;
+    const interval = 36000000;
     for await (const startTime of setInterval(interval, getStats())) {
       console.log("Statistics updated");
       getStats();
