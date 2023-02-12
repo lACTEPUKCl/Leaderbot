@@ -147,9 +147,7 @@ client.on("ready", () => {
   let guild = client.guilds.cache.get("735515208348598292");
   cleaner.vipCleaner((ids) =>
     ids.forEach((element) => {
-      console.log(ids, "ids");
       let user = guild.members.cache.get(element);
-      console.log(user, "user");
       guild.members.fetch({ user, cache: true }).then().catch(console.error);
       user?.roles.remove("1072902141666136125");
     })
