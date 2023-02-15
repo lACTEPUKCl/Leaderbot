@@ -2,6 +2,14 @@ import fs from "fs";
 import { exec } from "node:child_process";
 import { config } from "dotenv";
 config();
+
+const regexp =
+  /^Admin=(?<steamID>[0-9]*):Reserved [//]* DiscordID (?<discordId>[0-9]*) do (?<date>[0-9]{2}\.[0-9]{2}\.[0-9]{4})/gm;
+const getUserRegExp = (steamID) => {
+  return new RegExp(
+    `Admin=(?<steamID>${steamID}):Reserved [//]* DiscordID (?<discordId>[0-9]*) do (?<date>[0-9]{2}\\.[0-9]{2}\\.[0-9]{4})`
+  );
+};
 const adminsCfgPath = process.env.ADMINS_URL;
 const vipCreater = async (steamID, nickname, time, summ, discordId) => {
   const options = {
@@ -9,19 +17,46 @@ const vipCreater = async (steamID, nickname, time, summ, discordId) => {
     month: "numeric",
     day: "numeric",
   };
-  const summPerDay = summ / 9.863;
-  const currentTime = new Date().getTime();
-  const updatedTIme = new Date(currentTime + summPerDay * 24 * 60 * 60 * 1000);
-  const getTime = updatedTIme.toLocaleDateString("en-GB", options);
-  const endTime = getTime.replace(/\//g, ".");
+  let summPerDay = summ / 9.863;
+  function getDate(endTime) {
+    const currentTime = new Date().getTime();
+    const updatedTIme = new Date(currentTime + endTime * 24 * 60 * 60 * 1000);
+    const getTime = updatedTIme.toLocaleDateString("en-GB", options);
+    const newTime = getTime.replace(/\//g, ".");
+    return newTime;
+  }
   fs.readFile(`${adminsCfgPath}Admins.cfg`, "utf-8", (err, data) => {
     if (err) {
       console.error(err);
       return;
     }
-    const newData = data.concat(
-      `\r\nAdmin=${steamID}:Reserved // DiscordID ${discordId} do ${endTime}`
-    );
+    const nData = data.split("\r\n").map((e) => {
+      const userString = e.match(getUserRegExp(steamID));
+      if (userString) {
+        const { steamID, discordId, date } = userString.groups;
+        const splitDate = date.split(".");
+        const lastVipDay = new Date(
+          `${splitDate[1]} ${splitDate[0]} ${splitDate[2]}`
+        );
+        const remaining = lastVipDay - Date.now();
+        const remToDays = remaining / 24 / 60 / 60 / 1000;
+        const newVipDay = summPerDay + remToDays;
+        summPerDay = newVipDay;
+        const endTime = getDate(summPerDay);
+        const newText = `Admin=${steamID}:Reserved // DiscordID ${discordId} do ${endTime}`;
+        return newText;
+      }
+      return e;
+    });
+    const kostil = data.includes(steamID);
+    if (!kostil) {
+      const newData = getDate(summPerDay);
+      nData.push(
+        `Admin=${steamID}:Reserved // DiscordID ${discordId} do ${newData}`
+      );
+    }
+    const newData = nData.join("\r\n");
+
     if (newData.length) {
       fs.writeFile(`${adminsCfgPath}Admins.cfg`, newData, (err) => {
         if (err) {
