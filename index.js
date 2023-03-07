@@ -158,9 +158,7 @@ client.on("ready", () => {
     if (message.channelId !== "819484295709851649") return;
     if (message.channelId === "819484295709851649") {
       const content = message.content;
-      let result = content.match(
-        /[А-Яа-яA-Za-z0-9_-]+\n[0-9]{17}\n[0-9]+\.[0-9]+\.[0-9]+\n[0-9]+/g
-      );
+      let result = content.match(/.*\n[0-9]{17}\n.*\n[0-9]+/g);
       if (!result) {
         client.users.send(
           message.author,
