@@ -4,10 +4,26 @@ config();
 import creater from "./vip-creater.js";
 import cleaner from "./vip-cleaner.js";
 import fetch from "node-fetch";
+import { initializeApp } from "firebase/app";
+import {
+  getDatabase,
+  ref,
+  get,
+  runTransaction,
+  update,
+} from "firebase/database";
+import fs from "fs";
 import {
   setTimeout as setTimeoutPromise,
   setInterval,
 } from "node:timers/promises";
+
+const firebaseConfig = {
+  databaseURL: process.env.DATABASE_URL,
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
 
 const client = new Client({
   intents: [
@@ -23,46 +39,55 @@ let stats = [];
 let injectKd = [];
 let statsSort = [];
 let players = [];
+let users = {};
+let tempUsers = [];
+const adminsCfgPath = process.env.ADMINS_URL;
 client.on("ready", () => {
   console.log(`Logged in as ${client.user.tag}!`);
   const channel = client.channels.cache.get("1069615679281561600");
-  async function sortUsers(sort) {
+
+  async function getJson() {
     try {
       let response = await fetch(process.env.FIREBASE_JSON);
       const users = await response.json();
-      for (const key in users) {
-        stats.push(users[key]);
-      }
-      stats = Object.values(stats);
-      for (const key in stats) {
-        stats[key].kd = stats[key].kills / stats[key].death;
-        injectKd.push(stats[key]);
-        if (injectKd[key].kills > 500) {
-          statsSort.push(stats[key]);
-        }
-      }
-
-      const sortBy = statsSort.sort((a, b) => (a[sort] < b[sort] ? 1 : -1));
-      for (const key in sortBy) {
-        const a = sortBy[key];
-        players.push(
-          `(${key}) ` +
-            a.name +
-            ": У: " +
-            a.kills +
-            " С: " +
-            a.death +
-            " П: " +
-            a.revives +
-            " ТK: " +
-            a.teamkills +
-            " K/D: " +
-            a.kd.toFixed(2)
-        );
-        if (key === "20") return;
-      }
+      return users;
     } catch (error) {
       console.log(error);
+    }
+  }
+
+  async function sortUsers(sort) {
+    users = await getJson();
+    for (const key in users) {
+      stats.push(users[key]);
+    }
+    stats = Object.values(stats);
+    for (const key in stats) {
+      stats[key].kd = stats[key].kills / stats[key].death;
+      injectKd.push(stats[key]);
+      if (injectKd[key].kills > 500) {
+        statsSort.push(stats[key]);
+      }
+    }
+
+    const sortBy = statsSort.sort((a, b) => (a[sort] < b[sort] ? 1 : -1));
+    for (const key in sortBy) {
+      const a = sortBy[key];
+      players.push(
+        `(${key}) ` +
+          a.name +
+          ": У: " +
+          a.kills +
+          " С: " +
+          a.death +
+          " П: " +
+          a.revives +
+          " ТK: " +
+          a.teamkills +
+          " K/D: " +
+          a.kd.toFixed(2)
+      );
+      if (key === "20") return;
     }
   }
 
@@ -152,13 +177,14 @@ client.on("ready", () => {
       user?.roles.remove("1072902141666136125");
     })
   );
-  //reaction
-  client.on("messageCreate", (message) => {
+
+  client.on("messageCreate", async (message) => {
     if (message.author.bot) return;
-    if (message.channelId !== "819484295709851649") return;
     if (message.channelId === "819484295709851649") {
       const content = message.content;
-      let result = content.match(/.*\n[0-9]{17}\n.*\n[0-9]+/g);
+      let result = content.match(
+        /[А-Яа-яA-Za-z0-9_-]+\n[0-9]{17}\n[0-9]+\.[0-9]+\.[0-9]+\n[0-9]+/g
+      );
       if (!result) {
         client.users.send(
           message.author,
@@ -168,79 +194,97 @@ client.on("ready", () => {
         message.delete();
         return;
       }
-    }
-
-    async function getDonate() {
-      let json;
-      let res;
-      let lastDonate = "";
-      try {
-        let response = await fetch(process.env.DONATE_URL);
-        if (response.ok) {
-          json = await response.json();
-          for (let i = 0; i < 5; i++) {
-            let data = json.data[i];
-            res = `ID транзакции: ${data.id}\nИмя: ${data.what}\nСумма: ${
-              data.sum
-            }\nКомментарий: ${data.comment}\nДата: ${data.created_at.slice(
-              0,
-              19
-            )}\n\n`;
-            lastDonate = lastDonate + res;
+      async function getDonate() {
+        let json;
+        let res;
+        let lastDonate = "";
+        try {
+          let response = await fetch(process.env.DONATE_URL);
+          if (response.ok) {
+            json = await response.json();
+            for (let i = 0; i < 5; i++) {
+              let data = json.data[i];
+              res = `ID транзакции: ${data.id}\nИмя: ${data.what}\nСумма: ${
+                data.sum
+              }\nКомментарий: ${data.comment}\nДата: ${data.created_at.slice(
+                0,
+                19
+              )}\n\n`;
+              lastDonate = lastDonate + res;
+            }
+            const donateChannel = client.channels.cache.get(
+              "1073712072220754001"
+            );
+            let exampleEmbed = new EmbedBuilder()
+              .setColor(0x0099ff)
+              .setAuthor({
+                name: "Последние 5 донатов",
+                iconURL:
+                  "https://cdn.discordapp.com/icons/735515208348598292/21416c8e956be0ffed0b7fc49afc5624.webp",
+              })
+              .setDescription(`${lastDonate}`);
+            donateChannel.send({ embeds: [exampleEmbed] });
+          } else {
+            console.log(`${response.status}: ${response.statusText}`);
+            getDonate();
           }
-          const donateChannel = client.channels.cache.get(
-            "1073712072220754001"
-          );
-          let exampleEmbed = new EmbedBuilder()
-            .setColor(0x0099ff)
-            .setAuthor({
-              name: "Последние 5 донатов",
-              iconURL:
-                "https://cdn.discordapp.com/icons/735515208348598292/21416c8e956be0ffed0b7fc49afc5624.webp",
-            })
-            .setDescription(`${lastDonate}`);
-          donateChannel.send({ embeds: [exampleEmbed] });
-        } else {
-          console.log(`${response.status}: ${response.statusText}`);
-          getDonate();
+        } catch (e) {
+          console.log(e.message);
         }
-      } catch (e) {
-        console.log(e.message);
+      }
+      getDonate();
+
+      const filter = (reaction, user) => {
+        const id = [
+          "132225869698564096",
+          "365562331121582090",
+          "887358770211082250",
+        ];
+        const userId = user.id;
+        return ["👍"].includes(reaction.emoji.name) && id.includes(userId);
+      };
+      message.awaitReactions({ filter, max: 1 }).then((collected) => {
+        const reaction = collected.first();
+        if (typeof reaction == "undefined") return;
+        if (reaction.emoji?.name === "👍") {
+          const objMessage = message.content.split("\n");
+          const nickname = objMessage[0].trim();
+          const steamID = objMessage[1].trim();
+          const time = objMessage[2].trim();
+          const summ = objMessage[3].trim();
+          const discordId = message.author.id;
+          creater.vipCreater(steamID, nickname, summ, discordId);
+          let role = message.guild.roles.cache.get("1072902141666136125");
+          let user = message.guild.members.cache.get(message.author.id);
+          user.roles.add(role);
+          message.channel.send({
+            content: `Игроку ${nickname} - выдан VIP статус, спасибо за поддержку!`,
+          });
+
+          message.delete();
+        }
+      });
+    }
+
+    if (message.channelId === "1084165426759606273") {
+      if (message.content.toLocaleLowerCase().trim() === "vip") {
+        fs.readFile(`${adminsCfgPath}Admins.cfg`, "utf-8", (err, data) => {
+          if (err) {
+            console.error(err);
+            return;
+          }
+          const tempData = data.split("\r\n").map((e) => {
+            const getUser = e.includes(message.author.id);
+            if (getUser) {
+              const date = e.split(" ")[5];
+              message.reply({
+                content: `Дата окончания Vip - ${date}`,
+              });
+            }
+          });
+        });
       }
     }
-    getDonate();
-
-    const filter = (reaction, user) => {
-      const id = [
-        "132225869698564096",
-        "365562331121582090",
-        "887358770211082250",
-      ];
-      const userId = user.id;
-      return ["👍"].includes(reaction.emoji.name) && id.includes(userId);
-    };
-    message.awaitReactions({ filter, max: 1 }).then((collected) => {
-      const reaction = collected.first();
-      if (typeof reaction == "undefined") return;
-      if (reaction.emoji?.name === "👍") {
-        const objMessage = message.content.split("\n");
-        const nickname = objMessage[0].trim();
-        const steamID = objMessage[1].trim();
-        const time = objMessage[2].trim();
-        const summ = objMessage[3].trim();
-        const discordId = message.author.id;
-        creater.vipCreater(steamID, nickname, time, summ, discordId);
-        let role = message.guild.roles.cache.get("1072902141666136125");
-        let user = message.guild.members.cache.get(message.author.id);
-        user.roles.add(role);
-        message.channel.send({
-          content: `Игроку ${nickname} - выдан VIP статус, спасибо за поддержку!`,
-        });
-
-        message.delete();
-      }
-    });
   });
-  //reaction
 });
 client.login(process.env.CLIENT_TOKEN);

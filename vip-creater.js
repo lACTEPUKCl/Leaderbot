@@ -11,7 +11,7 @@ const getUserRegExp = (steamID) => {
   );
 };
 const adminsCfgPath = process.env.ADMINS_URL;
-const vipCreater = async (steamID, nickname, time, summ, discordId) => {
+const vipCreater = async (steamID, nickname, summ, discordId) => {
   const options = {
     year: "numeric",
     month: "numeric",
