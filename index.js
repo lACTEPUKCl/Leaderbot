@@ -265,26 +265,6 @@ client.on("ready", () => {
         }
       });
     }
-
-    if (message.channelId === "1084165426759606273") {
-      if (message.content.toLocaleLowerCase().trim() === "vip") {
-        fs.readFile(`${adminsCfgPath}Admins.cfg`, "utf-8", (err, data) => {
-          if (err) {
-            console.error(err);
-            return;
-          }
-          const tempData = data.split("\r\n").map((e) => {
-            const getUser = e.includes(message.author.id);
-            if (getUser) {
-              const date = e.split(" ")[5];
-              message.reply({
-                content: `Дата окончания Vip - ${date}`,
-              });
-            }
-          });
-        });
-      }
-    }
   });
 });
 client.login(process.env.CLIENT_TOKEN);
