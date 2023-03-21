@@ -52,11 +52,10 @@ client.on("ready", async () => {
   // console.log(member.user.id);
   // member.roles.add("1072902141666136125");
   setIntervalAsync(async () => {
-    console.log(tempSteamId);
     checkDonate(tempSteamId, process.env.DONATE_URL, () => {
       tempSteamId = [];
     });
-  }, 300000);
+  }, 30000);
 
   const getStats = [
     editEmbed({
@@ -172,11 +171,15 @@ client.on("ready", async () => {
           "755025905595842570",
         ];
         const userId = user.id;
-        return ["👍"].includes(reaction.emoji.name) && id.includes(userId);
+        return (
+          (["👍"].includes(reaction.emoji.name) && id.includes(userId)) ||
+          (["❌"].includes(reaction.emoji.name) && id.includes(userId))
+        );
       };
       message.awaitReactions({ filter, max: 1 }).then((collected) => {
         const reaction = collected.first();
         if (typeof reaction == "undefined") return;
+        if (reaction.emoji?.name === "❌") return;
         if (reaction.emoji?.name === "👍") {
           let role = message.guild.roles.cache.get("1072902141666136125");
           let user = message.guild.members.cache.get(message.author.id);
