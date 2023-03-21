@@ -56,7 +56,7 @@ client.on("ready", async () => {
     checkDonate(tempSteamId, process.env.DONATE_URL, () => {
       tempSteamId = [];
     });
-  }, 6000);
+  }, 300000);
 
   const getStats = [
     editEmbed({
