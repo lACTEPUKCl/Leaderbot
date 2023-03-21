@@ -1,4 +1,5 @@
 import fetchDonate from "./fetchDonate.js";
+import fetch from "node-fetch";
 
 async function checkDonate(tempSteamId, donateUrl, callback) {
   try {
