@@ -70,7 +70,7 @@ client.on("ready", async () => {
       db,
       sort: "death",
       messageId: "1069615861582811178",
-      authorName: "Топ 20 игроков по убийствам",
+      authorName: "Топ 20 игроков по смертям",
       seconds: 3000,
     }),
     editEmbed({
