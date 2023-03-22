@@ -39,7 +39,6 @@ client.on("ready", async () => {
   const channel = client.channels.cache.get("1069615679281561600");
   const guild = client.guilds.cache.get("735515208348598292");
   const donateChannel = client.channels.cache.get("1073712072220754001");
-  //getDonate(danate, donateChannel);
   let tempSteamId = [];
   // const username = "ACTEPUKC";
   // const discriminator = "9551";
@@ -122,6 +121,8 @@ client.on("ready", async () => {
 
   client.on("messageCreate", async (message) => {
     if (message.author.bot) return;
+    if (message.channelId === "1073712072220754001")
+      getDonate(process.env.DONATE_URL, donateChannel);
     if (message.channelId === "819484295709851649") {
       const content = message.content;
       let steamID64 = content.match(/[0-9]{17}/);
@@ -131,7 +132,7 @@ client.on("ready", async () => {
       if (!steamID64 || !steamId) {
         client.users.send(
           message.author,
-          "`Проверьте правильность ввода steamID64 или ссылки на профиль Steam\nSTEAMID64` (можно получить на сайте https://steamid.io/)`"
+          "Проверьте правильность ввода steamID64 или ссылки на профиль Steam\nSTEAMID64 можно получить на сайте https://steamid.io/\nSteamid должен быть тот же, что был указан в комментарии доната.\nДискорд для связи на случай затупа: ACTEPUKC#9551"
         );
         message.delete();
         return;
@@ -176,20 +177,30 @@ client.on("ready", async () => {
           (["❌"].includes(reaction.emoji.name) && id.includes(userId))
         );
       };
-      message.awaitReactions({ filter, max: 1 }).then((collected) => {
-        const reaction = collected.first();
-        if (typeof reaction == "undefined") return;
-        if (reaction.emoji?.name === "❌") return;
-        if (reaction.emoji?.name === "👍") {
-          let role = message.guild.roles.cache.get("1072902141666136125");
-          let user = message.guild.members.cache.get(message.author.id);
-          user.roles.add(role);
-          message.channel.send({
-            content: `Игроку <@${message.author.id}> - выдан VIP статус, спасибо за поддержку!`,
-          });
+      message
+        .awaitReactions({ filter, max: 1, time: 60000, errors: ["time"] })
+
+        .then((collected) => {
+          const reaction = collected.first();
+          if (typeof reaction == "undefined") return;
+          if (reaction.emoji?.name === "❌") return;
+          if (reaction.emoji?.name === "👍") {
+            let role = message.guild.roles.cache.get("1072902141666136125");
+            let user = message.guild.members.cache.get(message.author.id);
+            user.roles.add(role);
+            message.channel.send({
+              content: `Игроку <@${message.author.id}> - выдан VIP статус, спасибо за поддержку!`,
+            });
+            message.delete();
+          }
+        })
+        .catch((collected) => {
+          client.users.send(
+            message.author,
+            "Проверьте правильность ввода steamID64 или ссылки на профиль Steam\nSTEAMID64 можно получить на сайте https://steamid.io/\nSteamid должен быть тот же, что был указан в комментарии доната.\nДискорд для связи на случай затупа: ACTEPUKC#9551"
+          );
           message.delete();
-        }
-      });
+        });
     }
   });
 });
