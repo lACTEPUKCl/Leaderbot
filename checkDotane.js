@@ -11,7 +11,6 @@ async function checkDonate(tempSteamId, donateUrl, callback) {
       tempSteamId.forEach((element) => {
         const currentSteamId = element[2];
         json.data.forEach(async (jsonEl) => {
-          const [asdf, asdfd, asds, ms] = element;
           let comment = jsonEl.comment;
           let steamID64 = comment.match(/[0-9]{17}/);
           let groupsId = comment.match(steamId)?.groups;
@@ -22,14 +21,10 @@ async function checkDonate(tempSteamId, donateUrl, callback) {
             const dataSteam = await responseSteam.json();
             if (dataSteam.response.steamid === currentSteamId) {
               fetchDonate(element, jsonEl);
-            } else {
-              ms.react("❌");
             }
           }
           if (steamID64?.[0] === currentSteamId) {
             fetchDonate(element, jsonEl);
-          } else {
-            ms.react("❌");
           }
         });
       });
