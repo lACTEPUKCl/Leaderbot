@@ -29,7 +29,6 @@ async function checkDonate(tempSteamId, donateUrl, callback) {
         });
       });
     }
-    console.log(tempSteamId);
   } catch (e) {
     console.log(e);
   }
