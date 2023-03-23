@@ -1,5 +1,6 @@
 import fs from "fs";
 import { config } from "dotenv";
+import { exec } from "child_process";
 config();
 
 const regexp =
