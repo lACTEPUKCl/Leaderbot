@@ -129,15 +129,15 @@ client.on("ready", async () => {
       let steamId = /^https?:\/\/steamcommunity.com\/id\/(?<steamId>.*)\//;
       let groupsId = content.match(steamId)?.groups;
 
-      if (!steamID64 || !groupsId) {
-        console.log("false");
-        client.users.send(
-          message.author,
-          "Проверьте правильность ввода steamID64 или ссылки на профиль Steam\nSTEAMID64 можно получить на сайте https://steamid.io/\nSteamid должен быть тот же, что был указан в комментарии доната.\nДискорд для связи на случай затупа: ACTEPUKC#9551"
-        );
-        message.delete();
-        return;
-      }
+      // if (!steamID64 || !groupsId) {
+      //   console.log("false");
+      //   client.users.send(
+      //     message.author,
+      //     "Проверьте правильность ввода steamID64 или ссылки на профиль Steam\nSTEAMID64 можно получить на сайте https://steamid.io/\nSteamid должен быть тот же, что был указан в комментарии доната.\nДискорд для связи на случай затупа: ACTEPUKC#9551"
+      //   );
+      //   message.delete();
+      //   return;
+      // }
       if (groupsId) {
         const responseSteam = await fetch(
           `https://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/?key=78625F21328E996397F2930B25F4C91F&vanityurl=${groupsId.steamId}`
