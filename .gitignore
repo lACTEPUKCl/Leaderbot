@@ -1,7 +1,7 @@
 # Project Files
 *.sqlite
 *.tmp
-
+transactionId.json
 config-test*.json
 
 # Dependencies

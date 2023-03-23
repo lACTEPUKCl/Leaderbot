@@ -7,7 +7,7 @@ async function checkDonate(tempSteamId, donateUrl, callback) {
     if (response.ok) {
       callback();
       let json = await response.json();
-      let steamId = /^https?:\/\/steamcommunity.com\/id\/(?<steamId>.*)\//;
+      let steamId = /^https?:\/\/steamcommunity.com\/id\/(?<steamId>.*)/;
       tempSteamId.forEach((element) => {
         const currentSteamId = element[2];
         json.data.forEach(async (jsonEl) => {
