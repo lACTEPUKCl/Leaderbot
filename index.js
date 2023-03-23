@@ -43,12 +43,10 @@ client.on("ready", async () => {
   // const username = "ACTEPUKC";
   // const discriminator = "9551";
   // const members = await guild.members.fetch();
-  // console.log(members);
   // const member = members.find(
   //   (m) =>
   //     m.user.username === username && m.user.discriminator === discriminator
   // );
-  // console.log(member.user.id);
   // member.roles.add("1072902141666136125");
   setIntervalAsync(async () => {
     checkDonate(tempSteamId, process.env.DONATE_URL, () => {
@@ -109,13 +107,21 @@ client.on("ready", async () => {
       Promise.all(getStats);
     }
   }
-  startEmbedEdit();
+  //startEmbedEdit();
 
   cleaner.vipCleaner((ids) =>
-    ids.forEach((element) => {
+    ids.forEach(async (element) => {
+      // let user = guild.members.cache.get(element);
+      // guild.members.fetch({ user, cache: true }).then().catch(console.error);
+      // user?.roles.remove("1072902141666136125");
+      let role =
+        guild.roles.cache.find((r) => r.name === "VIP") ||
+        (await guild.roles.fetch("1072902141666136125"));
       let user = guild.members.cache.get(element);
-      guild.members.fetch({ user, cache: true }).then().catch(console.error);
-      user?.roles.remove("1072902141666136125");
+      user.send(
+        "С прискорбием сообщаем, что ваш Vip статус непосредственно все :c"
+      );
+      user.roles.remove(role);
     })
   );
 
@@ -129,6 +135,9 @@ client.on("ready", async () => {
       let steamId = /^https?:\/\/steamcommunity.com\/id\/(?<steamId>.*)/;
       let groupsId = content.match(steamId)?.groups;
 
+      let splitSteamId = groupsId?.steamId.split("/")[0];
+
+
       if (!steamID64 && !groupsId) {
 
         client.users.send(
@@ -139,25 +148,21 @@ client.on("ready", async () => {
         return;
       }
 
-      if (groupsId) {
+      if (typeof groupsId !== "undefined") {
         const responseSteam = await fetch(
-          `https://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/?key=78625F21328E996397F2930B25F4C91F&vanityurl=${groupsId.steamId}`
+          `https://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/?key=78625F21328E996397F2930B25F4C91F&vanityurl=${splitSteamId}`
         );
         const dataSteam = await responseSteam.json();
-        if (content.split("\n").length != 1) {
-          return;
+        if (dataSteam.response.success === 1) {
+          tempSteamId.push([
+            message.author.username,
+            message.author.id,
+            dataSteam.response.steamid,
+            message,
+          ]);
         }
-        tempSteamId.push([
-          message.author.username,
-          message.author.id,
-          dataSteam.response.steamid,
-          message,
-        ]);
       }
       if (steamID64) {
-        if (content.split("\n").length != 1) {
-          return;
-        }
         tempSteamId.push([
           message.author.username,
           message.author.id,
@@ -168,9 +173,9 @@ client.on("ready", async () => {
 
       const filter = (reaction, user) => {
         const id = [
-          "132225869698564096",
-          "365562331121582090",
-          "887358770211082250",
+          //"132225869698564096",
+          //"365562331121582090",
+          //"887358770211082250",
           "755025905595842570",
         ];
         const userId = user.id;

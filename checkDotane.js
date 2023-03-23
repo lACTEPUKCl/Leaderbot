@@ -14,9 +14,11 @@ async function checkDonate(tempSteamId, donateUrl, callback) {
           let comment = jsonEl.comment;
           let steamID64 = comment.match(/[0-9]{17}/);
           let groupsId = comment.match(steamId)?.groups;
-          if (groupsId) {
+          let splitSteamId = groupsId?.steamId.split("/")[0];
+
+          if (typeof groupsId !== "undefined") {
             const responseSteam = await fetch(
-              `https://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/?key=78625F21328E996397F2930B25F4C91F&vanityurl=${groupsId.steamId}`
+              `https://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/?key=78625F21328E996397F2930B25F4C91F&vanityurl=${splitSteamId}`
             );
             const dataSteam = await responseSteam.json();
             if (dataSteam.response.steamid === currentSteamId) {
