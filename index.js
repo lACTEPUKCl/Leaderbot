@@ -128,7 +128,9 @@ client.on("ready", async () => {
       let steamID64 = content.match(/[0-9]{17}/);
       let steamId = /^https?:\/\/steamcommunity.com\/id\/(?<steamId>.*)/;
       let groupsId = content.match(steamId)?.groups;
+
       if (!steamID64 && !groupsId) {
+
         client.users.send(
           message.author,
           "Проверьте правильность ввода steamID64 или ссылки на профиль Steam\nSTEAMID64 можно получить на сайте https://steamid.io/\nSteamid должен быть тот же, что был указан в комментарии доната.\nДискорд для связи на случай затупа: ACTEPUKC#9551"
