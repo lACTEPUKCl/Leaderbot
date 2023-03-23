@@ -109,7 +109,7 @@ client.on("ready", async () => {
       Promise.all(getStats);
     }
   }
-  //startEmbedEdit();
+  startEmbedEdit();
 
   cleaner.vipCleaner((ids) =>
     ids.forEach((element) => {
@@ -198,7 +198,7 @@ client.on("ready", async () => {
         .catch((collected) => {
           client.users.send(
             message.author,
-            "Проверьте правильность ввода steamID64 или ссылки на профиль Steam\nSTEAMID64 можно получить на сайте https://steamid.io/\nSteamid должен быть тот же, что был указан в комментарии доната.\nДискорд для связи на случай затупа: ACTEPUKC#9551"
+            "Проверьте правильность ввода steamID64 или ссылки на профиль Steam\nSTEAMID64 можно получить на сайте https://steamid.io/\nSteamid должен быть тот же, что был указан в комментарии доната.\nДискорд для связи на случай затупа: ACTEPUKC#9551!"
           );
           message.delete();
         });
