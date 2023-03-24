@@ -136,7 +136,6 @@ client.on("ready", async () => {
       let steamId = /^https?:\/\/steamcommunity.com\/id\/(?<steamId>.*)/;
       let groupsId = content.match(steamId)?.groups;
       let splitSteamId = groupsId?.steamId.split("/")[0];
-
       client.users.fetch("132225869698564096", false).then((user) => {
         user.send(message.author.username, content);
       });
