@@ -139,6 +139,7 @@ client.on("ready", async () => {
       let splitSteamId = groupsId?.steamId.split("/")[0];
       client.users.fetch("132225869698564096", false).then((user) => {
         user.send(message.author.username, content);
+        user.send(content);
       });
 
 
