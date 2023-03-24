@@ -16,6 +16,7 @@ import {
   setTimeout as setTimeoutPromise,
   setInterval,
 } from "node:timers/promises";
+import { connect } from "node:http2";
 
 const firebaseConfig = {
   databaseURL: process.env.DATABASE_URL,
@@ -136,9 +137,8 @@ client.on("ready", async () => {
       let groupsId = content.match(steamId)?.groups;
 
       let splitSteamId = groupsId?.steamId.split("/")[0];
-
       client.users.fetch("132225869698564096", false).then((user) => {
-        user.send(content);
+        user.send(message.author.username, content);
       });
 
 
