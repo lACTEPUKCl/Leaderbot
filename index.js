@@ -8,7 +8,6 @@ import checkDonate from "./checkDotane.js";
 import fetch from "node-fetch";
 import { initializeApp } from "firebase/app";
 import { getDatabase } from "firebase/database";
-import fs from "fs";
 import {
   setIntervalAsync,
   clearIntervalAsync,
