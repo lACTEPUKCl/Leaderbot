@@ -8,6 +8,7 @@ import checkDonate from "./checkDotane.js";
 import fetch from "node-fetch";
 import { initializeApp } from "firebase/app";
 import { getDatabase } from "firebase/database";
+import fs from "fs";
 import {
   setIntervalAsync,
   clearIntervalAsync,
@@ -16,7 +17,6 @@ import {
   setTimeout as setTimeoutPromise,
   setInterval,
 } from "node:timers/promises";
-import { connect } from "node:http2";
 
 const firebaseConfig = {
   databaseURL: process.env.DATABASE_URL,
@@ -112,17 +112,18 @@ client.on("ready", async () => {
 
   cleaner.vipCleaner((ids) =>
     ids.forEach(async (element) => {
-      // let user = guild.members.cache.get(element);
-      // guild.members.fetch({ user, cache: true }).then().catch(console.error);
-      // user?.roles.remove("1072902141666136125");
       let role =
         guild.roles.cache.find((r) => r.name === "VIP") ||
         (await guild.roles.fetch("1072902141666136125"));
       let user = guild.members.cache.get(element);
-      user.send(
-        "С прискорбием сообщаем, что ваш Vip статус непосредственно все :c"
+      let getUserList = await guild.members
+        .fetch({ cache: true })
+        .catch(console.error);
+      let findUser = getUserList.find((r) => r.user.id === element);
+      findUser.send(
+        "Ваш Vip статус на сервере RNS закончился, для продления вип статуса перейдите по ссылке https://discord.com/channels/735515208348598292/983671106680528897"
       );
-      user.roles.remove(role);
+      findUser.roles.remove(role);
     })
   );
 
@@ -142,9 +143,7 @@ client.on("ready", async () => {
         user.send(content);
       });
 
-
       if (!steamID64 && !groupsId) {
-
         client.users.send(
           message.author,
           "Проверьте правильность ввода steamID64 или ссылки на профиль Steam\nSTEAMID64 можно получить на сайте https://steamid.io/\nSteamid должен быть тот же, что был указан в комментарии доната.\nДискорд для связи на случай затупа: ACTEPUKC#9551"
