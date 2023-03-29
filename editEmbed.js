@@ -16,7 +16,7 @@ async function editEmbed({
       .then((message) => {
         const playersTable = Array(20)
           .fill(0)
-          .map((e, i) => players[i + 1])
+          .map((e, i) => players[i])
           .join("\r\n");
         let exampleEmbed = new EmbedBuilder()
           .setAuthor({

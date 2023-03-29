@@ -5,6 +5,7 @@
     "discord.js": "^14.7.1",
     "dotenv": "^16.0.3",
     "firebase": "^9.18.0",
+    "mongodb": "^5.1.0",
     "node-fetch": "^3.3.0",
     "nodemon": "^2.0.21",
     "set-interval-async": "^3.0.3"

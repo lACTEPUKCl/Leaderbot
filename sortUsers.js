@@ -1,42 +1,45 @@
-import { ref, get } from "firebase/database";
+import { MongoClient } from "mongodb";
 
 async function sortUsers(db, sort) {
-  const test = ref(db, "users");
-  const data = await get(test);
-  const tempPlayers = data.val();
-  let stats = Object.values(tempPlayers);
-  let injectKd = [];
-  let statsSort = [];
-  let players = [];
+  const clientdb = new MongoClient(db);
+  const dbName = "SquadJS";
+  const dbCollection = "users";
 
-  for (const key in stats) {
-    stats[key].kd = stats[key].kills / stats[key].death;
-    injectKd.push(stats[key]);
-    if (injectKd[key].kills > 500) {
-      statsSort.push(stats[key]);
+  try {
+    await clientdb.connect();
+    const db = clientdb.db(dbName);
+    const collection = db.collection(dbCollection);
+    const result = await collection
+      .find({ kills: { $gte: 500 } })
+      .sort({ [sort]: -1 })
+      .limit(20)
+      .toArray();
+    const players = [];
+    let i = 0;
+    for (const key in result) {
+      const a = result[key];
+      i = i + 1;
+      players.push(
+        `(${i}) ` +
+          a.name +
+          ": У: " +
+          a.kills +
+          " С: " +
+          a.death +
+          " П: " +
+          a.revives +
+          " ТK: " +
+          a.teamkills +
+          " K/D: " +
+          a.kd
+      );
     }
+    return players;
+  } catch (e) {
+    console.error(e);
+  } finally {
+    await clientdb.close();
   }
-
-  const sortBy = statsSort.sort((a, b) => (a[sort] < b[sort] ? 1 : -1));
-  for (const key in sortBy) {
-    const a = sortBy[key];
-    players.push(
-      `(${key}) ` +
-        a.name +
-        ": У: " +
-        a.kills +
-        " С: " +
-        a.death +
-        " П: " +
-        a.revives +
-        " ТK: " +
-        a.teamkills +
-        " K/D: " +
-        a.kd.toFixed(2)
-    );
-    if (key === "20") break;
-  }
-
-  return players;
 }
+
 export default sortUsers;
