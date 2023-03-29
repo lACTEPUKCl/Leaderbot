@@ -6,8 +6,7 @@ import editEmbed from "./editEmbed.js";
 import getDonate from "./getDonate.js";
 import checkDonate from "./checkDotane.js";
 import fetch from "node-fetch";
-import { initializeApp } from "firebase/app";
-import { getDatabase } from "firebase/database";
+
 import {
   setIntervalAsync,
   clearIntervalAsync,
@@ -16,12 +15,6 @@ import {
   setTimeout as setTimeoutPromise,
   setInterval,
 } from "node:timers/promises";
-
-const firebaseConfig = {
-  databaseURL: process.env.DATABASE_URL,
-};
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
 
 const client = new Client({
   intents: [
@@ -39,6 +32,7 @@ client.on("ready", async () => {
   const channel = client.channels.cache.get("1069615679281561600");
   const guild = client.guilds.cache.get("735515208348598292");
   const donateChannel = client.channels.cache.get("1073712072220754001");
+  const db = process.env.DATABASE_URL;
   let tempSteamId = [];
   // const username = "ACTEPUKC";
   // const discriminator = "9551";
@@ -69,7 +63,7 @@ client.on("ready", async () => {
       sort: "death",
       messageId: "1069615861582811178",
       authorName: "Топ 20 игроков по смертям",
-      seconds: 3000,
+      seconds: 5000,
     }),
     editEmbed({
       channel,
@@ -77,7 +71,7 @@ client.on("ready", async () => {
       sort: "revives",
       messageId: "1069615953438048276",
       authorName: "Топ 20 медиков",
-      seconds: 4000,
+      seconds: 10000,
     }),
     editEmbed({
       channel,
@@ -85,7 +79,7 @@ client.on("ready", async () => {
       sort: "teamkills",
       messageId: "1069616004457578627",
       authorName: "Топ 20 тимкилеров",
-      seconds: 5000,
+      seconds: 15000,
     }),
     editEmbed({
       channel,
@@ -93,7 +87,7 @@ client.on("ready", async () => {
       sort: "kd",
       messageId: "1069616217884741693",
       authorName: "Топ 20 игроков по соотношению убийств к смертям",
-      seconds: 6000,
+      seconds: 20000,
     }),
   ];
 
@@ -107,7 +101,7 @@ client.on("ready", async () => {
       Promise.all(getStats);
     }
   }
-  //startEmbedEdit();
+  startEmbedEdit();
 
   cleaner.vipCleaner((ids) =>
     ids.forEach(async (element) => {
