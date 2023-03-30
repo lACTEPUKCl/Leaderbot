@@ -6,6 +6,7 @@ import editEmbed from "./editEmbed.js";
 import getDonate from "./getDonate.js";
 import checkDonate from "./checkDotane.js";
 import fetch from "node-fetch";
+import dateDonateExpires from "./dateDonateExpires.js";
 
 import {
   setIntervalAsync,
@@ -183,7 +184,6 @@ client.on("ready", async () => {
       };
       message
         .awaitReactions({ filter, max: 1, time: 60000, errors: ["time"] })
-
         .then((collected) => {
           const reaction = collected.first();
           if (typeof reaction == "undefined") return;
@@ -207,6 +207,13 @@ client.on("ready", async () => {
           );
           message.delete();
         });
+    }
+    if (message.channelId === "1091073082510278748") {
+      if (!message.content.includes("!vip")) {
+        message.delete();
+        return;
+      }
+      dateDonateExpires(message.author.id, process.env.ADMINS_URL, message);
     }
   });
 });
