@@ -31,7 +31,6 @@ async function getDonate(donateUrl, donateChannel) {
       donateChannel.send({ embeds: [exampleEmbed] });
     } else {
       console.log(`${response.status}: ${response.statusText}`);
-      getDonate();
     }
   } catch (e) {
     console.log(e.message);
