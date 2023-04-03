@@ -103,7 +103,7 @@ client.on("ready", async () => {
       Promise.all(getStats);
     }
   }
-  //startEmbedEdit();
+  startEmbedEdit();
 
   cleaner.vipCleaner((ids) =>
     ids.forEach(async (element) => {
