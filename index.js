@@ -7,6 +7,7 @@ import getDonate from "./getDonate.js";
 import checkDonate from "./checkDotane.js";
 import fetch from "node-fetch";
 import dateDonateExpires from "./dateDonateExpires.js";
+import getStatsOnDiscord from "./getStatsOnDiscord.js";
 
 import {
   setIntervalAsync,
@@ -209,11 +210,21 @@ client.on("ready", async () => {
         });
     }
     if (message.channelId === "1091073082510278748") {
-      if (!message.content.includes("!vip")) {
-        message.delete();
+      if (message.content.includes("!vip")) {
+        dateDonateExpires(message.author.id, process.env.ADMINS_URL, message);
         return;
       }
-      dateDonateExpires(message.author.id, process.env.ADMINS_URL, message);
+      if (message.content.includes("!stats")) {
+        if (message.content.split(" ").length > 1) {
+          getStatsOnDiscord(
+            process.env.DATABASE_URL,
+            message.content.split(" ")[1],
+            message
+          );
+        }
+        return;
+      }
+      message.delete();
     }
   });
 });
