@@ -221,8 +221,8 @@ client.on("ready", async () => {
             message.content.split(" ")[1],
             message
           );
+          return;
         }
-        return;
       }
       message.delete();
     }
