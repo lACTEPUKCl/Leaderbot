@@ -8,6 +8,7 @@ import checkDonate from "./checkDotane.js";
 import fetch from "node-fetch";
 import dateDonateExpires from "./dateDonateExpires.js";
 import getStatsOnDiscord from "./getStatsOnDiscord.js";
+import getStatsOnDiscordWithoutSteamID from "./getStatsOnDiscordWithoutSteamID.js";
 
 import {
   setIntervalAsync,
@@ -219,6 +220,13 @@ client.on("ready", async () => {
           getStatsOnDiscord(
             process.env.DATABASE_URL,
             message.content.split(" ")[1],
+            message
+          );
+          return;
+        } else if (message.content.split(" ").length == 1) {
+          getStatsOnDiscordWithoutSteamID(
+            process.env.DATABASE_URL,
+            process.env.ADMINS_URL,
             message
           );
           return;
