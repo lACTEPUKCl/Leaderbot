@@ -36,6 +36,7 @@ client.on("ready", async () => {
   const guild = client.guilds.cache.get("735515208348598292");
   const donateChannel = client.channels.cache.get("1073712072220754001");
   const db = process.env.DATABASE_URL;
+  const steamApi = process.env.STEAM_API;
   let tempSteamId = [];
   // const username = "ACTEPUKC";
   // const discriminator = "9551";
@@ -46,7 +47,7 @@ client.on("ready", async () => {
   // );
   // member.roles.add("1072902141666136125");
   setIntervalAsync(async () => {
-    checkDonate(tempSteamId, process.env.DONATE_URL, () => {
+    checkDonate(steamApi, tempSteamId, process.env.DONATE_URL, () => {
       tempSteamId = [];
     });
   }, 30000);
@@ -150,7 +151,7 @@ client.on("ready", async () => {
 
       if (typeof groupsId !== "undefined") {
         const responseSteam = await fetch(
-          `https://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/?key=78625F21328E996397F2930B25F4C91F&vanityurl=${splitSteamId}`
+          `https://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/?key=${steamApi}&vanityurl=${splitSteamId}`
         );
         const dataSteam = await responseSteam.json();
         if (dataSteam.response.success === 1) {

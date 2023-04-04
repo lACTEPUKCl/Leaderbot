@@ -1,7 +1,7 @@
 import fetchDonate from "./fetchDonate.js";
 import fetch from "node-fetch";
 
-async function checkDonate(tempSteamId, donateUrl, callback) {
+async function checkDonate(steamApi, tempSteamId, donateUrl, callback) {
   try {
     let response = await fetch(donateUrl);
     if (response.ok) {
@@ -18,7 +18,7 @@ async function checkDonate(tempSteamId, donateUrl, callback) {
 
           if (typeof groupsId !== "undefined") {
             const responseSteam = await fetch(
-              `https://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/?key=78625F21328E996397F2930B25F4C91F&vanityurl=${splitSteamId}`
+              `https://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/?key=${steamApi}&vanityurl=${splitSteamId}`
             );
             const dataSteam = await responseSteam.json();
             if (dataSteam.response.steamid === currentSteamId) {
