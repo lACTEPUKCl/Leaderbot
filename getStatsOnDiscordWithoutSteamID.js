@@ -18,10 +18,9 @@ function getStatsOnDiscordWithoutSteamID(db, adminUrl, message) {
           currentUser.push(user);
           steamId.push(currentUser[0].toString().match(/[0-9]{17}/)[0]);
           getStatsOnDiscord(db, steamId.toString(), message);
+          return;
         }
-        return;
       }
-      message.delete();
     });
   });
 }
