@@ -21,6 +21,7 @@ function getStatsOnDiscordWithoutSteamID(db, adminUrl, message) {
           return;
         }
       }
+      message.delete();
     });
   });
 }
