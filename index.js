@@ -211,7 +211,7 @@ client.on("ready", async () => {
           message.delete();
         });
     }
-    if (message.channelId === "1091073082510278748") {
+    if (message.channelId === "1091073082510278748" || "1093615841624465498") {
       if (message.content.includes("!vip")) {
         dateDonateExpires(message.author.id, process.env.ADMINS_URL, message);
         return;
