@@ -35,6 +35,7 @@ client.on("ready", async () => {
   const channel = client.channels.cache.get("1069615679281561600");
   const guild = client.guilds.cache.get("735515208348598292");
   const donateChannel = client.channels.cache.get("1073712072220754001");
+  const channelsForStats = ["1091073082510278748", "1093615841624465498"];
   const db = process.env.DATABASE_URL;
   const steamApi = process.env.STEAM_API;
   let tempSteamId = [];
@@ -211,7 +212,7 @@ client.on("ready", async () => {
           message.delete();
         });
     }
-    if (message.channelId === "1091073082510278748" || "1093615841624465498") {
+    if (channelsForStats.includes(message.channelId)) {
       if (message.content.includes("!vip")) {
         dateDonateExpires(message.author.id, process.env.ADMINS_URL, message);
         return;
