@@ -13,9 +13,8 @@ function getStatsOnDiscordWithoutSteamID(db, adminUrl, message) {
     data.split("\r\n").map((e) => {
       const user = e.match(regexp);
       if (user) {
-        const getUser = user.find((el) => el.includes(message.author.id));
-        console.log(getUser.match(/[0-9]{17}/));
-        steamId.push(getUser.match(/[0-9]{17}/));
+        const getUser = user.filter((el) => el.includes(message.author.id));
+        steamId.push(getUser.toString().match(/[0-9]{17}/));
         getStatsOnDiscord(db, steamId.toString(), message);
         return;
       }
