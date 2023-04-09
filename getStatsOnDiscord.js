@@ -13,10 +13,12 @@ async function getStatsOnDiscord(db, steamId, message) {
     const user = await collection.findOne({
       _id: steamId,
     });
-    if (!user) {
-      message.delete();
-      return;
-    }
+    // if (!user) {
+    //   message.delete();
+    //   return;
+    // }
+    if (!user) return;
+
     let exampleEmbed = new EmbedBuilder()
       .setTitle(user.name.toString())
       .setURL(`https://steamcommunity.com/profiles/${steamId}/`)
