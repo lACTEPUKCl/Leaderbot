@@ -2,7 +2,7 @@ import fs from "fs";
 import getStatsOnDiscord from "./getStatsOnDiscord.js";
 
 function getStatsOnDiscordWithoutSteamID(db, adminUrl, message) {
-  const steamId = [];
+  let steamId = [];
   const regexp =
     /^Admin=[0-9]*:Reserved [//]* DiscordID [0-9]* do [0-9]{2}\.[0-9]{2}\.[0-9]{4}/gm;
   fs.readFile(`${adminUrl}Admins.cfg`, "utf-8", (err, data) => {
@@ -16,7 +16,6 @@ function getStatsOnDiscordWithoutSteamID(db, adminUrl, message) {
         const getUser = user.filter((el) => el.includes(message.author.id));
         steamId.push(getUser.toString().match(/[0-9]{17}/));
         getStatsOnDiscord(db, steamId.toString(), message);
-        return;
       }
     });
   });
