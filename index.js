@@ -14,10 +14,6 @@ import {
   setIntervalAsync,
   clearIntervalAsync,
 } from "set-interval-async/dynamic";
-import {
-  setTimeout as setTimeoutPromise,
-  setInterval,
-} from "node:timers/promises";
 
 const client = new Client({
   intents: [
@@ -53,67 +49,56 @@ client.on("ready", async () => {
     });
   }, 30000);
 
-  const getStats = [
-    editEmbed({
-      channel,
-      db,
-      sort: "kills",
-      messageId: "1069615769610108938",
-      authorName: "Топ 20 игроков по убийствам",
-      seconds: 1000,
-    }),
-    editEmbed({
-      channel,
-      db,
-      sort: "death",
-      messageId: "1069615861582811178",
-      authorName: "Топ 20 игроков по смертям",
-      seconds: 5000,
-    }),
-    editEmbed({
-      channel,
-      db,
-      sort: "revives",
-      messageId: "1069615953438048276",
-      authorName: "Топ 20 медиков",
-      seconds: 10000,
-    }),
-    editEmbed({
-      channel,
-      db,
-      sort: "teamkills",
-      messageId: "1069616004457578627",
-      authorName: "Топ 20 тимкилеров",
-      seconds: 15000,
-    }),
-    editEmbed({
-      channel,
-      db,
-      sort: "kd",
-      messageId: "1069616217884741693",
-      authorName: "Топ 20 игроков по соотношению убийств к смертям",
-      seconds: 20000,
-    }),
-  ];
-
-  async function startEmbedEdit() {
-    const interval = 18000000;
-    for await (const startTime of setInterval(
-      interval,
-      Promise.all(getStats)
-    )) {
-      console.log("Statistics updated");
-      Promise.all(getStats);
-    }
-  }
-  startEmbedEdit();
+  setIntervalAsync(() => {
+    const getStats = [
+      editEmbed({
+        channel,
+        db,
+        sort: "kills",
+        messageId: "1069615769610108938",
+        authorName: "Топ 20 игроков по убийствам",
+        seconds: 1000,
+      }),
+      editEmbed({
+        channel,
+        db,
+        sort: "death",
+        messageId: "1069615861582811178",
+        authorName: "Топ 20 игроков по смертям",
+        seconds: 5000,
+      }),
+      editEmbed({
+        channel,
+        db,
+        sort: "revives",
+        messageId: "1069615953438048276",
+        authorName: "Топ 20 медиков",
+        seconds: 10000,
+      }),
+      editEmbed({
+        channel,
+        db,
+        sort: "teamkills",
+        messageId: "1069616004457578627",
+        authorName: "Топ 20 тимкилеров",
+        seconds: 15000,
+      }),
+      editEmbed({
+        channel,
+        db,
+        sort: "kd",
+        messageId: "1069616217884741693",
+        authorName: "Топ 20 игроков по соотношению убийств к смертям",
+        seconds: 20000,
+      }),
+    ];
+  }, 18000000);
 
   cleaner.vipCleaner((ids) =>
     ids.forEach(async (element) => {
       let role =
         guild.roles.cache.find((r) => r.name === "VIP") ||
         (await guild.roles.fetch("1072902141666136125"));
-      let user = guild.members.cache.get(element);
       let getUserList = await guild.members
         .fetch({ cache: true })
         .catch(console.error);
