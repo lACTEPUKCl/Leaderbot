@@ -103,6 +103,7 @@ client.on("ready", async () => {
         .fetch({ cache: true })
         .catch(console.error);
       let findUser = getUserList.find((r) => r.user.id === element);
+      if (!findUser) return;
       findUser.send(
         "Ваш Vip статус на сервере RNS закончился, для продления вип статуса перейдите по ссылке https://discord.com/channels/735515208348598292/983671106680528897"
       );
