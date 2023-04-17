@@ -36,10 +36,11 @@ const vipCleaner = (callback) => {
       }
 
       if (steamIDForRemove.length) {
-        let users = data.split("\r\n");
+        let cleanData = data.replace(/\n/gm, "\r\n");
+        let users = cleanData.split("\r\n");
 
         steamIDForRemove.forEach((e) => {
-          const userString = data.match(getUserRegExp(e));
+          const userString = cleanData.match(getUserRegExp(e));
           usersRemove.push(userString[0]);
           users = users.filter((e) => userString[0] !== e);
           usersRemoveId.push(userString.groups.discordId);
