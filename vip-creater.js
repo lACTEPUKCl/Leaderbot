@@ -30,7 +30,8 @@ const vipCreater = async (steamID, nickname, summ, discordId) => {
       console.error(err);
       return;
     }
-    const nData = data.split("\r\n").map((e) => {
+    let cleanData = data.replace(/\n/gm, "\r\n");
+    const nData = cleanData.split("\r\n").map((e) => {
       const userString = e.match(getUserRegExp(steamID));
       if (userString) {
         const { steamID, discordId, date } = userString.groups;
@@ -73,13 +74,13 @@ const vipCreater = async (steamID, nickname, summ, discordId) => {
 
           console.log("\x1b[33m", "\r\n Backup created AdminsBackup.cfg\r\n");
 
-           exec("../syncconfig.sh", (err, stdout, stderr) => {
-             if (err) {
-               console.error(err);
-               return;
-             }
-             console.log(stdout);
-           });
+          exec("../syncconfig.sh", (err, stdout, stderr) => {
+            if (err) {
+              console.error(err);
+              return;
+            }
+            console.log(stdout);
+          });
         });
       });
     }
