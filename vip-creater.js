@@ -30,8 +30,10 @@ const vipCreater = async (steamID, nickname, summ, discordId) => {
       console.error(err);
       return;
     }
-    let cleanData = data.replace(/\n/gm, "\r\n");
-    const nData = cleanData.split("\r\n").map((e) => {
+    if (!data.match(/\r\n/gm)) {
+      data = data.replace(/\n/gm, "\r\n");
+    }
+    const nData = data.split("\r\n").map((e) => {
       const userString = e.match(getUserRegExp(steamID));
       if (userString) {
         const { steamID, discordId, date } = userString.groups;
