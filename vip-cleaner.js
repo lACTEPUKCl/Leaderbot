@@ -65,7 +65,7 @@ const vipCleaner = (callback) => {
         });
       }
     });
-  }, 3600);
+  }, 36000000);
 };
 export default {
   vipCleaner,
