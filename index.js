@@ -44,6 +44,7 @@ client.on("ready", async () => {
   // );
   // member.roles.add("1072902141666136125");
   setIntervalAsync(async () => {
+    if (tempSteamId.length === 0) return;
     checkDonate(steamApi, tempSteamId, process.env.DONATE_URL, () => {
       tempSteamId = [];
     });
