@@ -1,4 +1,4 @@
-import { Client, GatewayIntentBits, Team } from "discord.js";
+import { Client, GatewayIntentBits } from "discord.js";
 import { config } from "dotenv";
 config();
 import cleaner from "./vip-cleaner.js";
