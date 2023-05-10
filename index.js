@@ -105,9 +105,13 @@ client.on("ready", async () => {
         .catch(console.error);
       let findUser = getUserList.find((r) => r.user.id === element);
       if (!findUser) return;
-      findUser.send(
-        "Ваш Vip статус на сервере RNS закончился, для продления вип статуса перейдите по ссылке https://discord.com/channels/735515208348598292/983671106680528897"
-      );
+      findUser
+        .send(
+          "Ваш Vip статус на сервере RNS закончился, для продления вип статуса перейдите по ссылке https://discord.com/channels/735515208348598292/983671106680528897"
+        )
+        .catch((error) => {
+          console.log("Невозможно отправить сообщение пользователю");
+        });
       findUser.roles.remove(role);
     })
   );
@@ -129,10 +133,14 @@ client.on("ready", async () => {
       });
 
       if (!steamID64 && !groupsId) {
-        client.users.send(
-          message.author,
-          "Проверьте правильность ввода steamID64 или ссылки на профиль Steam\nSTEAMID64 можно получить на сайте https://steamid.io/\nSteamid должен быть тот же, что был указан в комментарии доната.\nДискорд для связи на случай затупа: ACTEPUKC#9551"
-        );
+        client.users
+          .send(
+            message.author,
+            "Проверьте правильность ввода steamID64 или ссылки на профиль Steam\nSTEAMID64 можно получить на сайте https://steamid.io/\nSteamid должен быть тот же, что был указан в комментарии доната.\nДискорд для связи на случай затупа: ACTEPUKC#9551"
+          )
+          .catch((error) => {
+            console.log("Невозможно отправить сообщение пользователю");
+          });
         message.delete();
         return;
       }
@@ -192,10 +200,14 @@ client.on("ready", async () => {
           }
         })
         .catch((collected) => {
-          client.users.send(
-            message.author,
-            "Проверьте правильность ввода steamID64 или ссылки на профиль Steam\nSTEAMID64 можно получить на сайте https://steamid.io/\nSteamid должен быть тот же, что был указан в комментарии доната.\nДискорд для связи на случай затупа: ACTEPUKC#9551!"
-          );
+          client.users
+            .send(
+              message.author,
+              "Проверьте правильность ввода steamID64 или ссылки на профиль Steam\nSTEAMID64 можно получить на сайте https://steamid.io/\nSteamid должен быть тот же, что был указан в комментарии доната.\nДискорд для связи на случай затупа: ACTEPUKC#9551!"
+            )
+            .catch((error) => {
+              console.log("Невозможно отправить сообщение пользователю");
+            });
           message.delete();
         });
     }
