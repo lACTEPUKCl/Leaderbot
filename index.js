@@ -139,7 +139,10 @@ client.on("ready", async () => {
             "Проверьте правильность ввода steamID64 или ссылки на профиль Steam\nSTEAMID64 можно получить на сайте https://steamid.io/\nSteamid должен быть тот же, что был указан в комментарии доната.\nДискорд для связи на случай затупа: ACTEPUKC#9551"
           )
           .catch((error) => {
-            console.log("Невозможно отправить сообщение пользователю");
+            console.log(
+              "Невозможно отправить сообщение пользователю",
+              message.author.username
+            );
           });
         message.delete();
         return;
@@ -206,7 +209,10 @@ client.on("ready", async () => {
               "Проверьте правильность ввода steamID64 или ссылки на профиль Steam\nSTEAMID64 можно получить на сайте https://steamid.io/\nSteamid должен быть тот же, что был указан в комментарии доната.\nДискорд для связи на случай затупа: ACTEPUKC#9551!"
             )
             .catch((error) => {
-              console.log("Невозможно отправить сообщение пользователю");
+              console.log(
+                "Невозможно отправить сообщение пользователю",
+                message.author.username
+              );
             });
           message.delete();
         });
