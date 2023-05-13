@@ -4,7 +4,7 @@ import { EmbedBuilder } from "discord.js";
 async function getStatsOnDiscord(db, steamId, message) {
   const clientdb = new MongoClient(db);
   const dbName = "SquadJS";
-  const dbCollection = "users";
+  const dbCollection = "mainstats";
 
   try {
     await clientdb.connect();
