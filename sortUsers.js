@@ -3,7 +3,7 @@ import { MongoClient } from "mongodb";
 async function sortUsers(db, sort) {
   const clientdb = new MongoClient(db);
   const dbName = "SquadJS";
-  const dbCollection = "users";
+  const dbCollection = "tempstats";
 
   try {
     await clientdb.connect();
