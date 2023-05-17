@@ -39,7 +39,6 @@ async function getStatsOnDiscord(db, steamId, message, steamApi) {
     let roles = Object.entries(user.roles);
     let test = ["", 0];
     roles.forEach((e) => {
-      console.log(e[1]);
       if (test[1] < e[1]) {
         test = e;
       }
