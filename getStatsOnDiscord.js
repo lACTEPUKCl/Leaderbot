@@ -1,5 +1,6 @@
 import { MongoClient } from "mongodb";
 import { EmbedBuilder } from "discord.js";
+import fetch from "node-fetch";
 
 async function getStatsOnDiscord(db, steamId, message, steamApi) {
   const clientdb = new MongoClient(db);
