@@ -36,14 +36,15 @@ async function getStatsOnDiscord(db, steamId, message, steamApi) {
     //     { name: "K/D", value: user.kd.toString(), inline: true }
     //   )
     //   .setColor(0x0099ff);
+    const timeplayed = (user.squad.timeplayed.toString() / 60).toFixed(1);
     let roles = Object.entries(user.roles);
-    let test = ["", 0];
+    let role = ["", 0];
     roles.forEach((e) => {
-      if (test[1] < e[1]) {
-        test = e;
+      if (role[1] < e[1]) {
+        role = e;
       }
     });
-    console.log(test[0].split("_").join("").toUpperCase());
+
     const exampleEmbed = new EmbedBuilder()
       .setColor(0x0099ff)
       .setTitle(user.name.toString())
@@ -61,12 +62,12 @@ async function getStatsOnDiscord(db, steamId, message, steamApi) {
         { name: "K/D", value: user.kd.toString(), inline: true },
         {
           name: "Время в игре",
-          value: user.squad.timeplayed.toString(),
+          value: `${timeplayed}ч`,
           inline: true,
         },
         {
           name: "Лучший класс",
-          value: test[0].split("_").join("").toUpperCase(),
+          value: role[0].split("_").join("").toUpperCase(),
           inline: true,
         }
       );
