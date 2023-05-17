@@ -227,14 +227,16 @@ client.on("ready", async () => {
           getStatsOnDiscord(
             process.env.DATABASE_URL,
             message.content.split(" ")[1],
-            message
+            message,
+            process.env.STEAM_API
           );
           return;
         } else if (message.content.split(" ").length == 1) {
           getStatsOnDiscordWithoutSteamID(
             process.env.DATABASE_URL,
             process.env.ADMINS_URL,
-            message
+            message,
+            process.env.STEAM_API
           );
           return;
         }
