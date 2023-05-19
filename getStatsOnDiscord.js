@@ -49,7 +49,7 @@ async function getStatsOnDiscord(db, steamId, message, steamApi) {
     const h = Math.floor((time % 1440) / 60);
     const dDisplay = d > 0 ? d + "д " : "";
     const hDisplay = h > 0 ? h + "ч " : "";
-
+    const killPerMatch = user.kills / user.matches.matches;
     // image
     let url =
       "https://cdn.discordapp.com/attachments/1067950760299593860/1109205240718299157/stats.png";
@@ -95,7 +95,7 @@ async function getStatsOnDiscord(db, steamId, message, steamApi) {
           ctx.fillText(`${user.matches.matches} игр`, 1271, 45);
           ctx.fillText("Убийств", 364, 188);
           ctx.fillText("Убийств за игру", 626, 188);
-          ctx.fillText("Убийств в минуту", 888, 188);
+          ctx.fillText("К/Д", 888, 188);
           ctx.fillText("% Побед", 1151, 188);
           ctx.fillText("Рядовой-Генерал", 60, 68);
           ctx.fillText("Кит", 60, 300);
@@ -104,11 +104,11 @@ async function getStatsOnDiscord(db, steamId, message, steamApi) {
           ctx.fillStyle = "#efefef";
           ctx.font = "25pt MyFont";
           ctx.fillText(user.kills.toString(), 364, 220); // Убийств
-          ctx.fillText("20", 626, 220); // Убийств за игру
-          ctx.fillText("12", 888, 220); // Убийств в минуту
+          ctx.fillText(`${~~killPerMatch}`, 626, 220); // Убийств за игру
+          ctx.fillText(user.kd.toString(), 888, 220); // КД
           ctx.fillText(`${~~user.matches.winrate.toString()}%`, 1151, 220); // % Побед
 
-          ctx.fillText(user.kd.toString(), 354, 303); // КД
+          ctx.fillText(user.kd.toString(), 354, 303);
           ctx.fillText(user.matches.won.toString(), 532, 303); // Побед
           ctx.fillText(user.revives.toString(), 709, 303); // Помощь
           ctx.fillText(user.teamkills.toString(), 887, 303); // Тимкилы

@@ -94,7 +94,7 @@ client.on("ready", async () => {
         seconds: 20000,
       }),
     ];
-  }, 60000);
+  }, 600000);
 
   cleaner.vipCleaner((ids) =>
     ids.forEach(async (element) => {
@@ -200,7 +200,7 @@ client.on("ready", async () => {
             });
             setTimeout(() => {
               message.delete();
-            }, 5000);
+            }, 2000);
           }
         })
         .catch((collected) => {
@@ -219,11 +219,11 @@ client.on("ready", async () => {
         });
     }
     if (channelsForStats.includes(message.channelId)) {
-      if (message.content.includes("!vip")) {
+      if (message.content.toLowerCase().includes("!vip")) {
         dateDonateExpires(message.author.id, process.env.ADMINS_URL, message);
         return;
       }
-      if (message.content.includes("!stats")) {
+      if (message.content.toLowerCase().includes("!stats")) {
         if (message.content.split(" ").length > 1) {
           getStatsOnDiscord(
             process.env.DATABASE_URL,
