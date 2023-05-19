@@ -96,6 +96,7 @@ client.on("ready", async () => {
     ];
   }, 600000);
 
+
   cleaner.vipCleaner((ids) =>
     ids.forEach(async (element) => {
       let role =
