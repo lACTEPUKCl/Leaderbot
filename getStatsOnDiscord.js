@@ -242,7 +242,7 @@ async function getStatsOnDiscord(db, steamId, message, steamApi) {
     setTimeout(() => {
       const imageToSend = new AttachmentBuilder("stats.png");
       message.reply({ files: [imageToSend] });
-    }, 6000);
+    }, 1000);
   } catch (e) {
     console.error(e);
   } finally {
