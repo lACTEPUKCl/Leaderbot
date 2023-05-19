@@ -239,8 +239,10 @@ async function getStatsOnDiscord(db, steamId, message, steamApi) {
     //       inline: true,
     //     }
     //   );
-    const imageToSend = new AttachmentBuilder("stats.png");
-    message.reply({ files: [imageToSend] });
+    setTimeout(() => {
+      const imageToSend = new AttachmentBuilder("stats.png");
+      message.reply({ files: [imageToSend] });
+    }, 6000);
   } catch (e) {
     console.error(e);
   } finally {

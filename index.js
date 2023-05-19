@@ -94,7 +94,7 @@ client.on("ready", async () => {
         seconds: 20000,
       }),
     ];
-  }, 18000000);
+  }, 60000);
 
   cleaner.vipCleaner((ids) =>
     ids.forEach(async (element) => {
