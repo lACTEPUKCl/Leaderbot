@@ -204,7 +204,6 @@ async function getStatsOnDiscord(db, steamId, message, steamApi) {
           ctx.fillText("1000/10000", 159, 168);
           PImage.encodePNGToStream(img, fs.createWriteStream(filepath)).then(
             () => {
-              console.log("done writing to ", filepath);
             }
           );
         });
