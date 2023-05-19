@@ -8,6 +8,7 @@
     "mongodb": "^5.1.0",
     "node-fetch": "^3.3.0",
     "nodemon": "^2.0.21",
+    "pureimage": "^0.3.17",
     "set-interval-async": "^3.0.3"
   },
   "scripts": {
