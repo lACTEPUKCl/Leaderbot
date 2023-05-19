@@ -27,6 +27,7 @@ const client = new Client({
 });
 
 client.on("ready", async () => {
+  //getStatsOnDiscord("asd", "asd", "asd", "asd");
   console.log(`Logged in as ${client.user.tag}!`);
   const channel = client.channels.cache.get("1069615679281561600");
   const guild = client.guilds.cache.get("735515208348598292");
