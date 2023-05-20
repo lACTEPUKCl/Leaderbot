@@ -54,7 +54,7 @@ async function getStatsOnDiscord(db, steamId, message, steamApi) {
     let url =
       "https://cdn.discordapp.com/attachments/1067950760299593860/1109205240718299157/stats.png";
     let filepath = "stats.png";
-    const font = PImage.registerFont("./img/KB_BlackWolf.ttf", "MyFont");
+    const font = PImage.registerFont("./img/1.ttf", "MyFont");
     font.load(() => {
       //get image
       client.get(url, (image_stream) => {
@@ -63,7 +63,7 @@ async function getStatsOnDiscord(db, steamId, message, steamApi) {
           //get context
           const ctx = img.getContext("2d");
           ctx.fillStyle = "#efefef";
-          ctx.font = "25pt titlefont";
+          ctx.font = "25pt MyFont";
           ctx.fillText(user.name, 393, 48); // Имя
           ctx.textAlign = "center";
           ctx.fillText("Звание", 156, 37);
@@ -203,8 +203,7 @@ async function getStatsOnDiscord(db, steamId, message, steamApi) {
           ctx.fillStyle = "#efefef";
           ctx.fillText("1000/10000", 159, 168);
           PImage.encodePNGToStream(img, fs.createWriteStream(filepath)).then(
-            () => {
-            }
+            () => {}
           );
         });
       });
