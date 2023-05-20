@@ -50,6 +50,8 @@ async function getStatsOnDiscord(db, steamId, message, steamApi) {
     // const hDisplay = h > 0 ? h + "ч " : "";
     const roleTime1 = gettime(sortRoles[0][1].toString());
     const roleTime2 = gettime(sortRoles[1][1].toString());
+    const leader = gettime(user.squad.leader.toString());
+    const cmd = gettime(user.squad.cmd.toString());
 
     function gettime(time) {
       const d = Math.floor(time / 1440);
@@ -77,11 +79,11 @@ async function getStatsOnDiscord(db, steamId, message, steamApi) {
       loadImage(
         `./img/Icon_${sortRoles[0][0].split("_").join("")}_kit.png`
       ).then((img1) => {
-        ctx.drawImage(img1, 15, 307, 40, 40);
+        ctx.drawImage(img1, 15, 297, 40, 40);
         loadImage(
           `./img/Icon_${sortRoles[1][0].split("_").join("")}_kit.png`
         ).then((img2) => {
-          ctx.drawImage(img2, 15, 403, 40, 40);
+          ctx.drawImage(img2, 15, 393, 40, 40);
           ctx.fillStyle = "#efefef";
           ctx.font = "20pt MyFont";
           ctx.fillText(user.name, 393, 48); // Имя
@@ -94,25 +96,25 @@ async function getStatsOnDiscord(db, steamId, message, steamApi) {
           ctx.fillText(
             sortRoles[0][0].split("_").join("").toUpperCase(),
             60,
-            337
+            327
           ); // Первая роль
           ctx.fillText(
             sortRoles[1][0].split("_").join("").toUpperCase(),
             60,
-            432
+            422
           ); // Вторая роль
           // ctx.fillText("M4A1", 60, 607); // Первое оружие
           // ctx.fillText("AK47", 60, 700); // Второе оружие
           ctx.textAlign = "right";
           ctx.font = "15pt MyFont";
-          ctx.fillText(roleTime1, 290, 337); // Первая роль (время)
-          ctx.fillText(roleTime2, 290, 432); // Вторая роль (время)
+          ctx.fillText(roleTime1, 290, 327); // Первая роль (время)
+          ctx.fillText(roleTime2, 290, 422); // Вторая роль (время)
           // ctx.fillText("789", 280, 607);
           // ctx.fillText("098", 280, 700);
           ctx.textAlign = "left";
           ctx.fillStyle = "#95a6b9";
           ctx.fillText(time, 1171, 45);
-          ctx.fillText(`${user.matches.matches} игр`, 1271, 45);
+          ctx.fillText(`${user.matches.matches} игр`, 1271, 45); // Всего игр
           ctx.fillText("Убийств", 364, 188);
           ctx.fillText("Убийств за игру", 626, 188);
           ctx.fillText("К/Д", 888, 188);
@@ -120,8 +122,8 @@ async function getStatsOnDiscord(db, steamId, message, steamApi) {
           ctx.textAlign = "center";
           ctx.fillText("Рядовой-Генерал", 152, 68);
           ctx.textAlign = "left";
-          ctx.fillText("Кит", 15, 300);
-          ctx.fillText("Оружие", 15, 570);
+          ctx.fillText("Кит", 15, 275);
+          ctx.fillText("Оружие", 15, 545);
 
           ctx.fillStyle = "#efefef";
           ctx.font = "20pt MyFont";
@@ -137,8 +139,8 @@ async function getStatsOnDiscord(db, steamId, message, steamApi) {
           ctx.fillText(user.death.toString(), 1065, 303); // Смерти
           ctx.fillText(user.bonuses.toString(), 1242, 303); // Бонусы
 
-          ctx.fillText(user.squad.leader.toString(), 354, 384); // Свадной
-          ctx.fillText(user.squad.cmd.toString(), 532, 384); // ЦМД
+          ctx.fillText(leader, 354, 384); // Свадной
+          ctx.fillText(cmd || 0, 532, 384); // ЦМД
           //  ctx.fillText("8", 709, 384); // На технике
           //ctx.fillText("9", 887, 384); // На вертолете
           // ctx.fillText("10", 1065, 384); //
@@ -163,8 +165,8 @@ async function getStatsOnDiscord(db, steamId, message, steamApi) {
           ctx.textAlign = "right";
           ctx.fillStyle = "#95a6b9";
           ctx.font = "15pt MyFont";
-          ctx.fillText("Время", 290, 300);
-          ctx.fillText("Убийств", 290, 570);
+          ctx.fillText("Время", 290, 275);
+          ctx.fillText("Убийств", 290, 545);
           ctx.fillText("Карта", 424, 525);
           ctx.fillText("Время игры", 780, 525);
           ctx.fillText("Результат", 971, 525);
@@ -213,7 +215,7 @@ async function getStatsOnDiscord(db, steamId, message, steamApi) {
           gradient.addColorStop(0.0, "green");
           gradient.addColorStop(1.0, "#05310f");
           ctx.clearRect(x0, y0, width1, height1);
-          const pct = 1;
+          const pct = 0;
           ctx.fillStyle = gradient;
           ctx.fillRect(x0, y0, width1 * pct, height1);
 
@@ -223,7 +225,7 @@ async function getStatsOnDiscord(db, steamId, message, steamApi) {
           ctx.textAlign = "center";
           ctx.font = "17pt MyFont";
           ctx.fillStyle = "#efefef";
-          ctx.fillText("1000/10000", 159, 168);
+          ctx.fillText("1000/10000", 159, 170);
 
           // image
 
