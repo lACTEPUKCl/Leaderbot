@@ -1,9 +1,8 @@
 import { MongoClient } from "mongodb";
 import { AttachmentBuilder } from "discord.js";
 import fetch from "node-fetch";
-import * as PImage from "pureimage";
 import * as fs from "fs";
-import * as client from "https";
+import { loadImage, createCanvas, registerFont } from "canvas";
 
 async function getStatsOnDiscord(db, steamId, message, steamApi) {
   const clientdb = new MongoClient(db);
@@ -44,31 +43,52 @@ async function getStatsOnDiscord(db, steamId, message, steamApi) {
     const sortRoles = roles.sort((a, b) => b[1] - a[1]);
     const weapons = Object.entries(user.weapons);
     const sortWeapons = weapons.sort((a, b) => b[1] - a[1]);
-    const time = user.squad.timeplayed;
-    const d = Math.floor(time / 1440);
-    const h = Math.floor((time % 1440) / 60);
-    const dDisplay = d > 0 ? d + "д " : "";
-    const hDisplay = h > 0 ? h + "ч " : "";
+    const time = gettime(user.squad.timeplayed);
+    // const d = Math.floor(time / 1440);
+    // const h = Math.floor((time % 1440) / 60);
+    // const dDisplay = d > 0 ? d + "д " : "";
+    // const hDisplay = h > 0 ? h + "ч " : "";
+    const roleTime1 = gettime(sortRoles[0][1].toString());
+    const roleTime2 = gettime(sortRoles[1][1].toString());
+
+    function gettime(time) {
+      const d = Math.floor(time / 1440);
+      const h = Math.floor((time % 1440) / 60);
+      const dDisplay = d > 0 ? d + "д " : "";
+      const hDisplay = h > 0 ? h + "ч" : "";
+      return dDisplay + hDisplay;
+    }
+
     const killPerMatch = user.kills / user.matches.matches;
     // image
-    let url =
-      "https://cdn.discordapp.com/attachments/1067950760299593860/1109205240718299157/stats.png";
-    let filepath = "stats.png";
-    const font = PImage.registerFont("./img/KB_BlackWolf.ttf", "MyFont");
-    font.load(() => {
-      //get image
-      client.get(url, (image_stream) => {
-        //decode image
-        PImage.decodePNGFromStream(image_stream).then((img) => {
-          //get context
-          const ctx = img.getContext("2d");
+
+    const font = registerFont("./img/Tektur-Bold.ttf", {
+      family: "MyFont",
+    });
+
+    const width = 1405;
+    const height = 729;
+
+    const canvas = createCanvas(width, height);
+    const ctx = canvas.getContext("2d");
+    //get image
+    loadImage("./img/stats.png").then((img) => {
+      ctx.drawImage(img, 0, 0, 1405, 729);
+      loadImage(
+        `./img/Icon_${sortRoles[0][0].split("_").join("")}_kit.png`
+      ).then((img1) => {
+        ctx.drawImage(img1, 15, 307, 40, 40);
+        loadImage(
+          `./img/Icon_${sortRoles[1][0].split("_").join("")}_kit.png`
+        ).then((img2) => {
+          ctx.drawImage(img2, 15, 403, 40, 40);
           ctx.fillStyle = "#efefef";
-          ctx.font = "25pt titlefont";
+          ctx.font = "20pt MyFont";
           ctx.fillText(user.name, 393, 48); // Имя
           ctx.textAlign = "center";
-          ctx.fillText("Звание", 156, 37);
-          ctx.fillText("Любимые киты", 156, 242);
-          ctx.fillText("Любимое оружие", 156, 510);
+          ctx.fillText("Звание", 152, 37);
+          ctx.fillText("Любимые киты", 152, 242);
+          ctx.fillText("Любимое оружие", 152, 510);
           ctx.textAlign = "left";
           ctx.fillText("История", 393, 469);
           ctx.fillText(
@@ -84,25 +104,27 @@ async function getStatsOnDiscord(db, steamId, message, steamApi) {
           // ctx.fillText("M4A1", 60, 607); // Первое оружие
           // ctx.fillText("AK47", 60, 700); // Второе оружие
           ctx.textAlign = "right";
-          ctx.fillText(sortRoles[0][1].toString(), 280, 337); // Первая роль (время)
-          ctx.fillText(sortRoles[1][1].toString(), 280, 432); // Вторая роль (время)
+          ctx.font = "15pt MyFont";
+          ctx.fillText(roleTime1, 290, 337); // Первая роль (время)
+          ctx.fillText(roleTime2, 290, 432); // Вторая роль (время)
           // ctx.fillText("789", 280, 607);
           // ctx.fillText("098", 280, 700);
           ctx.textAlign = "left";
           ctx.fillStyle = "#95a6b9";
-          ctx.font = "20pt MyFont";
-          ctx.fillText(dDisplay + hDisplay, 1171, 45);
+          ctx.fillText(time, 1171, 45);
           ctx.fillText(`${user.matches.matches} игр`, 1271, 45);
           ctx.fillText("Убийств", 364, 188);
           ctx.fillText("Убийств за игру", 626, 188);
           ctx.fillText("К/Д", 888, 188);
           ctx.fillText("% Побед", 1151, 188);
-          ctx.fillText("Рядовой-Генерал", 60, 68);
-          ctx.fillText("Кит", 60, 300);
-          ctx.fillText("Оружие", 60, 570);
+          ctx.textAlign = "center";
+          ctx.fillText("Рядовой-Генерал", 152, 68);
+          ctx.textAlign = "left";
+          ctx.fillText("Кит", 15, 300);
+          ctx.fillText("Оружие", 15, 570);
 
           ctx.fillStyle = "#efefef";
-          ctx.font = "25pt MyFont";
+          ctx.font = "20pt MyFont";
           ctx.fillText(user.kills.toString(), 364, 220); // Убийств
           ctx.fillText(`${~~killPerMatch}`, 626, 220); // Убийств за игру
           ctx.fillText(user.kd.toString(), 888, 220); // КД
@@ -123,7 +145,7 @@ async function getStatsOnDiscord(db, steamId, message, steamApi) {
           // ctx.fillText("11", 1242, 384); //
 
           ctx.fillStyle = "#95a6b9";
-          ctx.font = "20pt MyFont";
+          ctx.font = "15pt MyFont";
           ctx.fillText("У/С", 354, 271);
           ctx.fillText("Побед", 532, 271);
           ctx.fillText("Помощь", 709, 271);
@@ -140,9 +162,9 @@ async function getStatsOnDiscord(db, steamId, message, steamApi) {
 
           ctx.textAlign = "right";
           ctx.fillStyle = "#95a6b9";
-          ctx.font = "20pt MyFont";
-          ctx.fillText("Время", 280, 300);
-          ctx.fillText("Убийств", 280, 570);
+          ctx.font = "15pt MyFont";
+          ctx.fillText("Время", 290, 300);
+          ctx.fillText("Убийств", 290, 570);
           ctx.fillText("Карта", 424, 525);
           ctx.fillText("Время игры", 780, 525);
           ctx.fillText("Результат", 971, 525);
@@ -152,7 +174,7 @@ async function getStatsOnDiscord(db, steamId, message, steamApi) {
 
           ctx.textAlign = "left";
           ctx.fillStyle = "#efefef";
-          ctx.font = "25pt MyFont";
+          ctx.font = "20pt MyFont";
           // ctx.fillText("Albasrah raas v1", 354, 565);
           // ctx.fillText("Albasrah raas v1", 354, 605);
           // ctx.fillText("Albasrah raas v1", 354, 645);
@@ -185,59 +207,59 @@ async function getStatsOnDiscord(db, steamId, message, steamApi) {
 
           const x0 = 20;
           const y0 = 150;
-          const width = 265;
-          const height = 25;
-          const gradient = ctx.createLinearGradient(x0, y0, x0 + width, y0);
+          const width1 = 265;
+          const height1 = 25;
+          const gradient = ctx.createLinearGradient(x0, y0, x0 + width1, y0);
           gradient.addColorStop(0.0, "green");
           gradient.addColorStop(1.0, "#05310f");
-          ctx.clearRect(x0, y0, width, height);
+          ctx.clearRect(x0, y0, width1, height1);
           const pct = 1;
           ctx.fillStyle = gradient;
-          ctx.fillRect(x0, y0, width * pct, height);
+          ctx.fillRect(x0, y0, width1 * pct, height1);
 
           // outline the full progress bar
           ctx.strokeStyle = "black";
-          ctx.strokeRect(x0, y0, width, height);
+          ctx.strokeRect(x0, y0, width1, height1);
           ctx.textAlign = "center";
           ctx.font = "17pt MyFont";
           ctx.fillStyle = "#efefef";
           ctx.fillText("1000/10000", 159, 168);
-          PImage.encodePNGToStream(img, fs.createWriteStream(filepath)).then(
-            () => {
-            }
-          );
+
+          // image
+
+          // const exampleEmbed = new EmbedBuilder()
+          //   .setColor(0x0099ff)
+          //   .setTitle(user.name.toString())
+          //   .setURL(`https://steamcommunity.com/profiles/${steamId}/`)
+          //   //.setDescription("Звание")
+          //   .setThumbnail(userInfo[0].avatarmedium)
+          //   .addFields(
+          //     // { name: "Очков опыта до повышения", value: "Очко" },
+          //     // { name: "\u200B", value: "\u200B" },
+          //     { name: "Убийств", value: user.kills.toString(), inline: true },
+          //     { name: "Смертей", value: user.death.toString(), inline: true },
+          //     { name: "Помощи", value: user.revives.toString(), inline: true },
+          //     { name: "Тимкилов", value: user.teamkills.toString(), inline: true },
+          //     { name: "Бонусов", value: user.bonuses.toString(), inline: true },
+          //     { name: "K/D", value: user.kd.toString(), inline: true },
+          //     {
+          //       name: "Время в игре",
+          //       value: `${timeplayed}ч`,
+          //       inline: true,
+          //     },
+          //     {
+          //       name: "Лучший класс",
+          //       value: role[0].split("_").join("").toUpperCase(),
+          //       inline: true,
+          //     }
+          //   );
+          const buffer = canvas.toBuffer("image/png");
+          fs.writeFileSync("./stats.png", buffer);
         });
       });
+      //get context
     });
 
-    // image
-
-    // const exampleEmbed = new EmbedBuilder()
-    //   .setColor(0x0099ff)
-    //   .setTitle(user.name.toString())
-    //   .setURL(`https://steamcommunity.com/profiles/${steamId}/`)
-    //   //.setDescription("Звание")
-    //   .setThumbnail(userInfo[0].avatarmedium)
-    //   .addFields(
-    //     // { name: "Очков опыта до повышения", value: "Очко" },
-    //     // { name: "\u200B", value: "\u200B" },
-    //     { name: "Убийств", value: user.kills.toString(), inline: true },
-    //     { name: "Смертей", value: user.death.toString(), inline: true },
-    //     { name: "Помощи", value: user.revives.toString(), inline: true },
-    //     { name: "Тимкилов", value: user.teamkills.toString(), inline: true },
-    //     { name: "Бонусов", value: user.bonuses.toString(), inline: true },
-    //     { name: "K/D", value: user.kd.toString(), inline: true },
-    //     {
-    //       name: "Время в игре",
-    //       value: `${timeplayed}ч`,
-    //       inline: true,
-    //     },
-    //     {
-    //       name: "Лучший класс",
-    //       value: role[0].split("_").join("").toUpperCase(),
-    //       inline: true,
-    //     }
-    //   );
     setTimeout(() => {
       const imageToSend = new AttachmentBuilder("stats.png");
       message.reply({ files: [imageToSend] });
