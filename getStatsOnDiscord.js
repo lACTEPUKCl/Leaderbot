@@ -156,8 +156,8 @@ async function getStatsOnDiscord(dblink, steamId, message, steamApi) {
 
                 ctx.fillStyle = "#95a6b9";
                 ctx.font = "15pt MyFont";
-                ctx.fillText("У/С", 354, 271);
-                ctx.fillText("Побед", 532, 271);
+                ctx.fillText("Побед", 354, 271);
+                ctx.fillText("Поражений", 532, 271);
                 ctx.fillText("Помощь", 709, 271);
                 ctx.fillText("Тимкилы", 887, 271);
                 ctx.fillText("Смерти", 1065, 271);
