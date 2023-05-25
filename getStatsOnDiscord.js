@@ -3,9 +3,10 @@ import { AttachmentBuilder } from "discord.js";
 import fetch from "node-fetch";
 import * as fs from "fs";
 import { loadImage, createCanvas, registerFont } from "canvas";
+import calcVehicleTime from "./calcVehicleTime.js";
 
-async function getStatsOnDiscord(db, steamId, message, steamApi) {
-  const clientdb = new MongoClient(db);
+async function getStatsOnDiscord(dblink, steamId, message, steamApi) {
+  const clientdb = new MongoClient(dblink);
   const dbName = "SquadJS";
   const dbCollection = "mainstats";
   const responseSteam = await fetch(
@@ -43,17 +44,22 @@ async function getStatsOnDiscord(db, steamId, message, steamApi) {
     const sortRoles = roles.sort((a, b) => b[1] - a[1]);
     const weapons = Object.entries(user.weapons);
     const sortWeapons = weapons.sort((a, b) => b[1] - a[1]);
-    const time = gettime(user.squad.timeplayed);
+    const time = (await gettime(user.squad.timeplayed)) || 0;
     // const d = Math.floor(time / 1440);
     // const h = Math.floor((time % 1440) / 60);
     // const dDisplay = d > 0 ? d + "д " : "";
     // const hDisplay = h > 0 ? h + "ч " : "";
-    const roleTime1 = gettime(sortRoles[0][1].toString());
-    const roleTime2 = gettime(sortRoles[1][1].toString());
-    const leader = gettime(user.squad.leader.toString());
-    const cmd = gettime(user.squad.cmd.toString());
+    const roleTime1 = (await gettime(sortRoles[0][1].toString())) || 0;
+    const roleTime2 = (await gettime(sortRoles[1][1].toString())) || 0;
+    const role1Img = sortRoles[0][0].split("_").join("");
+    const role2Img = sortRoles[1][0].split("_").join("");
+    const leader = (await gettime(user.squad.leader.toString())) || 0;
+    const cmd = (await gettime(user.squad.cmd.toString())) || 0;
+    const vehicle = await calcVehicleTime(user.possess);
+    const heliTime = (await gettime(vehicle[1])) || 0;
+    const heavyTime = (await gettime(vehicle[0])) || 0;
 
-    function gettime(time) {
+    async function gettime(time) {
       const d = Math.floor(time / 1440);
       const h = Math.floor((time % 1440) / 60);
       const dDisplay = d > 0 ? d + "д " : "";
@@ -62,7 +68,6 @@ async function getStatsOnDiscord(db, steamId, message, steamApi) {
     }
 
     const killPerMatch = user.kills / user.matches.matches;
-    // image
 
     const font = registerFont("./img/Tektur-Bold.ttf", {
       family: "MyFont",
@@ -73,16 +78,14 @@ async function getStatsOnDiscord(db, steamId, message, steamApi) {
 
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext("2d");
-    //get image
+
     loadImage("./img/stats.png")
       .then((img) => {
         ctx.drawImage(img, 0, 0, 1405, 729);
-        loadImage(`./img/Icon_${sortRoles[0][0].split("_").join("")}_kit.png`)
+        loadImage(`./img/Icon_${role1Img}_kit.png`)
           .then((img1) => {
             ctx.drawImage(img1, 15, 297, 40, 40);
-            loadImage(
-              `./img/Icon_${sortRoles[1][0].split("_").join("")}_kit.png`
-            )
+            loadImage(`./img/Icon_${role2Img}_kit.png`)
               .then((img2) => {
                 ctx.drawImage(img2, 15, 393, 40, 40);
                 ctx.fillStyle = "#efefef";
@@ -137,8 +140,8 @@ async function getStatsOnDiscord(db, steamId, message, steamApi) {
                   220
                 ); // % Побед
 
-                ctx.fillText(user.kd.toString(), 354, 303);
-                ctx.fillText(user.matches.won.toString(), 532, 303); // Побед
+                ctx.fillText(user.matches.won.toString(), 354, 303); //Побед
+                ctx.fillText(user.matches.lose.toString(), 532, 303); // Поражений
                 ctx.fillText(user.revives.toString(), 709, 303); // Помощь
                 ctx.fillText(user.teamkills.toString(), 887, 303); // Тимкилы
                 ctx.fillText(user.death.toString(), 1065, 303); // Смерти
@@ -146,8 +149,8 @@ async function getStatsOnDiscord(db, steamId, message, steamApi) {
 
                 ctx.fillText(leader, 354, 384); // Свадной
                 ctx.fillText(cmd || 0, 532, 384); // ЦМД
-                //  ctx.fillText("8", 709, 384); // На технике
-                //ctx.fillText("9", 887, 384); // На вертолете
+                ctx.fillText(heliTime, 709, 384); // Пилот
+                ctx.fillText(heavyTime, 887, 384); // Мехвод
                 // ctx.fillText("10", 1065, 384); //
                 // ctx.fillText("11", 1242, 384); //
 
@@ -162,8 +165,8 @@ async function getStatsOnDiscord(db, steamId, message, steamApi) {
 
                 ctx.fillText("Сквадной", 354, 352);
                 ctx.fillText("ЦМД", 532, 352);
-                //ctx.fillText("На тех", 709, 352);
-                //ctx.fillText("На верт", 887, 352);
+                ctx.fillText("Пилот", 709, 352);
+                ctx.fillText("Мехвод", 887, 352);
                 // ctx.fillText("stats", 1065, 352);
                 //ctx.fillText("stats", 1242, 352);
 
@@ -270,12 +273,12 @@ async function getStatsOnDiscord(db, steamId, message, steamApi) {
                 const imageToSend = new AttachmentBuilder("stats.png");
                 message.reply({ files: [imageToSend] });
               })
-              .catch((err) => console.log("Image not found"));
+              .catch((err) => console.log("Image stats not found"));
           })
-          .catch((err) => console.log("Image not found"));
+          .catch((err) => console.log(`Image ${role1Img} not found`));
         //get context
       })
-      .catch((err) => console.log("Image not found"));
+      .catch((err) => console.log(`Image ${role2Img} not found`));
   } catch (e) {
     console.error(e);
   } finally {
