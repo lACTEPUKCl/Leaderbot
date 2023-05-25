@@ -3,6 +3,7 @@
 *.tmp
 transactionId.json
 config-test*.json
+stats.png
 
 # Dependencies
 node_modules/
