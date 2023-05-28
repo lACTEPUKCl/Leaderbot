@@ -5,6 +5,22 @@ import * as fs from "fs";
 import { loadImage, createCanvas, registerFont } from "canvas";
 import calcVehicleTime from "./calcVehicleTime.js";
 
+async function gettime(time, field) {
+  if (field === "sec") {
+    time = time / 1000;
+    const h = Math.floor((time % (3600 * 24)) / 3600);
+    const m = Math.floor((time % 3600) / 60);
+    const hDisplay = h > 0 ? h + "ч" : "";
+    const mDisplay = m > 0 ? m + "м" : "";
+    return hDisplay + mDisplay;
+  }
+  const d = Math.floor(time / 1440);
+  const h = Math.floor((time % 1440) / 60);
+  const dDisplay = d > 0 ? d + "д " : "";
+  const hDisplay = h > 0 ? h + "ч " : "";
+  return dDisplay + hDisplay;
+}
+
 async function getStatsOnDiscord(dblink, steamId, message, steamApi) {
   const clientdb = new MongoClient(dblink);
   const dbName = "SquadJS";
@@ -22,33 +38,13 @@ async function getStatsOnDiscord(dblink, steamId, message, steamApi) {
     const user = await collection.findOne({
       _id: steamId,
     });
-    // // if (!user) {
-    // //   message.delete();
-    // //   return;
-    // // }
     if (!user) return;
-    // // let exampleEmbed = new EmbedBuilder()
-    // //   .setTitle(user.name.toString())
-    // //   .setURL(`https://steamcommunity.com/profiles/${steamId}/`)
-    // //   .addFields(
-    // //     { name: "Kills", value: user.kills.toString(), inline: true },
-    // //     { name: "Death", value: user.death.toString(), inline: true },
-    // //     { name: "Revives", value: user.revives.toString(), inline: true },
-    // //     { name: "TeamKills", value: user.teamkills.toString(), inline: true },
-    // //     { name: "Bonuses", value: user.bonuses.toString(), inline: true },
-    // //     { name: "K/D", value: user.kd.toString(), inline: true }
-    // //   )
-    // //   .setColor(0x0099ff);
-    const timeplayed = (user.squad.timeplayed.toString() / 60).toFixed(1);
     const roles = Object.entries(user.roles);
     const sortRoles = roles.sort((a, b) => b[1] - a[1]);
     const weapons = Object.entries(user.weapons);
     const sortWeapons = weapons.sort((a, b) => b[1] - a[1]);
     const time = (await gettime(user.squad.timeplayed)) || 0;
-    // const d = Math.floor(time / 1440);
-    // const h = Math.floor((time % 1440) / 60);
-    // const dDisplay = d > 0 ? d + "д " : "";
-    // const hDisplay = h > 0 ? h + "ч " : "";
+    const player = user.matches.history.matches;
     const roleTime1 = (await gettime(sortRoles[0][1].toString())) || 0;
     const roleTime2 = (await gettime(sortRoles[1][1].toString())) || 0;
     const role1Img = sortRoles[0][0].split("_").join("");
@@ -58,24 +54,16 @@ async function getStatsOnDiscord(dblink, steamId, message, steamApi) {
     const vehicle = await calcVehicleTime(user.possess);
     const heliTime = (await gettime(vehicle[1])) || 0;
     const heavyTime = (await gettime(vehicle[0])) || 0;
-
-    async function gettime(time) {
-      const d = Math.floor(time / 1440);
-      const h = Math.floor((time % 1440) / 60);
-      const dDisplay = d > 0 ? d + "д " : "";
-      const hDisplay = h > 0 ? h + "ч" : "";
-      return dDisplay + hDisplay;
-    }
-
+    const historyTime1 = (await gettime(player[0]?.timeplayed, "sec")) || 0;
+    const historyTime2 = (await gettime(player[1]?.timeplayed, "sec")) || 0;
+    const historyTime3 = (await gettime(player[2]?.timeplayed, "sec")) || 0;
     const killPerMatch = user.kills / user.matches.matches;
-
     const font = registerFont("./img/Tektur-Bold.ttf", {
       family: "MyFont",
     });
 
     const width = 1405;
     const height = 729;
-
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext("2d");
 
@@ -185,35 +173,37 @@ async function getStatsOnDiscord(dblink, steamId, message, steamApi) {
                 ctx.textAlign = "left";
                 ctx.fillStyle = "#efefef";
                 ctx.font = "20pt MyFont";
-                // ctx.fillText("Albasrah raas v1", 354, 565);
-                // ctx.fillText("Albasrah raas v1", 354, 605);
-                // ctx.fillText("Albasrah raas v1", 354, 645);
-                // ctx.fillText("Albasrah raas v1", 354, 685);
+                if (player[0]?.layer) {
+                  ctx.fillText(player[0].layer, 354, 575);
+                  ctx.textAlign = "right";
+                  ctx.fillText(historyTime1, 780, 575);
+                  ctx.fillText(player[0].result, 971, 575);
+                  ctx.fillText(player[0].kd, 1089, 575);
+                  ctx.fillText(player[0].kills, 1218, 575);
+                  ctx.fillText(player[0].death, 1351, 575);
+                }
 
-                // ctx.textAlign = "right";
-                // ctx.fillText("1h 10m", 780, 565);
-                // ctx.fillText("Win", 971, 565);
-                // ctx.fillText("1", 1089, 565);
-                // ctx.fillText("10", 1218, 565);
-                // ctx.fillText("10", 1351, 565);
+                if (player[1]?.layer) {
+                  ctx.textAlign = "left";
+                  ctx.fillText(player[1].layer, 354, 625);
+                  ctx.textAlign = "right";
+                  ctx.fillText(historyTime2, 780, 625);
+                  ctx.fillText(player[1].result, 971, 625);
+                  ctx.fillText(player[1].kd, 1089, 625);
+                  ctx.fillText(player[1].kills, 1218, 625);
+                  ctx.fillText(player[1].death, 1351, 625);
+                }
 
-                // ctx.fillText("1h 10m", 780, 605);
-                // ctx.fillText("Win", 971, 605);
-                // ctx.fillText("1", 1089, 605);
-                // ctx.fillText("10", 1218, 605);
-                // ctx.fillText("10", 1351, 605);
-
-                // ctx.fillText("1h 10m", 780, 645);
-                // ctx.fillText("Win", 971, 645);
-                // ctx.fillText("1", 1089, 645);
-                // ctx.fillText("10", 1218, 645);
-                // ctx.fillText("10", 1351, 645);
-
-                // ctx.fillText("1h 10m", 780, 685);
-                // ctx.fillText("Win", 971, 685);
-                // ctx.fillText("1", 1089, 685);
-                // ctx.fillText("10", 1218, 685);
-                // ctx.fillText("10", 1351, 685);
+                if (player[2]?.layer) {
+                  ctx.textAlign = "left";
+                  ctx.fillText(player[2].layer, 354, 675);
+                  ctx.textAlign = "right";
+                  ctx.fillText(historyTime3, 780, 675);
+                  ctx.fillText(player[2].result, 971, 675);
+                  ctx.fillText(player[2].kd, 1089, 675);
+                  ctx.fillText(player[2].kills, 1218, 675);
+                  ctx.fillText(player[2].death, 1351, 675);
+                }
 
                 const x0 = 20;
                 const y0 = 150;
@@ -240,34 +230,6 @@ async function getStatsOnDiscord(dblink, steamId, message, steamApi) {
                 ctx.fillStyle = "#efefef";
                 ctx.fillText("1000/10000", 159, 170);
 
-                // image
-
-                // const exampleEmbed = new EmbedBuilder()
-                //   .setColor(0x0099ff)
-                //   .setTitle(user.name.toString())
-                //   .setURL(`https://steamcommunity.com/profiles/${steamId}/`)
-                //   //.setDescription("Звание")
-                //   .setThumbnail(userInfo[0].avatarmedium)
-                //   .addFields(
-                //     // { name: "Очков опыта до повышения", value: "Очко" },
-                //     // { name: "\u200B", value: "\u200B" },
-                //     { name: "Убийств", value: user.kills.toString(), inline: true },
-                //     { name: "Смертей", value: user.death.toString(), inline: true },
-                //     { name: "Помощи", value: user.revives.toString(), inline: true },
-                //     { name: "Тимкилов", value: user.teamkills.toString(), inline: true },
-                //     { name: "Бонусов", value: user.bonuses.toString(), inline: true },
-                //     { name: "K/D", value: user.kd.toString(), inline: true },
-                //     {
-                //       name: "Время в игре",
-                //       value: `${timeplayed}ч`,
-                //       inline: true,
-                //     },
-                //     {
-                //       name: "Лучший класс",
-                //       value: role[0].split("_").join("").toUpperCase(),
-                //       inline: true,
-                //     }
-                //   );
                 const buffer = canvas.toBuffer("image/png");
                 fs.writeFileSync("./stats.png", buffer);
                 const imageToSend = new AttachmentBuilder("stats.png");
@@ -276,7 +238,6 @@ async function getStatsOnDiscord(dblink, steamId, message, steamApi) {
               .catch((err) => console.log("Image stats not found"));
           })
           .catch((err) => console.log(`Image ${role1Img} not found`));
-        //get context
       })
       .catch((err) => console.log(`Image ${role2Img} not found`));
   } catch (e) {
