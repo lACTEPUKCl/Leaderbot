@@ -49,6 +49,7 @@ client.on("ready", async () => {
     checkDonate(steamApi, tempSteamId, process.env.DONATE_URL, () => {
       tempSteamId = [];
     });
+    console.log("Проверка полученых steamID");
   }, 30000);
 
   setIntervalAsync(() => {
@@ -146,21 +147,33 @@ client.on("ready", async () => {
             );
           });
         message.delete();
+        console.log(message.author.username, "Ввел некорректный steamID");
         return;
       }
 
       if (typeof groupsId !== "undefined") {
-        const responseSteam = await fetch(
-          `https://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/?key=${steamApi}&vanityurl=${splitSteamId}`
-        );
-        const dataSteam = await responseSteam.json();
-        if (dataSteam.response.success === 1) {
-          tempSteamId.push([
-            message.author.username,
-            message.author.id,
+        try {
+          const responseSteam = await fetch(
+            `https://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/?key=${steamApi}&vanityurl=${splitSteamId}`
+          );
+          const dataSteam = await responseSteam.json();
+          console.log(
             dataSteam.response.steamid,
-            message,
-          ]);
+            `steamID пользователя ${message.author.username} получен`
+          );
+          if (dataSteam.response.success === 1) {
+            tempSteamId.push([
+              message.author.username,
+              message.author.id,
+              dataSteam.response.steamid,
+              message,
+            ]);
+          }
+        } catch (error) {
+          console.log(
+            `Не удалось получить steamID пользователя ${message.author.username}`,
+            error
+          );
         }
       }
       if (steamID64) {

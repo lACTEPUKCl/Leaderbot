@@ -7,8 +7,10 @@ function addTransaction(tempSteamId, jsonData) {
   fs.readFile(`./transactionId.json`, (err, data) => {
     if (err) return;
     let transaction = JSON.parse(data);
-    const test = transaction.transactions.find((e) => e.id === id.toString());
-    if (!test) {
+    const getTrans = transaction.transactions.find(
+      (e) => e.id === id.toString()
+    );
+    if (!getTrans) {
       transaction.transactions.push({
         id: `${id}`,
         name,
