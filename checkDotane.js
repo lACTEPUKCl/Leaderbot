@@ -10,23 +10,30 @@ async function checkDonate(steamApi, tempSteamId, donateUrl, callback) {
       let steamId = /^https?:\/\/steamcommunity.com\/id\/(?<steamId>.*)/;
       tempSteamId.forEach((element) => {
         const currentSteamId = element[2];
+
         json.data.forEach(async (jsonEl) => {
           let comment = jsonEl.comment;
-          let steamID64 = comment.match(/[0-9]{17}/);
-          let groupsId = comment.match(steamId)?.groups;
+          let steamID64 = comment.trim().match(/[0-9]{17}/);
+          let groupsId = comment.trim().match(steamId)?.groups;
           let splitSteamId = groupsId?.steamId.split("/")[0];
-
           if (typeof groupsId !== "undefined") {
-            const responseSteam = await fetch(
-              `https://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/?key=${steamApi}&vanityurl=${splitSteamId}`
-            );
-            const dataSteam = await responseSteam.json();
-            if (dataSteam.response.steamid === currentSteamId) {
-              fetchDonate(element, jsonEl);
+            try {
+              const responseSteam = await fetch(
+                `https://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/?key=${steamApi}&vanityurl=${splitSteamId}`
+              );
+              const dataSteam = await responseSteam.json();
+
+              if (dataSteam.response.steamid === currentSteamId) {
+                fetchDonate(element, jsonEl);
+                console.log(`${currentSteamId} прошел проверку`);
+              }
+            } catch (error) {
+              console.log("Не удалось получить steamID", error);
             }
           }
           if (steamID64?.[0] === currentSteamId) {
             fetchDonate(element, jsonEl);
+            console.log(`${currentSteamId} прошел проверку`);
           }
         });
       });
