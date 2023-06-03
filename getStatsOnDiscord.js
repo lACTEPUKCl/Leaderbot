@@ -4,6 +4,7 @@ import fetch from "node-fetch";
 import * as fs from "fs";
 import { loadImage, createCanvas, registerFont } from "canvas";
 import calcVehicleTime from "./calcVehicleTime.js";
+import getExp from "./getExp.js";
 
 async function gettime(time, field) {
   if (field === "sec") {
@@ -58,6 +59,7 @@ async function getStatsOnDiscord(dblink, steamId, message, steamApi) {
     const historyTime2 = (await gettime(player[1]?.timeplayed, "sec")) || 0;
     const historyTime3 = (await gettime(player[2]?.timeplayed, "sec")) || 0;
     const killPerMatch = user.kills / user.matches.matches;
+    const exp = getExp(user);
     const font = registerFont("./img/Tektur-Bold.ttf", {
       family: "MyFont",
     });
@@ -112,7 +114,7 @@ async function getStatsOnDiscord(dblink, steamId, message, steamApi) {
                 ctx.fillText("У/С", 888, 188);
                 ctx.fillText("% Побед", 1151, 188);
                 ctx.textAlign = "center";
-                ctx.fillText("Рядовой-Генерал", 152, 68);
+                ctx.fillText(exp.rankStr, 152, 68);
                 ctx.textAlign = "left";
                 ctx.fillText("Кит", 15, 275);
                 ctx.fillText("Оружие", 15, 545);
@@ -218,7 +220,7 @@ async function getStatsOnDiscord(dblink, steamId, message, steamApi) {
                 gradient.addColorStop(0.0, "green");
                 gradient.addColorStop(1.0, "#05310f");
                 ctx.clearRect(x0, y0, width1, height1);
-                const pct = 0;
+                const pct = exp.rankPct;
                 ctx.fillStyle = gradient;
                 ctx.fillRect(x0, y0, width1 * pct, height1);
 
@@ -228,7 +230,7 @@ async function getStatsOnDiscord(dblink, steamId, message, steamApi) {
                 ctx.textAlign = "center";
                 ctx.font = "17pt MyFont";
                 ctx.fillStyle = "#efefef";
-                ctx.fillText("1000/10000", 159, 170);
+                ctx.fillText(exp.expProgress, 159, 170);
 
                 const buffer = canvas.toBuffer("image/png");
                 fs.writeFileSync("./stats.png", buffer);
