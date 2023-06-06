@@ -1,4 +1,11 @@
-import { Client, GatewayIntentBits } from "discord.js";
+import {
+  Client,
+  GatewayIntentBits,
+  EmbedBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+} from "discord.js";
 import { config } from "dotenv";
 config();
 import cleaner from "./vip-cleaner.js";
@@ -9,6 +16,7 @@ import fetch from "node-fetch";
 import dateDonateExpires from "./dateDonateExpires.js";
 import getStatsOnDiscord from "./getStatsOnDiscord.js";
 import getStatsOnDiscordWithoutSteamID from "./getStatsOnDiscordWithoutSteamID.js";
+import getBanFromBattlemetrics from "./getBansOnDiscord.js";
 
 import {
   setIntervalAsync,
@@ -27,23 +35,15 @@ const client = new Client({
 });
 
 client.on("ready", async () => {
-  //getStatsOnDiscord("asd", "asd", "asd", "asd");
   console.log(`Logged in as ${client.user.tag}!`);
   const channel = client.channels.cache.get("1069615679281561600");
   const guild = client.guilds.cache.get("735515208348598292");
   const donateChannel = client.channels.cache.get("1073712072220754001");
   const channelsForStats = ["1091073082510278748", "1093615841624465498"];
+  const channelForBans = "1115705521119440937";
   const db = process.env.DATABASE_URL;
   const steamApi = process.env.STEAM_API;
   let tempSteamId = [];
-  // const username = "ACTEPUKC";
-  // const discriminator = "9551";
-  // const members = await guild.members.fetch();
-  // const member = members.find(
-  //   (m) =>
-  //     m.user.username === username && m.user.discriminator === discriminator
-  // );
-  // member.roles.add("1072902141666136125");
   setIntervalAsync(async () => {
     if (tempSteamId.length === 0) return;
     checkDonate(steamApi, tempSteamId, process.env.DONATE_URL, () => {
@@ -256,6 +256,55 @@ client.on("ready", async () => {
         }
       }
       message.delete();
+    }
+    if (channelForBans.includes(message.channelId)) {
+      getBanFromBattlemetrics(message.content)
+        .then((bans) => {
+          if (!bans[0]) {
+            message.reply(
+              `Игрок с ником/SteamID ${message.content} не найден в списках банов
+              Проверьте правильность ввода ника/SteamID и попробуйте еще раз`
+            );
+            return;
+          }
+          let timeExpires = bans[0].attributes.expires;
+          if (bans[0].attributes.expires !== null) {
+            timeExpires = bans[0].attributes.expires.split("T");
+            const date = timeExpires[0];
+            const time = timeExpires[1].split(".")[0];
+            timeExpires = `${date}  ${time}`;
+          }
+          if (timeExpires === null) {
+            timeExpires = "Perm";
+          }
+          const adminName = bans[0].attributes.reason.split("by ")[1];
+          let reason = bans[0].attributes.reason;
+          if (bans[0].attributes.reason.includes("{{duration}}")) {
+            reason = bans[0].attributes.reason.split("{{duration}},")[0];
+          }
+
+          const confirm = new ButtonBuilder()
+            .setLabel("Обжаловать бан")
+            .setStyle(ButtonStyle.Link)
+            .setURL(
+              "https://discord.com/channels/735515208348598292/1068565169694851182"
+            );
+
+          const row = new ActionRowBuilder().addComponents(confirm);
+
+          const exampleEmbed = new EmbedBuilder()
+            .setColor(0xff001a)
+            .setTitle(bans[0].meta.player)
+            .setDescription(reason)
+            .addFields(
+              { name: "Дата окончания бана:", value: timeExpires },
+              { name: "Админ выдавший наказание:", value: adminName }
+            );
+          message.reply({ embeds: [exampleEmbed], components: [row] });
+        })
+        .catch((error) => {
+          console.error("Произошла ошибка:", error.message);
+        });
     }
   });
 });
