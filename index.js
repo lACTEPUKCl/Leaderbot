@@ -258,12 +258,17 @@ client.on("ready", async () => {
       message.delete();
     }
     if (channelForBans.includes(message.channelId)) {
-      getBanFromBattlemetrics(message.content)
+      if (!message.content.match(/[0-9]{17}/)) {
+        message.reply(
+          `Проверьте правильность ввода steamID64\nSTEAMID64 можно получить на сайте https://steamid.io/`
+        );
+        return;
+      }
+      getBanFromBattlemetrics(message)
         .then((bans) => {
           if (!bans[0]) {
             message.reply(
-              `Игрок с ником/SteamID ${message.content} не найден в списках банов
-              Проверьте правильность ввода ника/SteamID и попробуйте еще раз`
+              `Игрок с SteamID ${message.content} не найден в списках банов\nПроверьте правильность ввода ника/SteamID и попробуйте еще раз`
             );
             return;
           }
