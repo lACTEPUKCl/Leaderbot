@@ -260,17 +260,17 @@ client.on("ready", async () => {
     if (channelForBans.includes(message.channelId)) {
       getBanFromBattlemetrics(message)
         .then((bans) => {
-          console.log(bans[0].relationships);
+          console.log(bans);
           if (!bans) {
             message.reply(
-              `Игрок с данным Ником/SteamID не найден в списках банов`
+              `1Игрок с данным Ником/SteamID не найден в списках банов`
             );
             return;
           }
 
           if (!bans[0]) {
             message.reply(
-              `Игрок с данным Ником/SteamID не найден в списках банов`
+              `2Игрок с данным Ником/SteamID не найден в списках банов`
             );
             return;
           }
@@ -279,7 +279,7 @@ client.on("ready", async () => {
           const currentDate = new Date();
           if (timeExpires < currentDate) {
             message.reply(
-              `Игрок с данным Ником/SteamID не найден в списках банов`
+              `3Игрок с данным Ником/SteamID не найден в списках банов`
             );
             return;
           }
