@@ -321,7 +321,7 @@ client.on("ready", async () => {
 
           const exampleEmbed = new EmbedBuilder()
             .setColor(0xff001a)
-            .setTitle(bans[0].meta.player)
+            .setTitle(bans[0].meta?.player)
             .setDescription(reason)
             .addFields(
               { name: "Дата окончания бана:", value: timeExpires },
