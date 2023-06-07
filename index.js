@@ -277,28 +277,34 @@ client.on("ready", async () => {
 
           let timeExpires = new Date(bans[0].attributes.expires);
           const currentDate = new Date();
-          if (timeExpires < currentDate) {
+          console.log(
+            timeExpires.getTime() === 0,
+            currentDate,
+            timeExpires < currentDate,
+            bans[0].attributes.expires,
+            !bans[0].attributes.expires === null
+          );
+
+          if (timeExpires < currentDate && timeExpires.getTime() !== 0) {
             message.reply(
               `3Игрок с данным Ником/SteamID не найден в списках банов`
             );
             return;
           }
 
-          if (bans[0].attributes.expires !== null) {
-            timeExpires = bans[0].attributes.expires.split("T");
-            const date = timeExpires[0];
-            const time = timeExpires[1].split(".")[0];
-            timeExpires = `${date}  ${time}`;
-          }
-
-          if (timeExpires === null) {
+          if (timeExpires.getTime() === 0) {
             timeExpires = "Perm";
           }
 
-          if (bans[0].attributes.reason.split("by ")[1]) {
-            const adminName = bans[0].attributes.reason.split("by ")[1];
-          }
+          // if (bans[0].attributes.expires !== null) {
+          //   timeExpires = bans[0].attributes.expires.split("T");
+          //   const date = timeExpires[0];
+          //   const time = timeExpires[1].split(".")[0];
+          //   timeExpires = `${date}  ${time}`;
+          // }
 
+          const adminName = bans[0].attributes.reason.split("by ")[1];
+          console.log(adminName);
           let reason = bans[0].attributes.reason;
           if (bans[0].attributes.reason.includes("{{duration}}")) {
             reason = bans[0].attributes.reason.split("{{duration}},")[0];
