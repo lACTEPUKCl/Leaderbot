@@ -262,7 +262,7 @@ client.on("ready", async () => {
         .then((bans) => {
           if (!bans[0]) {
             message.reply(
-              `Игрок с Ником/SteamID "${message.content}" не найден в списках банов`
+              `Игрок с Ником/SteamID **${message.content}** не найден в списках банов`
             );
             return;
           }
@@ -271,7 +271,7 @@ client.on("ready", async () => {
           const currentDate = new Date();
           if (bans[0].attributes.expires < currentDate.toString()) {
             message.reply(
-              `Игрок с Ником/SteamID "${message.content}" не найден в списках банов`
+              `Игрок с Ником/SteamID **${message.content}** не найден в списках банов`
             );
             return;
           }
