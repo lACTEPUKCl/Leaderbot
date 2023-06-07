@@ -296,12 +296,12 @@ client.on("ready", async () => {
             timeExpires = "Perm";
           }
 
-          // if (bans[0].attributes.expires !== null) {
-          //   timeExpires = bans[0].attributes.expires.split("T");
-          //   const date = timeExpires[0];
-          //   const time = timeExpires[1].split(".")[0];
-          //   timeExpires = `${date}  ${time}`;
-          // }
+          if (bans[0].attributes.expires !== null) {
+            timeExpires = bans[0].attributes.expires.split("T");
+            const date = timeExpires[0];
+            const time = timeExpires[1].split(".")[0];
+            timeExpires = `${date}  ${time}`;
+          }
 
           const adminName = bans[0].attributes.reason.split("by ")[1];
           console.log(adminName);
