@@ -14,11 +14,7 @@ async function getBanFromBattlemetrics(message) {
     });
     const { data } = response;
     return data.data;
-  } catch (error) {
-    message.reply(
-      `Игрок с Ником/SteamID ${message.content} не найден в списках банов`
-    );
-  }
+  } catch (error) {}
 }
 
 export default getBanFromBattlemetrics;
