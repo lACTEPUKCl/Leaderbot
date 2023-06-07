@@ -262,26 +262,23 @@ client.on("ready", async () => {
         .then((bans) => {
           if (!bans) {
             message.reply(
-              `1Игрок с Ником/SteamID **${message.content}** не найден в списках банов`
+              `Игрок с Ником/SteamID **${message.content}** не найден в списках банов`
             );
             return;
           }
 
           if (!bans[0]) {
             message.reply(
-              `2Игрок с Ником/SteamID **${message.content}** не найден в списках банов`
+              `Игрок с Ником/SteamID **${message.content}** не найден в списках банов`
             );
             return;
           }
 
           let timeExpires = bans[0].attributes.expires;
           const currentDate = new Date();
-          console.log(timeExpires, currentDate);
-          console.log(bans[0].attributes.expires > currentDate.toString());
-
           if (bans[0].attributes.expires > currentDate.toString()) {
             message.reply(
-              `3Игрок с Ником/SteamID **${message.content}** не найден в списках банов`
+              `Игрок с Ником/SteamID **${message.content}** не найден в списках банов`
             );
             return;
           }

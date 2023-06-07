@@ -3,9 +3,9 @@ import { config } from "dotenv";
 config();
 
 async function getBanFromBattlemetrics(message) {
-  console.log(message.content);
   const apiKey = process.env.BATTLEMETRICS_API_KEY;
-  const searchUrl = `https://api.battlemetrics.com/bans?filter[organization]=22378&filter[search]="${message.content}"`;
+  const name = encodeURI(message.content);
+  const searchUrl = `https://api.battlemetrics.com/bans?filter[organization]=22378&filter[search]="${name}"`;
 
   try {
     const response = await axios.get(searchUrl, {
@@ -13,7 +13,6 @@ async function getBanFromBattlemetrics(message) {
         Authorization: `Bearer ${apiKey}`,
       },
     });
-    console.log(data);
     const { data } = response;
     return data.data;
   } catch (error) {
