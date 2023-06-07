@@ -258,30 +258,35 @@ client.on("ready", async () => {
       message.delete();
     }
     if (channelForBans.includes(message.channelId)) {
-      if (!message.content.match(/[0-9]{17}/)) {
-        message.reply(
-          `Проверьте правильность ввода steamID64\nSTEAMID64 можно получить на сайте https://steamid.io/`
-        );
-        return;
-      }
       getBanFromBattlemetrics(message)
         .then((bans) => {
           if (!bans[0]) {
             message.reply(
-              `Игрок с SteamID ${message.content} не найден в списках банов\nПроверьте правильность ввода ника/SteamID и попробуйте еще раз`
+              `Игрок с Ником/SteamID ${message.content} не найден в списках банов`
             );
             return;
           }
+
           let timeExpires = bans[0].attributes.expires;
+          const currentDate = new Date();
+          if (bans[0].attributes.expires < currentDate.toString()) {
+            message.reply(
+              "Игрок с Ником/SteamID ${message.content} не найден в списках банов"
+            );
+            return;
+          }
+
           if (bans[0].attributes.expires !== null) {
             timeExpires = bans[0].attributes.expires.split("T");
             const date = timeExpires[0];
             const time = timeExpires[1].split(".")[0];
             timeExpires = `${date}  ${time}`;
           }
+
           if (timeExpires === null) {
             timeExpires = "Perm";
           }
+
           const adminName = bans[0].attributes.reason.split("by ")[1];
           let reason = bans[0].attributes.reason;
           if (bans[0].attributes.reason.includes("{{duration}}")) {

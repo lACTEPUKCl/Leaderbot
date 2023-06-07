@@ -4,7 +4,7 @@ config();
 
 async function getBanFromBattlemetrics(message) {
   const apiKey = process.env.BATTLEMETRICS_API_KEY;
-  const searchUrl = `https://api.battlemetrics.com/bans?filter[organization]=22378&filter[search]=${message.content}`;
+  const searchUrl = `https://api.battlemetrics.com/bans?filter[organization]=22378&filter[search]="${message.content}"`;
 
   try {
     const response = await axios.get(searchUrl, {
@@ -16,7 +16,7 @@ async function getBanFromBattlemetrics(message) {
     return data.data;
   } catch (error) {
     message.reply(
-      `Игрок с SteamID ${message.content} не найден в списках банов\nПроверьте правильность ввода ника/SteamID и попробуйте еще раз`
+      `Игрок с Ником/SteamID ${message.content} не найден в списках банов`
     );
   }
 }
