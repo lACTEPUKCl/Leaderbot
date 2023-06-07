@@ -260,7 +260,6 @@ client.on("ready", async () => {
     if (channelForBans.includes(message.channelId)) {
       getBanFromBattlemetrics(message)
         .then((bans) => {
-          console.log(bans);
           if (!bans) {
             message.reply(
               `1Игрок с данным Ником/SteamID не найден в списках банов`
@@ -277,14 +276,6 @@ client.on("ready", async () => {
 
           let timeExpires = new Date(bans[0].attributes.expires);
           const currentDate = new Date();
-          console.log(
-            timeExpires.getTime() === 0,
-            currentDate,
-            timeExpires < currentDate,
-            bans[0].attributes.expires,
-            !bans[0].attributes.expires === null
-          );
-
           if (timeExpires < currentDate && timeExpires.getTime() !== 0) {
             message.reply(
               `3Игрок с данным Ником/SteamID не найден в списках банов`
@@ -296,9 +287,9 @@ client.on("ready", async () => {
             timeExpires = "Perm";
           }
 
-          let playerName = bans[0].meta.player;
-          if (!bans[0].meta.player) {
-            playerName = "Unknown";
+          let playerName = "Unknown";
+          if (bans[0].meta?.player) {
+            playerName = bans[0].meta.player;
           }
 
           if (bans[0].attributes.expires !== null) {
@@ -309,7 +300,6 @@ client.on("ready", async () => {
           }
 
           const adminName = bans[0].attributes.reason.split("by ")[1];
-          console.log(adminName);
           let reason = bans[0].attributes.reason;
           if (bans[0].attributes.reason.includes("{{duration}}")) {
             reason = bans[0].attributes.reason.split("{{duration}},")[0];
@@ -326,7 +316,7 @@ client.on("ready", async () => {
 
           const exampleEmbed = new EmbedBuilder()
             .setColor(0xff001a)
-            .setTitle(bans[0].meta.player)
+            .setTitle(playerName)
             .setDescription(reason)
             .addFields(
               { name: "Дата окончания бана:", value: timeExpires },
