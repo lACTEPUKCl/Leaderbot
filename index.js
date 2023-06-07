@@ -296,6 +296,11 @@ client.on("ready", async () => {
             timeExpires = "Perm";
           }
 
+          let playerName = bans[0].meta.player;
+          if (!bans[0].meta.player) {
+            playerName = "Unknown";
+          }
+
           if (bans[0].attributes.expires !== null) {
             timeExpires = bans[0].attributes.expires.split("T");
             const date = timeExpires[0];
@@ -321,7 +326,7 @@ client.on("ready", async () => {
 
           const exampleEmbed = new EmbedBuilder()
             .setColor(0xff001a)
-            .setTitle(bans[0].meta?.player)
+            .setTitle(bans[0].meta.player)
             .setDescription(reason)
             .addFields(
               { name: "Дата окончания бана:", value: timeExpires },
