@@ -262,14 +262,14 @@ client.on("ready", async () => {
         .then((bans) => {
           if (!bans) {
             message.reply(
-              `Игрок с Ником/SteamID **${message.content}** не найден в списках банов`
+              `1Игрок с Ником/SteamID **${message.content}** не найден в списках банов`
             );
             return;
           }
 
           if (!bans[0]) {
             message.reply(
-              `Игрок с Ником/SteamID **${message.content}** не найден в списках банов`
+              `2Игрок с Ником/SteamID **${message.content}** не найден в списках банов`
             );
             return;
           }
@@ -278,9 +278,10 @@ client.on("ready", async () => {
           const currentDate = new Date();
           console.log(timeExpires, currentDate);
           console.log(bans[0].attributes.expires > currentDate.toString());
+
           if (bans[0].attributes.expires > currentDate.toString()) {
             message.reply(
-              `Игрок с Ником/SteamID **${message.content}** не найден в списках банов`
+              `3Игрок с Ником/SteamID **${message.content}** не найден в списках банов`
             );
             return;
           }
