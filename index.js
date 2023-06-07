@@ -260,6 +260,7 @@ client.on("ready", async () => {
     if (channelForBans.includes(message.channelId)) {
       getBanFromBattlemetrics(message)
         .then((bans) => {
+          console.log(bans[0].relationships);
           if (!bans) {
             message.reply(
               `Игрок с данным Ником/SteamID не найден в списках банов`
@@ -274,9 +275,9 @@ client.on("ready", async () => {
             return;
           }
 
-          let timeExpires = bans[0].attributes.expires;
+          let timeExpires = new Date(bans[0].attributes.expires);
           const currentDate = new Date();
-          if (bans[0].attributes.expires > currentDate.toString()) {
+          if (timeExpires < currentDate) {
             message.reply(
               `Игрок с данным Ником/SteamID не найден в списках банов`
             );
@@ -294,7 +295,10 @@ client.on("ready", async () => {
             timeExpires = "Perm";
           }
 
-          const adminName = bans[0].attributes.reason.split("by ")[1];
+          if (bans[0].attributes.reason.split("by ")[1]) {
+            const adminName = bans[0].attributes.reason.split("by ")[1];
+          }
+
           let reason = bans[0].attributes.reason;
           if (bans[0].attributes.reason.includes("{{duration}}")) {
             reason = bans[0].attributes.reason.split("{{duration}},")[0];
