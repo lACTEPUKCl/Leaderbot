@@ -276,7 +276,7 @@ client.on("ready", async () => {
 
           let timeExpires = bans[0].attributes.expires;
           const currentDate = new Date();
-          if (bans[0].attributes.expires < currentDate.toString()) {
+          if (bans[0].attributes.expires > currentDate.toString()) {
             message.reply(
               `Игрок с данным Ником/SteamID не найден в списках банов`
             );
