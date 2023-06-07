@@ -260,7 +260,7 @@ client.on("ready", async () => {
     if (channelForBans.includes(message.channelId)) {
       getBanFromBattlemetrics(message)
         .then((bans) => {
-          if (!bans[0]) {
+          if (!bans) {
             message.reply(
               `Игрок с Ником/SteamID ${message.content} не найден в списках банов`
             );
