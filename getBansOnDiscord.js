@@ -16,7 +16,9 @@ async function getBanFromBattlemetrics(message) {
     console.log(data);
     const { data } = response;
     return data.data;
-  } catch (error) {}
+  } catch (error) {
+    console.log(error);
+  }
 }
 
 export default getBanFromBattlemetrics;
