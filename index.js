@@ -17,6 +17,7 @@ import dateDonateExpires from "./dateDonateExpires.js";
 import getStatsOnDiscord from "./getStatsOnDiscord.js";
 import getStatsOnDiscordWithoutSteamID from "./getStatsOnDiscordWithoutSteamID.js";
 import getBanFromBattlemetrics from "./getBansOnDiscord.js";
+import moment from "moment-timezone";
 
 import {
   setIntervalAsync,
@@ -262,41 +263,42 @@ client.on("ready", async () => {
         .then((bans) => {
           if (!bans) {
             message.reply(
-              `1Игрок с данным Ником/SteamID не найден в списках банов`
+              "Игрок с данным Ником/SteamID не найден в списках банов"
             );
             return;
           }
 
           if (!bans[0]) {
             message.reply(
-              `2Игрок с данным Ником/SteamID не найден в списках банов`
+              "Игрок с данным Ником/SteamID не найден в списках банов"
             );
             return;
           }
 
-          let timeExpires = new Date(bans[0].attributes.expires);
-          const currentDate = new Date();
-          if (timeExpires < currentDate && timeExpires.getTime() !== 0) {
+          let timeExpires = moment(bans[0].attributes.expires).tz(
+            "Europe/Moscow"
+          );
+          const currentDate = moment().tz("Europe/Moscow");
+
+          if (
+            timeExpires.isBefore(currentDate) &&
+            timeExpires.valueOf() !== 0
+          ) {
             message.reply(
-              `3Игрок с данным Ником/SteamID не найден в списках банов`
+              "Игрок с данным Ником/SteamID не найден в списках банов"
             );
             return;
           }
 
-          if (timeExpires.getTime() === 0) {
+          if (timeExpires.valueOf() === 0) {
             timeExpires = "Perm";
+          } else {
+            timeExpires = timeExpires.format("YYYY-MM-DD HH:mm");
           }
 
           let playerName = "Unknown";
           if (bans[0].meta?.player) {
             playerName = bans[0].meta.player;
-          }
-
-          if (bans[0].attributes.expires !== null) {
-            timeExpires = bans[0].attributes.expires.split("T");
-            const date = timeExpires[0];
-            const time = timeExpires[1].split(".")[0];
-            timeExpires = `${date}  ${time}`;
           }
 
           const adminName = bans[0].attributes.reason.split("by ")[1];
@@ -322,6 +324,7 @@ client.on("ready", async () => {
               { name: "Дата окончания бана:", value: timeExpires },
               { name: "Админ выдавший наказание:", value: adminName }
             );
+
           message.reply({ embeds: [exampleEmbed], components: [row] });
         })
         .catch((error) => {
