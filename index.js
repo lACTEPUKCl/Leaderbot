@@ -282,7 +282,7 @@ client.on("ready", async () => {
 
           if (
             timeExpires.isBefore(currentDate) &&
-            timeExpires.valueOf() !== 0
+            timeExpires.toString().includes("Invalid date")
           ) {
             message.reply(
               "Игрок с данным Ником/SteamID не найден в списках банов"
@@ -290,7 +290,7 @@ client.on("ready", async () => {
             return;
           }
 
-          if (timeExpires.valueOf() === 0) {
+          if (timeExpires.toString().includes("Invalid date")) {
             timeExpires = "Perm";
           } else {
             timeExpires = timeExpires.format("YYYY-MM-DD HH:mm");
