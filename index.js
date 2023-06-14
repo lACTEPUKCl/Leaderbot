@@ -51,7 +51,7 @@ client.on("ready", async () => {
       tempSteamId = [];
     });
     console.log("Проверка полученых steamID");
-  }, 30000);
+  }, 5000);
 
   setIntervalAsync(() => {
     const getStats = [
@@ -200,7 +200,7 @@ client.on("ready", async () => {
         );
       };
       message
-        .awaitReactions({ filter, max: 1, time: 60000, errors: ["time"] })
+        .awaitReactions({ filter, max: 1, time: 120000, errors: ["time"] })
         .then((collected) => {
           const reaction = collected.first();
           if (typeof reaction == "undefined") return;
