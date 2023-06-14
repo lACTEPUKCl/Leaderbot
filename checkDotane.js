@@ -8,7 +8,7 @@ async function checkDonate(steamApi, tempSteamId, donateUrl, callback) {
       callback();
       const json = await response.json();
       const steamIdRegex = /^https?:\/\/steamcommunity.com\/id\/(?<steamId>.*)/;
-
+      console.log("response");
       for (const element of tempSteamId) {
         const currentSteamId = element[2];
 
@@ -24,7 +24,7 @@ async function checkDonate(steamApi, tempSteamId, donateUrl, callback) {
                 `https://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/?key=${steamApi}&vanityurl=${splitSteamId}`
               );
               const dataSteam = await responseSteam.json();
-
+              console.log("dataSteam", dataSteam);
               if (dataSteam.response.steamid === currentSteamId) {
                 fetchDonate(element, jsonEl);
                 console.log(`${currentSteamId} прошел проверку`);
@@ -40,6 +40,7 @@ async function checkDonate(steamApi, tempSteamId, donateUrl, callback) {
             console.log(`${currentSteamId} прошел проверку`);
           }
         }
+        console.log("Закончил проверку");
       }
     }
   } catch (error) {
