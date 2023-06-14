@@ -18,11 +18,11 @@ function addTransaction(tempSteamId, jsonData) {
       });
       creater.vipCreater(steamId, name, sum, discorId);
       message.react("👍");
+      let newData = JSON.stringify(transaction);
+      fs.writeFile(`./transactionId.json`, newData, (err) => {
+        if (err) return;
+      });
     }
-    let newData = JSON.stringify(transaction);
-    fs.writeFile(`./transactionId.json`, newData, (err) => {
-      if (err) return;
-    });
   });
 }
 export default addTransaction;
