@@ -263,14 +263,14 @@ client.on("ready", async () => {
         .then((bans) => {
           if (!bans) {
             message.reply(
-              "1Игрок с данным Ником/SteamID не найден в списках банов"
+              "Игрок с данным Ником/SteamID не найден в списках банов"
             );
             return;
           }
 
           if (!bans[0]) {
             message.reply(
-              "2Игрок с данным Ником/SteamID не найден в списках банов"
+              "Игрок с данным Ником/SteamID не найден в списках банов"
             );
             return;
           }
@@ -285,7 +285,7 @@ client.on("ready", async () => {
             timeExpires.valueOf() !== 0
           ) {
             message.reply(
-              "3Игрок с данным Ником/SteamID не найден в списках банов"
+              "Игрок с данным Ником/SteamID не найден в списках банов"
             );
             return;
           }
