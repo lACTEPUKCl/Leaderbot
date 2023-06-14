@@ -3,19 +3,21 @@ import fetch from "node-fetch";
 
 async function checkDonate(steamApi, tempSteamId, donateUrl, callback) {
   try {
-    let response = await fetch(donateUrl);
+    const response = await fetch(donateUrl);
     if (response.ok) {
       callback();
-      let json = await response.json();
-      let steamId = /^https?:\/\/steamcommunity.com\/id\/(?<steamId>.*)/;
-      tempSteamId.forEach((element) => {
+      const json = await response.json();
+      const steamIdRegex = /^https?:\/\/steamcommunity.com\/id\/(?<steamId>.*)/;
+
+      for (const element of tempSteamId) {
         const currentSteamId = element[2];
 
-        json.data.forEach(async (jsonEl) => {
-          let comment = jsonEl.comment;
-          let steamID64 = comment.trim().match(/[0-9]{17}/);
-          let groupsId = comment.trim().match(steamId)?.groups;
-          let splitSteamId = groupsId?.steamId.split("/")[0];
+        for (const jsonEl of json.data) {
+          const comment = jsonEl.comment;
+          const steamID64 = comment.trim().match(/[0-9]{17}/);
+          const groupsId = comment.trim().match(steamIdRegex)?.groups;
+          const splitSteamId = groupsId?.steamId.split("/")[0];
+
           if (typeof groupsId !== "undefined") {
             try {
               const responseSteam = await fetch(
@@ -29,17 +31,22 @@ async function checkDonate(steamApi, tempSteamId, donateUrl, callback) {
               }
             } catch (error) {
               console.log("Не удалось получить steamID", error);
+              throw error;
             }
           }
+
           if (steamID64?.[0] === currentSteamId) {
             fetchDonate(element, jsonEl);
             console.log(`${currentSteamId} прошел проверку`);
           }
-        });
-      });
+        }
+      }
     }
-  } catch (e) {
-    console.log(e);
+  } catch (error) {
+    console.log(error);
+    setTimeout(() => {
+      checkDonate(steamApi, tempSteamId, donateUrl, callback);
+    }, 30000);
   }
 }
 
