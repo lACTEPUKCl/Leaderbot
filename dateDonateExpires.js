@@ -10,7 +10,7 @@ function dateDonateExpires(discordId, adminUrl, message) {
       console.error(err);
       return;
     }
-    data.split("\r\n").map((e) => {
+    data.split("\r\n").some((e) => {
       const user = e.match(regexp);
       if (user) {
         if (user.toString().includes(discordId)) {
@@ -19,6 +19,7 @@ function dateDonateExpires(discordId, adminUrl, message) {
             currentUser[0].toString().match(/[0-9]{2}\.[0-9]{2}\.[0-9]{4}/)[0]
           );
           message.reply(`Дата окончания Vip статуса - ${date.toString()}`);
+          return true;
         }
       }
     });
