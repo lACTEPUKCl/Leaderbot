@@ -279,11 +279,8 @@ client.on("ready", async () => {
             "Europe/Moscow"
           );
           const currentDate = moment().tz("Europe/Moscow");
-
-          if (
-            timeExpires.isBefore(currentDate) &&
-            timeExpires.toString().includes("Invalid date")
-          ) {
+          console.log(timeExpires.isBefore(currentDate));
+          if (timeExpires.isBefore(currentDate)) {
             message.reply(
               "Игрок с данным Ником/SteamID не найден в списках банов"
             );
