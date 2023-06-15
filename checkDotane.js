@@ -31,7 +31,7 @@ async function checkDonate(steamApi, tempSteamId, donateUrl, callback) {
               }
             } catch (error) {
               console.log("Не удалось получить steamID");
-              throw error;
+              throw new Error(error);
             }
           }
 
