@@ -11,12 +11,13 @@ function getStatsOnDiscordWithoutSteamID(db, adminUrl, message, steamApi) {
       return;
     }
 
-    data.split("\r\n").map((e) => {
+    data.split("\r\n").some((e) => {
       const user = e.match(regexp);
       if (user) {
         const getUser = user.filter((el) => el.includes(message.author.id));
         if (getUser.length > 0) {
           steamId.push(getUser.toString().match(/[0-9]{17}/));
+          return true;
         }
       }
     });

@@ -8,7 +8,7 @@ async function checkDonate(steamApi, tempSteamId, donateUrl, callback) {
       callback();
       const json = await response.json();
       const steamIdRegex = /^https?:\/\/steamcommunity.com\/id\/(?<steamId>.*)/;
-      console.log("response");
+      console.log("response", tempSteamId);
       for (const element of tempSteamId) {
         const currentSteamId = element[2];
 
@@ -17,7 +17,13 @@ async function checkDonate(steamApi, tempSteamId, donateUrl, callback) {
           const steamID64 = comment.trim().match(/[0-9]{17}/);
           const groupsId = comment.trim().match(steamIdRegex)?.groups;
           const splitSteamId = groupsId?.steamId.split("/")[0];
-
+          console.log("splitSteamId", splitSteamId);
+          console.log("groupsId", groupsId, typeof groupsId !== "undefined");
+          console.log(
+            "steamID64",
+            steamID64,
+            steamID64?.[0] === currentSteamId
+          );
           if (typeof groupsId !== "undefined") {
             try {
               const responseSteam = await fetch(
@@ -28,6 +34,7 @@ async function checkDonate(steamApi, tempSteamId, donateUrl, callback) {
               if (dataSteam.response.steamid === currentSteamId) {
                 fetchDonate(element, jsonEl);
                 console.log(`${currentSteamId} прошел проверку`);
+                break;
               }
             } catch (error) {
               console.log("Не удалось получить steamID");
@@ -38,6 +45,7 @@ async function checkDonate(steamApi, tempSteamId, donateUrl, callback) {
           if (steamID64?.[0] === currentSteamId) {
             fetchDonate(element, jsonEl);
             console.log(`${currentSteamId} прошел проверку`);
+            break;
           }
         }
         console.log("Закончил проверку");
