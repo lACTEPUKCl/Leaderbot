@@ -10,30 +10,15 @@ async function sortUsers(db, sort) {
     const db = clientdb.db(dbName);
     const collection = db.collection(dbCollection);
     const result = await collection
-      .find({ kills: { $gte: 500 } })
+      .find({ "matches.matches": { $gte: 50 } })
       .sort({ [sort]: -1 })
       .limit(20)
       .toArray();
-    const players = [];
-    let i = 0;
-    for (const key in result) {
-      const a = result[key];
-      i = i + 1;
-      players.push(
-        `(${i}) ` +
-          a.name +
-          ": У: " +
-          a.kills +
-          " С: " +
-          a.death +
-          " П: " +
-          a.revives +
-          " ТK: " +
-          a.teamkills +
-          " K/D: " +
-          a.kd
-      );
-    }
+    const players = result.map((player) => {
+      const { name, kills, death, revives, teamkills, kd, matches } = player;
+      const matchesMatches = matches.matches;
+      return `${name} ${kills} ${death} ${revives} ${teamkills} ${kd} ${matchesMatches}`;
+    });
     return players;
   } catch (e) {
     console.error(e);

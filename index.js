@@ -38,6 +38,7 @@ const client = new Client({
 client.on("ready", async () => {
   console.log(`Logged in as ${client.user.tag}!`);
   const channel = client.channels.cache.get("1069615679281561600");
+  const testChannel = client.channels.cache.get("1119060668046389308");
   const guild = client.guilds.cache.get("735515208348598292");
   const donateChannel = client.channels.cache.get("1073712072220754001");
   const channelsForStats = ["1091073082510278748", "1093615841624465498"];
