@@ -4,6 +4,7 @@ import * as fs from "fs";
 import { loadImage, createCanvas, registerFont } from "canvas";
 
 function getNickname(player) {
+  if (!player) return "";
   const splitName = player.split(/\s+/);
   const filteredNickname = splitName.filter((name) => isNaN(name));
   const result = filteredNickname.join(" ");
@@ -11,6 +12,7 @@ function getNickname(player) {
 }
 
 function getStats(player, sort) {
+  if (!player) return "";
   const numbers = player.split(/\s+/).filter((num) => !isNaN(num));
   const stats = ["kills", "death", "revives", "teamkills", "kd", "matches"];
 
@@ -40,17 +42,25 @@ function getColumnName(sort) {
   return null;
 }
 
-async function editEmbed({
+async function leaderboard({
   channel,
   db,
   sort,
   messageId,
   authorName,
   seconds,
+  status,
+  channelTemp,
 }) {
   setTimeout(async () => {
-    const players = await sortUsers(db, sort);
-    const message = await channel.messages.fetch(messageId);
+    const players = await sortUsers(db, sort, status);
+    let message;
+
+    if (!channelTemp) {
+      message = await channel.messages.fetch(messageId);
+    } else if (Object.keys(channelTemp).length > 0) {
+      message = await channelTemp.messages.fetch(messageId);
+    }
 
     const playersTable = Array(20)
       .fill(0)
@@ -105,4 +115,4 @@ async function editEmbed({
     message.edit({ files: [imageToSend] });
   }, seconds);
 }
-export default editEmbed;
+export default leaderboard;

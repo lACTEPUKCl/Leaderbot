@@ -9,7 +9,7 @@ import {
 import { config } from "dotenv";
 config();
 import cleaner from "./vip-cleaner.js";
-import editEmbed from "./editEmbed.js";
+import leaderboard from "./leaderboard.js";
 import getDonate from "./getDonate.js";
 import checkDonate from "./checkDotane.js";
 import fetch from "node-fetch";
@@ -38,7 +38,7 @@ const client = new Client({
 client.on("ready", async () => {
   console.log(`Logged in as ${client.user.tag}!`);
   const channel = client.channels.cache.get("1069615679281561600");
-  const testChannel = client.channels.cache.get("1119060668046389308");
+  const channelTemp = client.channels.cache.get("1119326545572544562");
   const guild = client.guilds.cache.get("735515208348598292");
   const donateChannel = client.channels.cache.get("1073712072220754001");
   const channelsForStats = ["1091073082510278748", "1093615841624465498"];
@@ -56,45 +56,105 @@ client.on("ready", async () => {
 
   setIntervalAsync(() => {
     const getStats = [
-      editEmbed({
+      leaderboard({
         channel,
         db,
         sort: "kills",
         messageId: "1069615769610108938",
         authorName: "Топ 20 игроков по убийствам",
         seconds: 1000,
+        status: "main",
       }),
-      editEmbed({
+      leaderboard({
         channel,
         db,
         sort: "death",
         messageId: "1069615861582811178",
         authorName: "Топ 20 игроков по смертям",
         seconds: 5000,
+        status: "main",
       }),
-      editEmbed({
+      leaderboard({
         channel,
         db,
         sort: "revives",
         messageId: "1069615953438048276",
         authorName: "Топ 20 медиков",
         seconds: 10000,
+        status: "main",
       }),
-      editEmbed({
+      leaderboard({
         channel,
         db,
         sort: "teamkills",
         messageId: "1069616004457578627",
         authorName: "Топ 20 тимкилеров",
         seconds: 15000,
+        status: "main",
       }),
-      editEmbed({
+      leaderboard({
         channel,
         db,
         sort: "kd",
         messageId: "1069616217884741693",
         authorName: "Топ 20 игроков по соотношению убийств к смертям",
         seconds: 20000,
+        status: "main",
+      }),
+    ];
+  }, 600000);
+
+  setIntervalAsync(() => {
+    const getStats = [
+      leaderboard({
+        channel,
+        db,
+        sort: "kills",
+        messageId: "1119327644585037884",
+        authorName: "Топ 20 игроков по убийствам",
+        seconds: 1000,
+        status: "temp",
+        channelTemp,
+      }),
+      leaderboard({
+        channel,
+        db,
+        sort: "death",
+        messageId: "1119327655217594389",
+        authorName: "Топ 20 игроков по смертям",
+        seconds: 5000,
+        status: "temp",
+        channelTemp,
+      }),
+      leaderboard({
+        channel,
+        db,
+        sort: "revives",
+        messageId: "1119327661202886789",
+        authorName: "Топ 20 медиков",
+        seconds: 10000,
+        status: "temp",
+        channelTemp,
+      }),
+      leaderboard({
+        channel,
+        db,
+        sort: "teamkills",
+        messageId: "1119327665392980089",
+        authorName: "Топ 20 тимкилеров",
+        seconds: 15000,
+        status: "temp",
+        channelTemp,
+      }),
+      leaderboard({
+        channel,
+        db,
+        sort: "kd",
+        messageId: "1119327669188841502",
+        authorName: "Топ 20 игроков по соотношению убийств к смертям",
+        seconds: 20000,
+        status: "temp",
+        channelTemp,
       }),
     ];
   }, 600000);
@@ -122,6 +182,18 @@ client.on("ready", async () => {
 
   client.on("messageCreate", async (message) => {
     if (message.author.bot) return;
+    if (message.channelId === "1119326545572544562") {
+      const exampleEmbed = new EmbedBuilder()
+        .setColor(0xff001a)
+        .setTitle("asd")
+        .setDescription("123")
+        .addFields(
+          { name: "123", value: "123" },
+          { name: "123", value: "123" }
+        );
+
+      channelTemp.send({ embeds: [exampleEmbed] });
+    }
     if (message.channelId === "1073712072220754001")
       getDonate(process.env.DONATE_URL, donateChannel);
     if (message.channelId === "819484295709851649") {

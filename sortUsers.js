@@ -1,16 +1,22 @@
 import { MongoClient } from "mongodb";
 
-async function sortUsers(db, sort) {
+async function sortUsers(db, sort, status) {
   const clientdb = new MongoClient(db);
   const dbName = "SquadJS";
-  const dbCollection = "mainstats";
+  let dbCollection = "mainstats";
+  let count = 50;
+
+  if (status === "temp") {
+    count = 5;
+    dbCollection = "tempstats";
+  }
 
   try {
     await clientdb.connect();
     const db = clientdb.db(dbName);
     const collection = db.collection(dbCollection);
     const result = await collection
-      .find({ "matches.matches": { $gte: 50 } })
+      .find({ "matches.matches": { $gte: count } })
       .sort({ [sort]: -1 })
       .limit(20)
       .toArray();
