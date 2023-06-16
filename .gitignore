@@ -4,6 +4,7 @@
 transactionId.json
 config-test*.json
 stats.png
+leaderboard.png
 
 # Dependencies
 node_modules/
