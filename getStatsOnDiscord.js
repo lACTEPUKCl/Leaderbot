@@ -60,7 +60,7 @@ async function getStatsOnDiscord(dblink, steamId, message, steamApi) {
     const historyTime3 = (await gettime(player[2]?.timeplayed, "sec")) || 0;
     const killPerMatch = user.kills / user.matches.matches;
     const exp = getExp(user);
-    const font = registerFont("./img/Tektur-Bold.ttf", {
+    registerFont("./img/Tektur-Bold.ttf", {
       family: "MyFont",
     });
 
