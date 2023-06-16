@@ -63,7 +63,7 @@ async function editEmbed({
         registerFont("./img/Tektur-Regular.ttf", {
           family: "MyFont",
         });
-        loadImage("./img/leaderboard.png").then((img) => {
+        loadImage("./img/leaderboarddefault.png").then((img) => {
           ctx.drawImage(img, 0, 0, width, height);
 
           ctx.fillStyle = "#efefef";
