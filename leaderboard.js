@@ -70,14 +70,14 @@ async function leaderboard({
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext("2d");
     registerFont("./img/Tektur-Regular.ttf", {
-      family: "MyFont",
+      family: "MyFont1",
     });
 
     const img = await loadImage("./img/leaderboarddefault.png");
     ctx.drawImage(img, 0, 0, width, height);
 
     ctx.fillStyle = "#efefef";
-    ctx.font = "20pt MyFont";
+    ctx.font = "20pt MyFont1";
     ctx.textAlign = "left";
 
     const startTextY = 148;
@@ -101,7 +101,7 @@ async function leaderboard({
     }
     ctx.textAlign = "left";
     ctx.fillText(authorName, 112, 50);
-    ctx.font = "12pt MyFont";
+    ctx.font = "12pt MyFont1";
     ctx.textAlign = "right";
     ctx.fillText("Ранг", 65, 102);
     ctx.fillText("Игрок", 160, 102);
