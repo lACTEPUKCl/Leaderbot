@@ -72,65 +72,65 @@ async function editEmbed({
           ctx.fillText(getNickname(playersTable[0]), 112, 148); // Ник1
           ctx.fillText(getNickname(playersTable[1]), 112, 205); // Ник2
           ctx.fillText(getNickname(playersTable[2]), 112, 262); // Ник3
-          ctx.fillText(getNickname(playersTable[3]), 112, 321); // Ник4
-          ctx.fillText(getNickname(playersTable[4]), 112, 378); // Ник5
-          ctx.fillText(getNickname(playersTable[5]), 112, 435); // Ник6
-          ctx.fillText(getNickname(playersTable[6]), 112, 492); // Ник7
-          ctx.fillText(getNickname(playersTable[7]), 112, 549); // Ник8
-          ctx.fillText(getNickname(playersTable[8]), 112, 606); // Ник9
-          ctx.fillText(getNickname(playersTable[9]), 112, 663); // Ник10
-          ctx.fillText(getNickname(playersTable[10]), 112, 720); // Ник11
-          ctx.fillText(getNickname(playersTable[11]), 112, 777); // Ник12
-          ctx.fillText(getNickname(playersTable[12]), 112, 834); // Ник13
-          ctx.fillText(getNickname(playersTable[13]), 112, 891); // Ник14
-          ctx.fillText(getNickname(playersTable[14]), 112, 948); // Ник15
-          ctx.fillText(getNickname(playersTable[15]), 112, 1005); // Ник16
-          ctx.fillText(getNickname(playersTable[16]), 112, 1062); // Ник17
-          ctx.fillText(getNickname(playersTable[17]), 112, 1119); // Ник18
-          ctx.fillText(getNickname(playersTable[18]), 112, 1176); // Ник19
-          ctx.fillText(getNickname(playersTable[19]), 112, 1233); // Ник20
+          ctx.fillText(getNickname(playersTable[3]), 112, 320); // Ник4
+          ctx.fillText(getNickname(playersTable[4]), 112, 377); // Ник5
+          ctx.fillText(getNickname(playersTable[5]), 112, 434); // Ник6
+          ctx.fillText(getNickname(playersTable[6]), 112, 491); // Ник7
+          ctx.fillText(getNickname(playersTable[7]), 112, 548); // Ник8
+          ctx.fillText(getNickname(playersTable[8]), 112, 605); // Ник9
+          ctx.fillText(getNickname(playersTable[9]), 112, 662); // Ник10
+          ctx.fillText(getNickname(playersTable[10]), 112, 719); // Ник11
+          ctx.fillText(getNickname(playersTable[11]), 112, 776); // Ник12
+          ctx.fillText(getNickname(playersTable[12]), 112, 833); // Ник13
+          ctx.fillText(getNickname(playersTable[13]), 112, 890); // Ник14
+          ctx.fillText(getNickname(playersTable[14]), 112, 947); // Ник15
+          ctx.fillText(getNickname(playersTable[15]), 112, 1004); // Ник16
+          ctx.fillText(getNickname(playersTable[16]), 112, 1061); // Ник17
+          ctx.fillText(getNickname(playersTable[17]), 112, 1118); // Ник18
+          ctx.fillText(getNickname(playersTable[18]), 112, 1175); // Ник19
+          ctx.fillText(getNickname(playersTable[19]), 112, 1232); // Ник20
           ctx.textAlign = "right";
           ctx.fillText(getStats(playersTable[0], sort), 830, 148); // Ник1
           ctx.fillText(getStats(playersTable[1], sort), 830, 205); // Ник2
           ctx.fillText(getStats(playersTable[2], sort), 830, 262); // Ник3
-          ctx.fillText(getStats(playersTable[3], sort), 830, 321); // Ник4
-          ctx.fillText(getStats(playersTable[4], sort), 830, 378); // Ник5
-          ctx.fillText(getStats(playersTable[5], sort), 830, 435); // Ник6
-          ctx.fillText(getStats(playersTable[6], sort), 830, 492); // Ник7
-          ctx.fillText(getStats(playersTable[7], sort), 830, 549); // Ник8
-          ctx.fillText(getStats(playersTable[8], sort), 830, 606); // Ник9
-          ctx.fillText(getStats(playersTable[9], sort), 830, 663); // Ник10
-          ctx.fillText(getStats(playersTable[10], sort), 830, 720); // Ник11
-          ctx.fillText(getStats(playersTable[11], sort), 830, 777); // Ник12
-          ctx.fillText(getStats(playersTable[12], sort), 830, 834); // Ник13
-          ctx.fillText(getStats(playersTable[13], sort), 830, 891); // Ник14
-          ctx.fillText(getStats(playersTable[14], sort), 830, 948); // Ник15
-          ctx.fillText(getStats(playersTable[15], sort), 830, 1005); // Ник16
-          ctx.fillText(getStats(playersTable[16], sort), 830, 1062); // Ник17
-          ctx.fillText(getStats(playersTable[17], sort), 830, 1119); // Ник18
-          ctx.fillText(getStats(playersTable[18], sort), 830, 1176); // Ник19
-          ctx.fillText(getStats(playersTable[19], sort), 830, 1233); // Ник20
+          ctx.fillText(getStats(playersTable[3], sort), 830, 320); // Ник4
+          ctx.fillText(getStats(playersTable[4], sort), 830, 377); // Ник5
+          ctx.fillText(getStats(playersTable[5], sort), 830, 434); // Ник6
+          ctx.fillText(getStats(playersTable[6], sort), 830, 491); // Ник7
+          ctx.fillText(getStats(playersTable[7], sort), 830, 548); // Ник8
+          ctx.fillText(getStats(playersTable[8], sort), 830, 605); // Ник9
+          ctx.fillText(getStats(playersTable[9], sort), 830, 662); // Ник10
+          ctx.fillText(getStats(playersTable[10], sort), 830, 719); // Ник11
+          ctx.fillText(getStats(playersTable[11], sort), 830, 776); // Ник12
+          ctx.fillText(getStats(playersTable[12], sort), 830, 833); // Ник13
+          ctx.fillText(getStats(playersTable[13], sort), 830, 890); // Ник14
+          ctx.fillText(getStats(playersTable[14], sort), 830, 947); // Ник15
+          ctx.fillText(getStats(playersTable[15], sort), 830, 1004); // Ник16
+          ctx.fillText(getStats(playersTable[16], sort), 830, 1061); // Ник17
+          ctx.fillText(getStats(playersTable[17], sort), 830, 1118); // Ник18
+          ctx.fillText(getStats(playersTable[18], sort), 830, 1175); // Ник19
+          ctx.fillText(getStats(playersTable[19], sort), 830, 1232); // Ник20
 
           ctx.fillText(getStats(playersTable[0], "matches"), 950, 148); // Ник1
           ctx.fillText(getStats(playersTable[1], "matches"), 950, 205); // Ник2
           ctx.fillText(getStats(playersTable[2], "matches"), 950, 262); // Ник3
-          ctx.fillText(getStats(playersTable[3], "matches"), 950, 321); // Ник4
-          ctx.fillText(getStats(playersTable[4], "matches"), 950, 378); // Ник5
-          ctx.fillText(getStats(playersTable[5], "matches"), 950, 435); // Ник6
-          ctx.fillText(getStats(playersTable[6], "matches"), 950, 492); // Ник7
-          ctx.fillText(getStats(playersTable[7], "matches"), 950, 549); // Ник8
-          ctx.fillText(getStats(playersTable[8], "matches"), 950, 606); // Ник9
-          ctx.fillText(getStats(playersTable[9], "matches"), 950, 663); // Ник10
-          ctx.fillText(getStats(playersTable[10], "matches"), 950, 720); // Ник11
-          ctx.fillText(getStats(playersTable[11], "matches"), 950, 777); // Ник12
-          ctx.fillText(getStats(playersTable[12], "matches"), 950, 834); // Ник13
-          ctx.fillText(getStats(playersTable[13], "matches"), 950, 891); // Ник14
-          ctx.fillText(getStats(playersTable[14], "matches"), 950, 948); // Ник15
-          ctx.fillText(getStats(playersTable[15], "matches"), 950, 1005); // Ник16
-          ctx.fillText(getStats(playersTable[16], "matches"), 950, 1062); // Ник17
-          ctx.fillText(getStats(playersTable[17], "matches"), 950, 1119); // Ник18
-          ctx.fillText(getStats(playersTable[18], "matches"), 950, 1176); // Ник19
-          ctx.fillText(getStats(playersTable[19], "matches"), 950, 1233); // Ник20
+          ctx.fillText(getStats(playersTable[3], "matches"), 950, 320); // Ник4
+          ctx.fillText(getStats(playersTable[4], "matches"), 950, 377); // Ник5
+          ctx.fillText(getStats(playersTable[5], "matches"), 950, 434); // Ник6
+          ctx.fillText(getStats(playersTable[6], "matches"), 950, 491); // Ник7
+          ctx.fillText(getStats(playersTable[7], "matches"), 950, 548); // Ник8
+          ctx.fillText(getStats(playersTable[8], "matches"), 950, 605); // Ник9
+          ctx.fillText(getStats(playersTable[9], "matches"), 950, 662); // Ник10
+          ctx.fillText(getStats(playersTable[10], "matches"), 950, 719); // Ник11
+          ctx.fillText(getStats(playersTable[11], "matches"), 950, 776); // Ник12
+          ctx.fillText(getStats(playersTable[12], "matches"), 950, 833); // Ник13
+          ctx.fillText(getStats(playersTable[13], "matches"), 950, 890); // Ник14
+          ctx.fillText(getStats(playersTable[14], "matches"), 950, 947); // Ник15
+          ctx.fillText(getStats(playersTable[15], "matches"), 950, 1004); // Ник16
+          ctx.fillText(getStats(playersTable[16], "matches"), 950, 1061); // Ник17
+          ctx.fillText(getStats(playersTable[17], "matches"), 950, 1118); // Ник18
+          ctx.fillText(getStats(playersTable[18], "matches"), 950, 1175); // Ник19
+          ctx.fillText(getStats(playersTable[19], "matches"), 950, 1232); // Ник20
           ctx.font = "12pt MyFont";
           ctx.fillText("Ранг", 65, 102); // 3 колонка
           ctx.fillText("Игрок", 160, 102); // 3 колонка
