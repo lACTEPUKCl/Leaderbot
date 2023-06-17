@@ -134,14 +134,14 @@ async function getStatsOnDiscord(dblink, steamId, message, steamApi) {
                   60,
                   422
                 ); // Вторая роль
-                ctx.fillText(resultArray[0][0], 15, 607); // Первое оружие
-                ctx.fillText(resultArray[1][0], 15, 700); // Второе оружие
+                ctx.fillText(resultArray[0][0], 15, 600); // Первое оружие
+                ctx.fillText(resultArray[1][0], 15, 690); // Второе оружие
                 ctx.textAlign = "right";
                 ctx.font = "15pt MyFont";
                 ctx.fillText(roleTime1, 290, 327); // Первая роль (время)
                 ctx.fillText(roleTime2, 290, 422); // Вторая роль (время)
-                ctx.fillText(resultArray[0][1], 290, 607); // Первое оружие
-                ctx.fillText(resultArray[1][1], 290, 700); // Второе оружие
+                ctx.fillText(resultArray[0][1], 290, 600); // Первое оружие
+                ctx.fillText(resultArray[1][1], 290, 690); // Второе оружие
                 ctx.textAlign = "left";
                 ctx.fillStyle = "#95a6b9";
                 ctx.fillText(time, 1171, 45);
