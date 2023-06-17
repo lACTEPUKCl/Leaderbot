@@ -26,11 +26,13 @@ async function getStatsOnDiscord(dblink, steamId, message, steamApi) {
   const clientdb = new MongoClient(dblink);
   const dbName = "SquadJS";
   const dbCollection = "mainstats";
-  const responseSteam = await fetch(
-    `http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=${steamApi}&steamids=${steamId}`
-  );
-  const dataSteam = await responseSteam.json();
-  const userInfo = dataSteam.response.players;
+  // const responseSteam = await fetch(
+  //   `http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=${steamApi}&steamids=${steamId}`
+  // );
+  // const dataSteam = await responseSteam.json();
+  // const userInfo = dataSteam.response.players;
+
+  //["BP_Projectile_155mm_Artillery", "BP_Heavy_Mortarround4"];
 
   try {
     await clientdb.connect();
@@ -41,13 +43,48 @@ async function getStatsOnDiscord(dblink, steamId, message, steamApi) {
     });
     if (!user) return;
     const roles = Object.entries(user.roles);
-    const sortRoles = roles.sort((a, b) => b[1] - a[1]);
+    let sortRoles = roles.sort((a, b) => b[1] - a[1]);
     const weapons = Object.entries(user.weapons);
-    const sortWeapons = weapons.sort((a, b) => b[1] - a[1]);
+    const resultWeapons = {};
+    let artillerySum = 0;
+    let knifeSum = 0;
+
+    for (const [key, value] of weapons) {
+      let [prefix, suffix] = key.split("_")[1].includes("Projectile")
+        ? key.split("_").slice(1, 3)
+        : [key.split("_")[1]];
+
+      const weaponKey = suffix ? `${prefix} ${suffix}` : prefix;
+
+      if (weaponKey === "Projectile 155mm" || weaponKey === "Heavy") {
+        artillerySum += value;
+      } else {
+        resultWeapons[weaponKey] = (resultWeapons[weaponKey] || 0) + value;
+      }
+
+      if (
+        weaponKey === "SOCP" ||
+        weaponKey === "AK74Bayonet" ||
+        weaponKey === "M9Bayonet" ||
+        weaponKey === "G3Bayonet" ||
+        weaponKey === "Bayonet2000" ||
+        weaponKey === "AKMBayonet" ||
+        weaponKey === "SA80Bayonet" ||
+        weaponKey === "QNL-95" ||
+        weaponKey === "OKC-3S"
+      ) {
+        knifeSum += value;
+      }
+    }
+
+    const resultArray = Object.entries(resultWeapons).sort(
+      (a, b) => b[1] - a[1]
+    );
+
     const time = (await gettime(user.squad.timeplayed)) || 0;
     const player = user.matches.history.matches;
-    const roleTime1 = (await gettime(sortRoles[0][1].toString())) || 0;
-    const roleTime2 = (await gettime(sortRoles[1][1].toString())) || 0;
+    const roleTime1 = await gettime(sortRoles[0][1].toString());
+    const roleTime2 = await gettime(sortRoles[1][1].toString());
     const role1Img = sortRoles[0][0].split("_").join("");
     const role2Img = sortRoles[1][0].split("_").join("");
     const leader = (await gettime(user.squad.leader.toString())) || 0;
@@ -97,14 +134,14 @@ async function getStatsOnDiscord(dblink, steamId, message, steamApi) {
                   60,
                   422
                 ); // Вторая роль
-                // ctx.fillText("M4A1", 60, 607); // Первое оружие
-                // ctx.fillText("AK47", 60, 700); // Второе оружие
+                ctx.fillText(resultArray[0][0], 15, 607); // Первое оружие
+                ctx.fillText(resultArray[1][0], 15, 700); // Второе оружие
                 ctx.textAlign = "right";
                 ctx.font = "15pt MyFont";
                 ctx.fillText(roleTime1, 290, 327); // Первая роль (время)
                 ctx.fillText(roleTime2, 290, 422); // Вторая роль (время)
-                // ctx.fillText("789", 280, 607);
-                // ctx.fillText("098", 280, 700);
+                ctx.fillText(resultArray[0][1], 290, 607); // Первое оружие
+                ctx.fillText(resultArray[1][1], 290, 700); // Второе оружие
                 ctx.textAlign = "left";
                 ctx.fillStyle = "#95a6b9";
                 ctx.fillText(time, 1171, 45);
@@ -141,8 +178,8 @@ async function getStatsOnDiscord(dblink, steamId, message, steamApi) {
                 ctx.fillText(cmd || 0, 532, 384); // ЦМД
                 ctx.fillText(heliTime, 709, 384); // Пилот
                 ctx.fillText(heavyTime, 887, 384); // Мехвод
-                // ctx.fillText("10", 1065, 384); //
-                // ctx.fillText("11", 1242, 384); //
+                ctx.fillText(artillerySum || 0, 1065, 384); //
+                ctx.fillText(knifeSum, 1242, 384); //
 
                 ctx.fillStyle = "#95a6b9";
                 ctx.font = "15pt MyFont";
@@ -157,8 +194,8 @@ async function getStatsOnDiscord(dblink, steamId, message, steamApi) {
                 ctx.fillText("ЦМД", 532, 352);
                 ctx.fillText("Пилот", 709, 352);
                 ctx.fillText("Мехвод", 887, 352);
-                // ctx.fillText("stats", 1065, 352);
-                //ctx.fillText("stats", 1242, 352);
+                ctx.fillText("Арта", 1065, 352);
+                ctx.fillText("Нож", 1242, 352);
 
                 ctx.textAlign = "right";
                 ctx.fillStyle = "#95a6b9";
