@@ -22,6 +22,9 @@ function addTransaction(tempSteamId, jsonData) {
       fs.writeFile(`./transactionId.json`, newData, (err) => {
         if (err) return;
       });
+    } else {
+      console.log("Вип по этому донату уже был выдан");
+      message.react("❌");
     }
   });
 }

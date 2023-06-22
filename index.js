@@ -277,7 +277,12 @@ client.on("ready", async () => {
         .then((collected) => {
           const reaction = collected.first();
           if (typeof reaction == "undefined") return;
-          if (reaction.emoji?.name === "❌") return;
+          if (reaction.emoji?.name === "❌") {
+            console.log("X");
+            message.delete();
+            return;
+          }
+          console.log(reaction.emoji?.name === "👍");
           if (reaction.emoji?.name === "👍") {
             let role = message.guild.roles.cache.get("1072902141666136125");
             let user = message.guild.members.cache.get(message.author.id);
