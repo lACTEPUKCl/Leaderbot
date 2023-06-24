@@ -18,6 +18,7 @@ import getStatsOnDiscord from "./getStatsOnDiscord.js";
 import getStatsOnDiscordWithoutSteamID from "./getStatsOnDiscordWithoutSteamID.js";
 import getBanFromBattlemetrics from "./getBansOnDiscord.js";
 import moment from "moment-timezone";
+import creater from "./vip-creater.js";
 
 import {
   setIntervalAsync,
@@ -196,6 +197,24 @@ client.on("ready", async () => {
     }
     if (message.channelId === "1073712072220754001")
       getDonate(process.env.DONATE_URL, donateChannel);
+
+    if (message.channelId === "1122110171380994178") {
+      const msg = message.content.split(" ");
+      const steamID64 = msg[0].match(/[0-9]{17}/);
+      const discordId = msg[1].match(/[0-9]+/);
+      const name = msg[2];
+      const sum = msg[3].match(/[0-9]+/);
+      console.log(steamID64, name, sum, discordId);
+
+      if (!steamID64 || !discordId || !name || !sum || sum[0].length > 4) {
+        message.delete();
+        return;
+      }
+
+      message.react("👍");
+      creater.vipCreater(steamID64[0], name, sum[0], discordId[0]);
+    }
+
     if (message.channelId === "819484295709851649") {
       const content = message.content;
       let steamID64 = content.match(/[0-9]{17}/);
