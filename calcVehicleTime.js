@@ -31,6 +31,11 @@ async function calcVehicleTime(possess) {
     "LAV25",
     "BTR82A",
     "BTR80",
+    "Sprut",
+    "BMD4M",
+    "BMD1M",
+    "ZTD05",
+    "ZBD05",
   ];
   const heliVehicle = [
     "Z8G",
@@ -42,6 +47,7 @@ async function calcVehicleTime(possess) {
     "UH60",
     "UH1Y",
     "MI17",
+    "Z8J",
   ];
   let heliTime = 0;
   let heavyTime = 0;
