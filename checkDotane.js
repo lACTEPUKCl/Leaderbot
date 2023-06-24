@@ -4,8 +4,9 @@ import fetch from "node-fetch";
 async function checkDonate(steamApi, tempSteamId, donateUrl, callback) {
   try {
     let retryCount = 0;
+    let matchFound = false;
 
-    while (retryCount < 3) {
+    while (retryCount < 3 && !matchFound) {
       let response = await fetch(donateUrl);
 
       if (!response.ok) {
@@ -49,6 +50,7 @@ async function checkDonate(steamApi, tempSteamId, donateUrl, callback) {
                 ) {
                   fetchDonate(element, jsonEl);
                   console.log(`${currentSteamId} найден в списках донатов`);
+                  matchFound = true;
                   break;
                 }
               } catch (error) {
@@ -60,15 +62,20 @@ async function checkDonate(steamApi, tempSteamId, donateUrl, callback) {
             if (steamID64?.[0] === currentSteamId) {
               fetchDonate(element, jsonEl);
               console.log(`${currentSteamId} найден в списках донатов`);
+              matchFound = true;
               break;
             }
           }
 
           console.log("Закончил проверку");
+
+          if (matchFound) {
+            break;
+          }
         }
 
         // Выходим из цикла, если найдены совпадения
-        if (retryCount === 0) {
+        if (matchFound) {
           break;
         }
       }
@@ -81,7 +88,7 @@ async function checkDonate(steamApi, tempSteamId, donateUrl, callback) {
       retryCount++;
     }
 
-    if (retryCount === 3) {
+    if (retryCount === 3 && !matchFound) {
       console.log("Совпадений не найдено");
     }
 
