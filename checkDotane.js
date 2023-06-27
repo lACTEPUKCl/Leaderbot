@@ -70,15 +70,11 @@ async function checkDonate(steamApi, tempSteamId, donateUrl, callback) {
 
           console.log("Закончил проверку");
 
-          if (matchFound) {
-            break;
-          }
+          if (matchFound) break;
         }
 
         // Выходим из цикла, если найдены совпадения
-        if (matchFound) {
-          break;
-        }
+        if (matchFound) break;
       }
 
       if (!matchFound) {
