@@ -80,12 +80,14 @@ async function checkDonate(steamApi, tempSteamId, donateUrl, callback) {
         }
       }
 
-      // Повторная попытка через 30 секунд
-      console.log(
-        "Совпадений не найдено. Повторная попытка через 30 секунд..."
-      );
-      await new Promise((resolve) => setTimeout(resolve, 30000));
-      retryCount++;
+      if (!matchFound) {
+        // Повторная попытка через 30 секунд
+        console.log(
+          "Совпадений не найдено. Повторная попытка через 30 секунд..."
+        );
+        await new Promise((resolve) => setTimeout(resolve, 30000));
+        retryCount++;
+      }
     }
 
     if (retryCount === 3 && !matchFound) {
