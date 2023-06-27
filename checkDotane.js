@@ -10,6 +10,7 @@ async function checkDonate(steamApi, tempSteamId, donateUrl, callback) {
       let response = await fetch(donateUrl);
 
       if (!response.ok) {
+        if (matchFound) return;
         console.log(
           "Не удалось получить список донатов. Повторная попытка через 10 секунд..."
         );
@@ -69,23 +70,21 @@ async function checkDonate(steamApi, tempSteamId, donateUrl, callback) {
 
           console.log("Закончил проверку");
 
-          if (matchFound) {
-            break;
-          }
+          if (matchFound) break;
         }
 
         // Выходим из цикла, если найдены совпадения
-        if (matchFound) {
-          break;
-        }
+        if (matchFound) break;
       }
 
-      // Повторная попытка через 30 секунд
-      console.log(
-        "Совпадений не найдено. Повторная попытка через 30 секунд..."
-      );
-      await new Promise((resolve) => setTimeout(resolve, 30000));
-      retryCount++;
+      if (!matchFound) {
+        // Повторная попытка через 30 секунд
+        console.log(
+          "Совпадений не найдено. Повторная попытка через 30 секунд..."
+        );
+        await new Promise((resolve) => setTimeout(resolve, 30000));
+        retryCount++;
+      }
     }
 
     if (retryCount === 3 && !matchFound) {
