@@ -10,6 +10,7 @@ async function checkDonate(steamApi, tempSteamId, donateUrl, callback) {
       let response = await fetch(donateUrl);
 
       if (!response.ok) {
+        if (matchFound) return;
         console.log(
           "Не удалось получить список донатов. Повторная попытка через 10 секунд..."
         );
