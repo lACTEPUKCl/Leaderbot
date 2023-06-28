@@ -37,7 +37,6 @@ async function checkDonate(steamApi, tempSteamId, donateUrl, callback) {
                 const resolveUrl = `https://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/?key=${steamApi}&vanityurl=${splitSteamId}`;
                 const responseSteam = await fetch(resolveUrl);
                 const dataSteam = await responseSteam.json();
-                console.log("dataSteam", dataSteam);
 
                 if (
                   dataSteam.response.success === 1 &&
