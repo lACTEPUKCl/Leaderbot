@@ -13,7 +13,7 @@ async function checkDonate(steamApi, tempSteamId, donateUrl, callback) {
         console.log(
           "Не удалось получить список донатов. Повторная попытка через 20 секунд..."
         );
-        await new Promise((resolve) => setTimeout(resolve, 20000));
+        await sleep(20000);
         retryCount++;
       } else {
         if (matchFound) return;
@@ -62,15 +62,13 @@ async function checkDonate(steamApi, tempSteamId, donateUrl, callback) {
           console.log("Закончил проверку");
         }
 
-        // Выходим из цикла, если найдены совпадения
         if (matchFound) return;
       }
       if (!matchFound) {
-        // Повторная попытка через 30 секунд
         console.log(
           "Совпадений не найдено. Повторная попытка через 30 секунд..."
         );
-        await new Promise((resolve) => setTimeout(resolve, 30000));
+        await sleep(30000);
         retryCount++;
       }
     }
@@ -83,6 +81,11 @@ async function checkDonate(steamApi, tempSteamId, donateUrl, callback) {
   } catch (error) {
     console.log(error);
   }
+}
+
+function sleep(ms) {
+  const start = new Date().getTime();
+  while (new Date().getTime() - start < ms) {}
 }
 
 export default checkDonate;
