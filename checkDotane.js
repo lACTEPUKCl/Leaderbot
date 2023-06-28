@@ -23,9 +23,11 @@ async function checkDonate(steamApi, tempSteamId, donateUrl, callback) {
         console.log("response", tempSteamId);
 
         for (const element of tempSteamId) {
+          if (matchFound) break;
           const currentSteamId = element[2];
 
           for (const jsonEl of json.data) {
+            if (matchFound) break;
             const comment = jsonEl.comment;
             const steamID64 = comment.trim().match(/[0-9]{17}/);
             const groupsId = comment.trim().match(steamIdRegex)?.groups;
