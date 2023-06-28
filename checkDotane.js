@@ -14,6 +14,7 @@ async function checkDonate(steamApi, tempSteamId, donateUrl, callback) {
         console.log(
           "Не удалось получить список донатов. Повторная попытка через 20 секунд..."
         );
+        console.log("1", matchFound);
         await new Promise((resolve) => setTimeout(resolve, 20000));
         retryCount++;
       } else {
@@ -46,17 +47,19 @@ async function checkDonate(steamApi, tempSteamId, donateUrl, callback) {
                   fetchDonate(element, jsonEl);
                   console.log(`${currentSteamId} найден в списках донатов`);
                   matchFound = true;
+                  console.log("2", matchFound);
                 }
               } catch (error) {
                 console.log("Не удалось получить steamID");
                 throw new Error(error);
               }
             }
-
+            console.log("3", matchFound);
             if (steamID64?.[0] === currentSteamId) {
               fetchDonate(element, jsonEl);
               console.log(`${currentSteamId} найден в списках донатов`);
               matchFound = true;
+              console.log("4", matchFound);
             }
             if (matchFound) break;
           }
@@ -66,10 +69,12 @@ async function checkDonate(steamApi, tempSteamId, donateUrl, callback) {
 
         // Выходим из цикла, если найдены совпадения
         if (matchFound) return;
+        console.log("53", matchFound);
       }
-
+      console.log("6", matchFound);
       if (!matchFound) {
         // Повторная попытка через 30 секунд
+        console.log("7", matchFound);
         console.log(
           "Совпадений не найдено. Повторная попытка через 30 секунд..."
         );
