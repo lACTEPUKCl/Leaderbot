@@ -46,6 +46,7 @@ async function checkDonate(steamApi, tempSteamId, donateUrl, callback) {
                   fetchDonate(element, jsonEl);
                   console.log(`${currentSteamId} найден в списках донатов`);
                   matchFound = true;
+                  callback();
                 }
               } catch (error) {
                 console.log("Не удалось получить steamID");
@@ -57,6 +58,7 @@ async function checkDonate(steamApi, tempSteamId, donateUrl, callback) {
               fetchDonate(element, jsonEl);
               console.log(`${currentSteamId} найден в списках донатов`);
               matchFound = true;
+              callback();
             }
             if (matchFound) break;
           }
@@ -80,9 +82,8 @@ async function checkDonate(steamApi, tempSteamId, donateUrl, callback) {
 
     if (retryCount === 3 && !matchFound) {
       console.log("Совпадений не найдено");
+      callback();
     }
-
-    callback();
   } catch (error) {
     console.log(error);
   }
