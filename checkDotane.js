@@ -12,11 +12,12 @@ async function checkDonate(steamApi, tempSteamId, donateUrl, callback) {
       if (!response.ok) {
         if (matchFound) return;
         console.log(
-          "Не удалось получить список донатов. Повторная попытка через 10 секунд..."
+          "Не удалось получить список донатов. Повторная попытка через 20 секунд..."
         );
-        await new Promise((resolve) => setTimeout(resolve, 10000));
+        await new Promise((resolve) => setTimeout(resolve, 20000));
         retryCount++;
       } else {
+        if (matchFound) return;
         const json = await response.json();
         const steamIdRegex =
           /^https?:\/\/steamcommunity.com\/id\/(?<steamId>.*)/;
@@ -30,13 +31,6 @@ async function checkDonate(steamApi, tempSteamId, donateUrl, callback) {
             const steamID64 = comment.trim().match(/[0-9]{17}/);
             const groupsId = comment.trim().match(steamIdRegex)?.groups;
             const splitSteamId = groupsId?.steamId?.split("/")[0];
-            console.log("splitSteamId", splitSteamId);
-            console.log("groupsId", groupsId, typeof groupsId !== "undefined");
-            console.log(
-              "steamID64",
-              steamID64,
-              steamID64?.[0] === currentSteamId
-            );
 
             if (typeof groupsId !== "undefined") {
               try {
@@ -52,7 +46,6 @@ async function checkDonate(steamApi, tempSteamId, donateUrl, callback) {
                   fetchDonate(element, jsonEl);
                   console.log(`${currentSteamId} найден в списках донатов`);
                   matchFound = true;
-                  break;
                 }
               } catch (error) {
                 console.log("Не удалось получить steamID");
@@ -64,17 +57,15 @@ async function checkDonate(steamApi, tempSteamId, donateUrl, callback) {
               fetchDonate(element, jsonEl);
               console.log(`${currentSteamId} найден в списках донатов`);
               matchFound = true;
-              break;
             }
+            if (matchFound) break;
           }
-
-          console.log("Закончил проверку");
-
           if (matchFound) break;
+          console.log("Закончил проверку");
         }
 
         // Выходим из цикла, если найдены совпадения
-        if (matchFound) break;
+        if (matchFound) return;
       }
 
       if (!matchFound) {
