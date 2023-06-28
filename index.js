@@ -297,7 +297,6 @@ client.on("ready", async () => {
           const reaction = collected.first();
           if (typeof reaction == "undefined") return;
           if (reaction.emoji?.name === "❌") {
-            console.log("X");
             message.delete();
             return;
           }
