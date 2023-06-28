@@ -2,10 +2,9 @@ import fetchDonate from "./fetchDonate.js";
 import fetch from "node-fetch";
 
 async function checkDonate(steamApi, tempSteamId, donateUrl, callback) {
+  let retryCount = 0;
+  let matchFound = false;
   try {
-    let retryCount = 0;
-    let matchFound = false;
-
     while (retryCount < 3 && !matchFound) {
       let response = await fetch(donateUrl);
 
@@ -69,7 +68,7 @@ async function checkDonate(steamApi, tempSteamId, donateUrl, callback) {
 
         // Выходим из цикла, если найдены совпадения
         if (matchFound) return;
-        console.log("53", matchFound);
+        console.log("5", matchFound);
       }
       console.log("6", matchFound);
       if (!matchFound) {
