@@ -3,21 +3,21 @@ import fetch from "node-fetch";
 
 async function checkDonate(steamApi, tempSteamId, donateUrl, callback) {
   let retryCount = 0;
-  let matchFound = false;
+  this.matchFound = false;
   try {
-    while (retryCount < 3 && !matchFound) {
+    while (retryCount < 3 && !this.matchFound) {
       let response = await fetch(donateUrl);
 
       if (!response.ok) {
-        if (matchFound) return;
+        if (this.matchFound) return;
         console.log(
           "Не удалось получить список донатов. Повторная попытка через 20 секунд..."
         );
-        console.log("1", matchFound);
+        console.log("1", this.matchFound);
         await new Promise((resolve) => setTimeout(resolve, 20000));
         retryCount++;
       } else {
-        if (matchFound) return;
+        if (this.matchFound) return;
         const json = await response.json();
         const steamIdRegex =
           /^https?:\/\/steamcommunity.com\/id\/(?<steamId>.*)/;
@@ -45,35 +45,35 @@ async function checkDonate(steamApi, tempSteamId, donateUrl, callback) {
                 ) {
                   fetchDonate(element, jsonEl);
                   console.log(`${currentSteamId} найден в списках донатов`);
-                  matchFound = true;
-                  console.log("2", matchFound);
+                  this.matchFound = true;
+                  console.log("2", this.matchFound);
                 }
               } catch (error) {
                 console.log("Не удалось получить steamID");
                 throw new Error(error);
               }
             }
-            console.log("3", matchFound);
+            console.log("3", this.matchFound);
             if (steamID64?.[0] === currentSteamId) {
               fetchDonate(element, jsonEl);
               console.log(`${currentSteamId} найден в списках донатов`);
-              matchFound = true;
-              console.log("4", matchFound);
+              this.matchFound = true;
+              console.log("4", this.matchFound);
             }
-            if (matchFound) break;
+            if (this.matchFound) break;
           }
-          if (matchFound) break;
+          if (this.matchFound) break;
           console.log("Закончил проверку");
         }
 
         // Выходим из цикла, если найдены совпадения
-        if (matchFound) return;
-        console.log("5", matchFound);
+        if (this.matchFound) return;
+        console.log("5", this.matchFound);
       }
-      console.log("6", matchFound);
-      if (!matchFound) {
+      console.log("6", this.matchFound);
+      if (!this.matchFound) {
         // Повторная попытка через 30 секунд
-        console.log("7", matchFound);
+        console.log("7", this.matchFound);
         console.log(
           "Совпадений не найдено. Повторная попытка через 30 секунд..."
         );
@@ -82,7 +82,7 @@ async function checkDonate(steamApi, tempSteamId, donateUrl, callback) {
       }
     }
 
-    if (retryCount === 3 && !matchFound) {
+    if (retryCount === 3 && !this.matchFound) {
       console.log("Совпадений не найдено");
     }
 
