@@ -32,8 +32,6 @@ async function getStatsOnDiscord(dblink, steamId, message, steamApi) {
   // const dataSteam = await responseSteam.json();
   // const userInfo = dataSteam.response.players;
 
-  //["BP_Projectile_155mm_Artillery", "BP_Heavy_Mortarround4"];
-
   try {
     await clientdb.connect();
     const db = clientdb.db(dbName);
@@ -134,14 +132,24 @@ async function getStatsOnDiscord(dblink, steamId, message, steamApi) {
                   60,
                   422
                 ); // Вторая роль
-                ctx.fillText(resultArray[0][0], 15, 600); // Первое оружие
-                ctx.fillText(resultArray[1][0], 15, 690); // Второе оружие
+
+                if (resultArray.length != 0) {
+                  ctx.textAlign = "left";
+                  ctx.fillText(resultArray[0][0], 15, 600); // Первое оружие
+                  ctx.textAlign = "right";
+                  ctx.fillText(resultArray[0][1], 290, 600); // Первое оружие
+                }
+                if (resultArray.length >= 2) {
+                  ctx.fillText(resultArray[1][1], 290, 690); // Второе оружие
+                  ctx.textAlign = "left";
+                  ctx.fillText(resultArray[1][0], 15, 690); // Второе оружие
+                }
+
                 ctx.textAlign = "right";
                 ctx.font = "15pt MyFont";
                 ctx.fillText(roleTime1, 290, 327); // Первая роль (время)
                 ctx.fillText(roleTime2, 290, 422); // Вторая роль (время)
-                ctx.fillText(resultArray[0][1], 290, 600); // Первое оружие
-                ctx.fillText(resultArray[1][1], 290, 690); // Второе оружие
+
                 ctx.textAlign = "left";
                 ctx.fillStyle = "#95a6b9";
                 ctx.fillText(time, 1171, 45);
@@ -274,7 +282,7 @@ async function getStatsOnDiscord(dblink, steamId, message, steamApi) {
                 const imageToSend = new AttachmentBuilder("stats.png");
                 message.reply({ files: [imageToSend] });
               })
-              .catch((err) => console.log("Image stats not found"));
+              .catch((err) => console.log(err, "Image stats not found"));
           })
           .catch((err) => console.log(`Image ${role1Img} not found`));
       })
