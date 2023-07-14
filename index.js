@@ -99,10 +99,9 @@ client.on("ready", async () => {
     }
 
     // Канал для автовыдачи Vip слота
-    if (message.channelId === "1119060668046389308") {
+    if (message.channelId === vipChannelId) {
       const vipRole = message.guild.roles.cache.get("1072902141666136125");
       const user = message.guild.members.cache.get(message.author.id);
-      //vipChannelId
       console.log(
         `Получен запрос на получение Vip слота от игрока ${message.author.username}`
       );
