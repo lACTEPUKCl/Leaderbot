@@ -76,12 +76,11 @@ client.on("ready", async () => {
     if (message.author.bot) return;
 
     // Канал для вывода списка донатов
-    console.log(message.channelId);
-    if (message.channelId === vipManualyChannel)
+    if (message.channelId === checkDonateChannelId.id)
       await getDonate(process.env.DONATE_URL, donateChannelId);
 
     // Канал для выдачи Vip слота вручную
-    if (message.channelId === "1122110171380994178") {
+    if (message.channelId === vipManualyChannel.id) {
       const msg = message.content.split(" ");
       const [steamID64, discordId, name, sum] = [
         msg[0].match(/[0-9]{17}/),
@@ -99,7 +98,7 @@ client.on("ready", async () => {
     }
 
     // Канал для автовыдачи Vip слота
-    if (message.channelId === vipChannelId) {
+    if (message.channelId === vipChannelId.id) {
       const vipRole = message.guild.roles.cache.get("1072902141666136125");
       const user = message.guild.members.cache.get(message.author.id);
       console.log(
