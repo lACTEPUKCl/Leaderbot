@@ -1,6 +1,6 @@
 import fs from "fs";
 
-function dateDonateExpires(discordId, adminUrl, message) {
+async function dateDonateExpires(discordId, adminUrl, message) {
   const currentUser = [];
   const date = [];
   const regexp =
