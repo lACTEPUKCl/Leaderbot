@@ -1,6 +1,7 @@
 import fs from "fs";
 import { config } from "dotenv";
 import { exec } from "child_process";
+
 config();
 
 const regexp =
@@ -77,12 +78,12 @@ const vipCreater = async (steamID, nickname, summ, discordId) => {
           console.log("\x1b[33m", "\r\n Backup created AdminsBackup.cfg\r\n");
 
           exec("../syncconfig.sh", (err, stdout, stderr) => {
-           if (err) {
-             console.error(err);
+            if (err) {
+              console.error(err);
               return;
-           }
-             console.log(stdout);
-           });
+            }
+            console.log(stdout);
+          });
         });
       });
     }

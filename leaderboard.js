@@ -3,7 +3,7 @@ import sortUsers from "./sortUsers.js";
 import * as fs from "fs";
 import { loadImage, createCanvas, registerFont } from "canvas";
 
-function getNickname(player) {
+async function getNickname(player) {
   if (!player) return "";
   const splitName = player.split(/\s+/);
   const filteredNickname = splitName.filter((name) => isNaN(name));
@@ -11,7 +11,7 @@ function getNickname(player) {
   return result;
 }
 
-function getStats(player, sort) {
+async function getStats(player, sort) {
   if (!player) return "";
   const numbers = player.split(/\s+/).filter((num) => !isNaN(num));
   const stats = ["kills", "death", "revives", "teamkills", "kd", "matches"];
@@ -24,7 +24,7 @@ function getStats(player, sort) {
   return null;
 }
 
-function getColumnName(sort) {
+async function getColumnName(sort) {
   const stats = {
     kills: "Убийств",
     death: "Смертей",
@@ -50,17 +50,10 @@ async function leaderboard({
   authorName,
   seconds,
   status,
-  channelTemp,
 }) {
   setTimeout(async () => {
     const players = await sortUsers(db, sort, status);
-    let message;
-
-    if (!channelTemp) {
-      message = await channel.messages.fetch(messageId);
-    } else if (Object.keys(channelTemp).length > 0) {
-      message = await channelTemp.messages.fetch(messageId);
-    }
+    const message = await channel.messages.fetch(messageId);
 
     const playersTable = Array(20)
       .fill(0)
@@ -87,10 +80,10 @@ async function leaderboard({
 
     for (let i = 0; i < 20; i++) {
       ctx.textAlign = "left";
-      const playerName = getNickname(playersTable[i]);
+      const playerName = await getNickname(playersTable[i]);
       ctx.textAlign = "right";
-      const statsValue = getStats(playersTable[i], sort);
-      const matchesValue = getStats(playersTable[i], "matches");
+      const statsValue = await getStats(playersTable[i], sort);
+      const matchesValue = await getStats(playersTable[i], "matches");
 
       const textY = startTextY + i * textYSpacing;
       ctx.textAlign = "left";
@@ -105,7 +98,7 @@ async function leaderboard({
     ctx.textAlign = "right";
     ctx.fillText("Ранг", 65, 102);
     ctx.fillText("Игрок", 160, 102);
-    ctx.fillText(getColumnName(sort), statsX, 102);
+    ctx.fillText(await getColumnName(sort), statsX, 102);
     ctx.fillText("Матчей", matchesX, 102);
 
     const buffer = canvas.toBuffer("image/png");

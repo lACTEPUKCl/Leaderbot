@@ -1,8 +1,9 @@
 import fs from "fs";
 import creater from "./vip-creater.js";
 
-function addTransaction(tempSteamId, jsonData) {
-  const [name, discorId, steamId, message] = tempSteamId;
+async function addTransaction(steamId, jsonData, message, vipRole, user) {
+  const username = message.author.username;
+  const discordId = message.author.id;
   const { id, sum } = jsonData;
   fs.readFile(`./transactionId.json`, (err, data) => {
     if (err) return;
@@ -13,18 +14,32 @@ function addTransaction(tempSteamId, jsonData) {
     if (!getTrans) {
       transaction.transactions.push({
         id: `${id}`,
-        name,
+        username,
         steamID: steamId,
       });
-      creater.vipCreater(steamId, name, sum, discorId);
-      message.react("👍");
+
+      creater.vipCreater(steamId, username, sum, discordId);
+      user.roles.add(vipRole);
+      message.channel.send({
+        content: `Игроку <@${message.author.id}> - выдан VIP статус, спасибо за поддержку!`,
+      });
+      message.delete();
+
       let newData = JSON.stringify(transaction);
       fs.writeFile(`./transactionId.json`, newData, (err) => {
         if (err) return;
       });
     } else {
-      console.log("Вип по этому донату уже был выдан");
-      message.react("❌");
+      console.log("VIP по этому донату уже был выдан");
+      try {
+        message.author.send("VIP по этому донату уже был выдан");
+      } catch (error) {
+        console.log(
+          "Невозможно отправить сообщение пользователю",
+          message.author.username
+        );
+      }
+      message.delete();
     }
   });
 }
