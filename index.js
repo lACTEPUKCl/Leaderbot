@@ -76,7 +76,6 @@ client.on("ready", async () => {
     if (message.author.bot) return;
 
     // Канал для вывода списка донатов
-    console.log(message.channelId, vipManualyChannel.id);
     if (message.channelId === checkDonateChannelId.id)
       await getDonate(process.env.DONATE_URL, donateChannelId);
 
