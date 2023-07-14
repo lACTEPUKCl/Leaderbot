@@ -9,7 +9,7 @@ import dateDonateExpires from "./dateDonateExpires.js";
 import getStatsOnDiscord from "./getStatsOnDiscord.js";
 import getStatsOnDiscordWithoutSteamID from "./getStatsOnDiscordWithoutSteamID.js";
 import getBanFromBattlemetrics from "./getBansFromBattlemertics.js";
-import getSteamIdFromMessage from "./getSteamIDfromMessage.js";
+import getSteamIDFromMessage from "./getSteamIDfromMessage.js";
 import creater from "./vip-creater.js";
 
 const client = new Client({
@@ -110,7 +110,7 @@ client.on("ready", async () => {
         user.send(`${message.author.username}\n${message.content}`);
       }); //Отправляет уведомление в лс меламори
 
-      await getSteamIdFromMessage(
+      await getSteamIDFromMessage(
         message,
         steamApi,
         donateUrl,
