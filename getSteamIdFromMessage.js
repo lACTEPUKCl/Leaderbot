@@ -1,7 +1,7 @@
 import checkDonate from "./checkDonate.js";
 import getSteamId64 from "./getSteamID64.js";
 
-async function getSteamIdFromMessage(
+function getSteamIdFromMessage(
   message,
   steamApi,
   donateURL,
@@ -9,7 +9,7 @@ async function getSteamIdFromMessage(
   user,
   callback
 ) {
-  const steamId64 = await getSteamId64(
+  const steamId64 = getSteamId64(
     message,
     steamApi,
     message.content,
