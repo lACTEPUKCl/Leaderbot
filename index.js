@@ -9,7 +9,7 @@ import dateDonateExpires from "./dateDonateExpires.js";
 import getStatsOnDiscord from "./getStatsOnDiscord.js";
 import getStatsOnDiscordWithoutSteamID from "./getStatsOnDiscordWithoutSteamID.js";
 import getBanFromBattlemetrics from "./getBansFromBattlemertics.js";
-import getSteamIDFromMessage from "./getSteamIDfromMessage.js";
+import getSteamIDFromMessage from "./getSteamIDFromMessage.js";
 import creater from "./vip-creater.js";
 
 const client = new Client({
