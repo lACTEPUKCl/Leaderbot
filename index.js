@@ -11,6 +11,7 @@ import getStatsOnDiscordWithoutSteamID from "./getStatsOnDiscordWithoutSteamID.j
 import getBanFromBattlemetrics from "./getBansFromBattlemertics.js";
 import getSteamIDFromMessage from "./getSteamIDFromMessage.js";
 import creater from "./vip-creater.js";
+import chartInitialization from "./chartInitialization.js";
 
 const client = new Client({
   intents: [
@@ -39,6 +40,7 @@ client.on("ready", async () => {
   const vipChannelId = client.channels.cache.get("819484295709851649");
   const statsChannelId = ["1091073082510278748", "1093615841624465498"];
   const bansChannelId = "1115705521119440937";
+  const tickRateChannelId = client.channels.cache.get("1137378898762551357");
   const db = process.env.DATABASE_URL;
   const steamApi = process.env.STEAM_API;
   const donateUrl = process.env.DONATE_URL;
@@ -48,6 +50,7 @@ client.on("ready", async () => {
   setInterval(() => {
     top20StatsMain(leaderboadChannelMainId, db);
     top20StatsTemp(leaderboadChannelTempId, db);
+    chartInitialization(tickRateChannelId);
   }, 600000);
 
   // Очистка Vip пользователей, удаление ролей + отправка им уведомлений
