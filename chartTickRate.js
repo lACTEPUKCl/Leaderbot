@@ -167,7 +167,6 @@ async function fetchDataFromMongoDB(serverId) {
     await client.connect();
     const database = client.db("SquadJS");
     const collection = database.collection("serverinfo");
-    console.log(`server` + serverId);
     const mongoData = await collection.findOne({ _id: `server` + serverId });
     return mongoData.tickRate.map(([date, name, value]) => ({
       timestamp: new Date(date),
@@ -183,7 +182,6 @@ async function fetchDataFromMongoDB(serverId) {
 }
 
 async function createChart({ channel, serverId, messageId, seconds }) {
-  console.log(serverId);
   setTimeout(async () => {
     // Получение данных из MongoDB
     const dataPoints = await fetchDataFromMongoDB(serverId);
