@@ -10,7 +10,7 @@ const canvasHeight = 600;
 const margin = 50; // Уменьшил отступ
 
 // Загрузка и регистрация шрифта
-registerFont("./img/Tektur-Regular.ttf", { family: "MyFont" }); // Замените "путь_к_шрифту.ttf" на путь к вашему шрифту
+registerFont("./img/Tektur-Bold.ttf", { family: "MyFont" }); // Замените "путь_к_шрифту.ttf" на путь к вашему шрифту
 
 // Объект для хранения цветов, привязанных к именам
 const nameColors = {};
@@ -58,9 +58,9 @@ async function drawChart(dataPoints, canvas) {
 
     // Подписи к отметкам
     if (i % 2 === 0) {
-      ctx.font = "10px MyFont"; // Увеличил размер шрифта на 2 пикселя
+      ctx.font = "20px MyFont"; // Увеличил размер шрифта на 2 пикселя
       ctx.fillStyle = "white"; // Изменил цвет цифр на белый
-      ctx.fillText((i * 5).toString(), margin - 20, y + 2); // Подправил координаты отметок
+      ctx.fillText((i * 5).toString(), margin - 30, y + 2); // Подправил координаты отметок
     }
   }
   ctx.strokeStyle = "#ccc";
@@ -94,11 +94,11 @@ async function drawChart(dataPoints, canvas) {
     ctx.fillRect(x, y, stepX / 2, height);
 
     // Выводим имена над столбцами
-    ctx.font = "15px MyFont";
+    ctx.font = "20px MyFont";
     ctx.fillStyle = "white";
     ctx.textAlign = "center";
     ctx.textBaseline = "bottom";
-    const nameY = 45;
+    const nameY = 420;
 
     // Проверяем, было ли имя уже выведено
     if (!(dataPoint.name in nameCounts) || nameCounts[dataPoint.name] === 0) {
@@ -120,7 +120,15 @@ async function drawChart(dataPoints, canvas) {
 
       const groupWidth = (groupEndIndex - groupStartIndex + 1) * stepX;
       const groupNameX = margin + groupStartIndex * stepX + groupWidth / 2;
-      ctx.fillText(dataPoint.name, groupNameX, nameY);
+
+      // Поворачиваем контекст на 45 градусов
+      ctx.save();
+      ctx.translate(groupNameX, nameY);
+      ctx.rotate(-Math.PI / 4); // Поворот против часовой стрелки на 45 градусов
+
+      ctx.fillText(dataPoint.name, 0, 0);
+
+      ctx.restore(); // Восстанавливаем исходное состояние контекста
 
       // Обновляем счетчик для этой группы
       for (let j = groupStartIndex; j <= groupEndIndex; j++) {
@@ -132,22 +140,27 @@ async function drawChart(dataPoints, canvas) {
   }
 
   // Отрисовка времени и вертикальных меток на оси X
-  ctx.font = "10px MyFont"; // Уменьшил размер шрифта времени на 3 пикселя
+  ctx.font = "20px MyFont"; // Уменьшил размер шрифта времени на 3 пикселя
   ctx.fillStyle = "white"; // Цвет времени - белый
   ctx.textAlign = "center";
   ctx.textBaseline = "top"; // Текст будет начинаться от верхнего края
   const halfHourStep = Math.floor(dataPoints.length / 12); // Шаг в полчаса (по 12 отметок на графике)
+
   for (let i = 0; i < dataPoints.length; i += halfHourStep) {
     const dataPoint = dataPoints[i];
     const x = margin + i * stepX + stepX / 2;
     const y = canvasHeight - margin + 5; // Смещение времени вниз от оси X
-    const timestamp = dataPoint.timestamp
-      .toISOString()
-      .split("T")[1]
-      .slice(0, 5); // Форматирование времени без секунд
+
+    // Увеличиваем время на 3 часа
+    const timestamp = new Date(dataPoint.timestamp);
+    timestamp.setHours(timestamp.getHours() + 3);
+
+    // Форматирование времени без секунд
+    const formattedTime = timestamp.toISOString().split("T")[1].slice(0, 5);
+
     ctx.save();
     ctx.translate(x, y);
-    ctx.fillText(timestamp, 0, 0);
+    ctx.fillText(formattedTime, 0, 0);
     ctx.restore();
 
     // Отрисовка вертикальной линии
@@ -167,7 +180,6 @@ async function fetchDataFromMongoDB(serverId) {
     await client.connect();
     const database = client.db("SquadJS");
     const collection = database.collection("serverinfo");
-    console.log(`server` + serverId);
     const mongoData = await collection.findOne({ _id: `server` + serverId });
     return mongoData.tickRate.map(([date, name, value]) => ({
       timestamp: new Date(date),
@@ -183,7 +195,6 @@ async function fetchDataFromMongoDB(serverId) {
 }
 
 async function createChart({ channel, serverId, messageId, seconds }) {
-  console.log(serverId);
   setTimeout(async () => {
     // Получение данных из MongoDB
     const dataPoints = await fetchDataFromMongoDB(serverId);
