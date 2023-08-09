@@ -57,11 +57,23 @@ const vipCleaner = (callback) => {
             console.log("\x1b[36m", e);
           });
 
-          fs.writeFile(`${adminsCfgPath}AdminsBackup.cfg`, data, (err) => {
-            if (err) return;
+          fs.writeFile(
+            `${adminsCfgPath}Backups/AdminsBackup${new Date().toLocaleString(
+              "ru-RU",
+              {
+                timeZone: "Europe/Moscow",
+              }
+            )}.cfg`,
+            data,
+            (err) => {
+              if (err) return;
 
-            console.log("\x1b[33m", "\r\n Backup created AdminsBackup.cfg\r\n");
-          });
+              console.log(
+                "\x1b[33m",
+                "\r\n Backup created AdminsBackup.cfg\r\n"
+              );
+            }
+          );
         });
       }
     });
