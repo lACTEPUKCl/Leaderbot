@@ -51,7 +51,7 @@ client.on("ready", async () => {
     top20StatsMain(leaderboadChannelMainId, db);
     top20StatsTemp(leaderboadChannelTempId, db);
     chartInitialization(tickRateChannelId);
-  }, 60000);
+  }, 600000);
 
   // Очистка Vip пользователей, удаление ролей + отправка им уведомлений
   cleaner.vipCleaner((ids) =>
