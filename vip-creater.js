@@ -69,22 +69,31 @@ const vipCreater = async (steamID, nickname, summ, discordId) => {
         }
         console.log(`User ${nickname} added`);
 
-        fs.writeFile(`${adminsCfgPath}AdminsBackup.cfg`, data, (err) => {
-          if (err) {
-            console.error(err);
-            return;
-          }
-
-          console.log("\x1b[33m", "\r\n Backup created AdminsBackup.cfg\r\n");
-
-          exec("../syncconfig.sh", (err, stdout, stderr) => {
+        fs.writeFile(
+          `${adminsCfgPath}Backups/AdminsBackup${new Date().toLocaleString(
+            "ru-RU",
+            {
+              timeZone: "Europe/Moscow",
+            }
+          )}.cfg`,
+          data,
+          (err) => {
             if (err) {
               console.error(err);
               return;
             }
-            console.log(stdout);
-          });
-        });
+
+            console.log("\x1b[33m", "\r\n Backup created AdminsBackup.cfg\r\n");
+
+            exec("../syncconfig.sh", (err, stdout, stderr) => {
+              if (err) {
+                console.error(err);
+                return;
+              }
+              console.log(stdout);
+            });
+          }
+        );
       });
     }
   });
