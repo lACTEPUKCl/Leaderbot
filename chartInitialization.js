@@ -10,17 +10,17 @@ async function chartInitialization(tickRateChannelId) {
     {
       serverId: "2",
       messageId: "1137382998984118312",
-      seconds: 2000,
+      seconds: 4000,
     },
     {
       serverId: "3",
       messageId: "1137383029514453144",
-      seconds: 4000,
+      seconds: 7000,
     },
     {
       serverId: "4",
       messageId: "1137383059298193599",
-      seconds: 8000,
+      seconds: 10000,
     },
   ];
 
