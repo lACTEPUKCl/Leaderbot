@@ -57,7 +57,6 @@ async function getStatsOnDiscord(dblink, steamId, message, steamApi) {
     let knifeSum = 0;
 
     for (const [key, value] of weapons) {
-      console.log(key);
       let [prefix, suffix] = key.split("_")[1].includes("Projectile")
         ? key.split("_").slice(1, 3)
         : [key.split("_")[1]];
@@ -83,11 +82,11 @@ async function getStatsOnDiscord(dblink, steamId, message, steamApi) {
         knifeSum += value;
       }
     }
-    console.log(Object.entries(resultWeapons));
+
     const resultArray = Object.entries(resultWeapons).sort(
       (a, b) => b[1] - a[1]
     );
-    console.log(resultArray);
+
     const time = (await gettime(user.squad.timeplayed)) || 0;
     const player = user.matches.history.matches;
     const roleTime1 = await gettime(sortRoles[0][1].toString());
