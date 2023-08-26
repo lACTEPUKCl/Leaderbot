@@ -147,7 +147,7 @@ async function getStatsOnDiscord(dblink, steamId, message, steamApi) {
       //ctx.fillText(resultArray[0][0], 15, 600); // Первое оружие
       await loadImageAndDraw(
         ctx,
-        `./img/weapons/${resultArray[0][0]}.png`,
+        `./img/weapons/${resultArray[0][0].toLowerCase()}.png`,
         5,
         550,
         160,
@@ -162,7 +162,7 @@ async function getStatsOnDiscord(dblink, steamId, message, steamApi) {
       // ctx.fillText(resultArray[1][0], 15, 690); // Второе оружие
       await loadImageAndDraw(
         ctx,
-        `./img/weapons/${resultArray[1][0]}.png`,
+        `./img/weapons/${resultArray[1][0].toLowerCase()}.png`,
         5,
         640,
         160,
