@@ -5,10 +5,9 @@ import { loadImage, createCanvas, registerFont } from "canvas";
 
 async function getNickname(player) {
   if (!player) return "";
-  const splitName = player.split(/\s+/);
-  const filteredNickname = splitName.filter((name) => isNaN(name));
-  const result = filteredNickname.join(" ");
-  return result;
+  const splitName = player.split(" ");
+  const filteredNickname = splitName.slice(0, -6).join(" ");
+  return filteredNickname;
 }
 
 async function getStats(player, sort) {
