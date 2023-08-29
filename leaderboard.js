@@ -5,10 +5,9 @@ import { loadImage, createCanvas, registerFont } from "canvas";
 
 async function getNickname(player) {
   if (!player) return "";
-  const splitName = player.split(/\s+/);
-  const filteredNickname = splitName.filter((name) => isNaN(name));
-  const result = filteredNickname.join(" ");
-  return result;
+  const splitName = player.split(" ");
+  const filteredNickname = splitName.slice(0, -6).join(" ");
+  return filteredNickname;
 }
 
 async function getStats(player, sort) {
@@ -81,6 +80,7 @@ async function leaderboard({
     for (let i = 0; i < 20; i++) {
       ctx.textAlign = "left";
       const playerName = await getNickname(playersTable[i]);
+      console.log(playerName);
       ctx.textAlign = "right";
       const statsValue = await getStats(playersTable[i], sort);
       const matchesValue = await getStats(playersTable[i], "matches");
