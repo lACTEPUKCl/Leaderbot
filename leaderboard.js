@@ -80,7 +80,6 @@ async function leaderboard({
     for (let i = 0; i < 20; i++) {
       ctx.textAlign = "left";
       const playerName = await getNickname(playersTable[i]);
-      console.log(playerName);
       ctx.textAlign = "right";
       const statsValue = await getStats(playersTable[i], sort);
       const matchesValue = await getStats(playersTable[i], "matches");
