@@ -8,19 +8,19 @@ import {
 
 async function checkBansFromBattlemetrics(bans, message) {
   if (!bans) {
-    message.reply("Игрок с данным Ником/SteamID не найден в списках банов");
+    message.reply(`Игрок ${message.content} не найден в списках банов`);
     return;
   }
 
   if (!bans[0]) {
-    message.reply("Игрок с данным Ником/SteamID не найден в списках банов");
+    message.reply(`Игрок ${message.content} не найден в списках банов`);
     return;
   }
 
   let timeExpires = moment(bans[0].attributes.expires).tz("Europe/Moscow");
   const currentDate = moment().tz("Europe/Moscow");
   if (timeExpires.isBefore(currentDate)) {
-    message.reply("Игрок с данным Ником/SteamID не найден в списках банов");
+    message.reply(`Игрок ${message.content} не найден в списках банов`);
     return;
   }
 
