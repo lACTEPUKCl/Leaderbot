@@ -65,7 +65,7 @@ async function leaderboard({
       family: "MyFont1",
     });
 
-    const img = await loadImage("./img/leaderboarddefault.png");
+    const img = await loadImage("./img/leaderboard.png");
     ctx.drawImage(img, 0, 0, width, height);
 
     ctx.fillStyle = "#efefef";
