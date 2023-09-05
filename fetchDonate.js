@@ -23,7 +23,9 @@ async function addTransaction(steamId, jsonData, message, vipRole, user) {
       message.channel.send({
         content: `Игроку <@${message.author.id}> - выдан VIP статус, спасибо за поддержку!`,
       });
-      message.delete();
+      try {
+        message.delete();
+      } catch (error) {}
 
       let newData = JSON.stringify(transaction);
       fs.writeFile(`./transactionId.json`, newData, (err) => {
@@ -39,7 +41,9 @@ async function addTransaction(steamId, jsonData, message, vipRole, user) {
           message.author.username
         );
       }
-      message.delete();
+      try {
+        message.delete();
+      } catch (error) {}
     }
   });
 }
