@@ -70,7 +70,9 @@ async function checkDonate(
           message.author.username
         );
       }
-      message.delete();
+      try {
+        await message.delete();
+      } catch (error) {}
     }
   } catch (error) {
     console.log(error);
