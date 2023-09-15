@@ -41,6 +41,7 @@ client.on("ready", async () => {
   const statsChannelId = ["1091073082510278748", "1093615841624465498"];
   const bansChannelId = "1115705521119440937";
   const tickRateChannelId = client.channels.cache.get("1137378898762551357");
+  const memeChannelId = "1151479560047706162";
   const db = process.env.DATABASE_URL;
   const steamApi = process.env.STEAM_API;
   const donateUrl = process.env.DONATE_URL;
@@ -150,6 +151,20 @@ client.on("ready", async () => {
     // Канал для проверки бана
     if (bansChannelId.includes(message.channelId)) {
       getBanFromBattlemetrics(message);
+    }
+
+    if (memeChannelId.includes(message.channelId)) {
+      if (message.attachments.size > 0) {
+        const isImage = message.attachments.every((attachment) =>
+          /\.(jpg|jpeg|png)$/.test(attachment.url)
+        );
+
+        if (!isImage) {
+          message.delete();
+        }
+      } else if (!/(\.jpg|\.jpeg|\.png)$/.test(message.content)) {
+        message.delete();
+      }
     }
   });
 });
