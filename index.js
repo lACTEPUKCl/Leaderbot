@@ -154,8 +154,10 @@ client.on("ready", async () => {
 
     if (memeChannelId.includes(message.channelId)) {
       if (message.attachments.size > 0) {
-        const isImage = message.attachments.every((attachment) =>
-          /\.(jpg|jpeg|png|gif)$/.test(attachment.url)
+        const isImage = message.attachments.every(
+          (attachment) =>
+            /\.(jpg|jpeg|png|gif)$/.test(attachment.url) ||
+            /\.(jpg|jpeg|png|gif)(\?.*)?$/.test(attachment.url)
         );
 
         if (!isImage) {
