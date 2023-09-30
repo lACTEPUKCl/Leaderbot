@@ -148,7 +148,6 @@ client.on("ready", async () => {
       message.delete();
     }
 
-    // Канал для проверки бана
     if (bansChannelId.includes(message.channelId)) {
       getBanFromBattlemetrics(message);
     }
@@ -156,13 +155,16 @@ client.on("ready", async () => {
     if (memeChannelId.includes(message.channelId)) {
       if (message.attachments.size > 0) {
         const isImage = message.attachments.every((attachment) =>
-          /\.(jpg|jpeg|png)$/.test(attachment.url)
+          /\.(jpg|jpeg|png|gif)$/.test(attachment.url)
         );
 
         if (!isImage) {
           message.delete();
         }
-      } else if (!/(\.jpg|\.jpeg|\.png)$/.test(message.content)) {
+      } else if (
+        !/\.(jpg|jpeg|png|gif)$/.test(message.content) &&
+        !/\.(jpg|jpeg|png|gif)(\?.*)?$/.test(message.content)
+      ) {
         message.delete();
       }
     }
