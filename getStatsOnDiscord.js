@@ -4,6 +4,7 @@ import fetch from "node-fetch";
 import * as fs from "fs";
 import { loadImage, createCanvas, registerFont } from "canvas";
 import calcVehicleTime from "./calcVehicleTime.js";
+import calcVehicleKills from "./calcVehicleKills.js";
 import getExp from "./getExp.js";
 
 async function loadImageAndDraw(ctx, imgPath, x, y, width, height) {
@@ -96,6 +97,7 @@ async function getStatsOnDiscord(dblink, steamId, message, steamApi) {
     const leader = (await gettime(user.squad.leader.toString())) || 0;
     const cmd = (await gettime(user.squad.cmd.toString())) || 0;
     const vehicle = await calcVehicleTime(user.possess);
+    const vehicleKills = await calcVehicleKills(user.weapons);
     const heliTime = (await gettime(vehicle[1])) || 0;
     const heavyTime = (await gettime(vehicle[0])) || 0;
     const historyTime1 = (await gettime(player[0]?.timeplayed, "sec")) || 0;
@@ -179,8 +181,8 @@ async function getStatsOnDiscord(dblink, steamId, message, steamApi) {
     ctx.fillStyle = "#95a6b9";
     ctx.fillText(time, 1171, 45);
     ctx.fillText(`${user.matches.matches} игр`, 1271, 45); // Всего игр
-    ctx.fillText("Убийств", 364, 188);
-    ctx.fillText("Убийств за игру", 626, 188);
+    ctx.fillText("Всего Убийств", 364, 188);
+    ctx.fillText("Убийств на технике", 626, 188);
     ctx.fillText("У/С", 888, 188);
     ctx.fillText("% Побед", 1151, 188);
     ctx.textAlign = "center";
@@ -192,12 +194,12 @@ async function getStatsOnDiscord(dblink, steamId, message, steamApi) {
     ctx.fillStyle = "#efefef";
     ctx.font = "20pt MyFont";
     ctx.fillText(user.kills.toString(), 364, 220); // Убийств
-    ctx.fillText(`${~~killPerMatch}`, 626, 220); // Убийств за игру
+    ctx.fillText(`${~~vehicleKills}`, 626, 220); // Убийств на технике
     ctx.fillText(user.kd.toString(), 888, 220); // КД
     ctx.fillText(`${~~user.matches.winrate.toString()}%`, 1151, 220); // % Побед
 
-    ctx.fillText(user.matches.won.toString(), 354, 303); //Побед
-    ctx.fillText(user.matches.lose.toString(), 532, 303); // Поражений
+    ctx.fillText(user.matches.won.toString(), 532, 303); //Побед
+    ctx.fillText(`${~~killPerMatch}`, 354, 303); // Убийств за игру
     ctx.fillText(user.revives.toString(), 709, 303); // Помощь
     ctx.fillText(user.teamkills.toString(), 887, 303); // Тимкилы
     ctx.fillText(user.death.toString(), 1065, 303); // Смерти
@@ -212,8 +214,8 @@ async function getStatsOnDiscord(dblink, steamId, message, steamApi) {
 
     ctx.fillStyle = "#95a6b9";
     ctx.font = "15pt MyFont";
-    ctx.fillText("Побед", 354, 271);
-    ctx.fillText("Поражений", 532, 271);
+    ctx.fillText("Побед", 532, 271);
+    ctx.fillText("Убийст за игру", 354, 271);
     ctx.fillText("Помощь", 709, 271);
     ctx.fillText("Тимкилы", 887, 271);
     ctx.fillText("Смерти", 1065, 271);
