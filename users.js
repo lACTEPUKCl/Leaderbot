@@ -15,7 +15,7 @@ async function addUser(steamId, message, callback) {
       }
     }
 
-    const getUser = users.users.find((e) => e.discordId === id.toString());
+    const getUser = users.users.find((e) => e.id === discordId.toString());
 
     if (!getUser) {
       users.users.push({
