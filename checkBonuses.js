@@ -30,46 +30,50 @@ async function checkBonuses(steamId, message, vipRole, user, dblink) {
       _id: steamId,
     });
     if (!dbUser) return;
+    const userName = dbUser.name;
+    const discordId = message.author.id;
+    const changeBonuses = Math.abs(15000 - dbUser.bonuses);
+
+    if (dbUser.bonuses < 15000) {
+      console.log(
+        `У игрока ${userName} не хватает ${changeBonuses} бонусных баллов`
+      );
+      try {
+        await message.author.send(
+          `Не хватает бонусных баллов для получения Vip статуса, требуется 15000 бонусных баллов`
+        );
+      } catch (error) {
+        console.log(
+          "Невозможно отправить сообщение пользователю",
+          message.author.username
+        );
+      }
+      await clientdb.close();
+      return;
+    }
+
     await addUser(steamId, message, async (callback) => {
       if (callback) {
-        const userName = dbUser.name;
-        const discordId = message.author.id;
-        const changeBonuses = Math.abs(15000 - dbUser.bonuses);
-        if (dbUser.bonuses < 15000) {
-          console.log(
-            `У игрока ${userName} не хватает ${changeBonuses} бонусных баллов`
-          );
-          try {
-            await message.author.send(
-              `Не хватает бонусных баллов для получения Vip статуса, требуется 15000 бонусных баллов`
-            );
-          } catch (error) {
-            console.log(
-              "Невозможно отправить сообщение пользователю",
-              message.author.username
-            );
-          }
-        } else {
-          console.log(
-            `Игроку ${dbUser.name} со steamID ${steamId} был выдан Vip статус за бонусные баллы`
-          );
+        console.log(
+          `Игроку ${dbUser.name} со steamID ${steamId} был выдан Vip статус за бонусные баллы`
+        );
 
-          await updateUserBonuses(collection, steamId, -15000);
+        await updateUserBonuses(collection, steamId, -15000);
 
-          message.channel.send({
-            content: `Игроку <@${message.author.id}> - выдан VIP статус, спасибо за поддержку!`,
-          });
-          try {
-            message.delete();
-          } catch (error) {}
+        message.channel.send({
+          content: `Игроку <@${message.author.id}> - выдан VIP статус, спасибо за поддержку!`,
+        });
+        try {
+          message.delete();
+        } catch (error) {}
 
-          user.roles.add(vipRole);
-          creater.vipCreater(steamId, dbUser.name, 300, discordId);
-          await clientdb.close();
-        }
+        user.roles.add(vipRole);
+        creater.vipCreater(steamId, dbUser.name, 300, discordId);
+        await clientdb.close();
       } else {
         try {
           message.delete();
+          await clientdb.close();
         } catch (error) {}
       }
     });
