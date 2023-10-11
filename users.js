@@ -20,7 +20,7 @@ async function addUser(steamId, message, callback) {
       (user) =>
         user.id === discordId.toString() || user.steamID === steamId.toString()
     );
-    console.log(existingUser);
+
     if (!existingUser) {
       users.users.push({
         id: discordId.toString(),
