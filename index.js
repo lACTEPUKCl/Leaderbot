@@ -38,6 +38,7 @@ client.on("ready", async () => {
   const checkDonateChannelId = client.channels.cache.get("1073712072220754001");
   const vipManualyChannel = client.channels.cache.get("1122110171380994178");
   const vipChannelId = client.channels.cache.get("819484295709851649");
+  const vipBonusChannelId = client.channels.cache.get("1161691433493872782");
   const statsChannelId = ["1091073082510278748", "1093615841624465498"];
   const bansChannelId = "1115705521119440937";
   const tickRateChannelId = client.channels.cache.get("1137378898762551357");
@@ -78,6 +79,8 @@ client.on("ready", async () => {
 
   client.on("messageCreate", async (message) => {
     if (message.author.bot) return;
+    const user = message.guild.members.cache.get(message.author.id);
+    const vipRole = message.guild.roles.cache.get("1072902141666136125");
 
     // Канал для вывода списка донатов
     if (message.channelId === checkDonateChannelId.id)
@@ -101,10 +104,22 @@ client.on("ready", async () => {
       creater.vipCreater(steamID64[0], name, sum[0], discordId[0]);
     }
 
+    // Канал для автовыдачи Vip слота за бонусы
+    if (message.channelId === vipBonusChannelId.id) {
+      await getSteamIDFromMessage(
+        true,
+        db,
+        message,
+        steamApi,
+        donateUrl,
+        vipRole,
+        user,
+        (result) => {}
+      );
+    }
+
     // Канал для автовыдачи Vip слота
     if (message.channelId === vipChannelId.id) {
-      const vipRole = message.guild.roles.cache.get("1072902141666136125");
-      const user = message.guild.members.cache.get(message.author.id);
       console.log(
         `Получен запрос на получение Vip слота от игрока ${message.author.username}`
       );
@@ -114,6 +129,8 @@ client.on("ready", async () => {
       }); //Отправляет уведомление в лс меламори
 
       await getSteamIDFromMessage(
+        false,
+        db,
         message,
         steamApi,
         donateUrl,

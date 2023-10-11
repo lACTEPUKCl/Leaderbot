@@ -1,7 +1,10 @@
 import checkDonate from "./checkDonate.js";
 import getSteamId64 from "./getSteamID64.js";
+import checkBonuses from "./checkBonuses.js";
 
 async function getSteamIDFromMessage(
+  vip,
+  db,
   message,
   steamApi,
   donateURL,
@@ -14,8 +17,10 @@ async function getSteamIDFromMessage(
     steamApi,
     message.content,
     (steamId) => {
-      if (steamId) {
+      if (steamId && !vip) {
         checkDonate(steamApi, steamId, donateURL, message, vipRole, user);
+      } else if (steamId && vip) {
+        checkBonuses(steamId, message, vipRole, user, db);
       } else {
         message.delete();
         console.log(message.author.username, "Ввел некорректный steamID");
