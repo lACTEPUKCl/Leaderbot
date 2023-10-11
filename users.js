@@ -6,6 +6,7 @@ async function addUser(steamId, message, callback) {
 
   try {
     let users = { users: [] };
+
     try {
       const data = await fs.readFile("./users.json", "utf8");
       users = JSON.parse(data);
@@ -15,11 +16,14 @@ async function addUser(steamId, message, callback) {
       }
     }
 
-    const getUser = users.users.find((e) => e.id === discordId.toString());
-
-    if (!getUser) {
+    const existingUser = users.users.find(
+      (user) =>
+        user.id === discordId.toString() || user.steamID === steamId.toString()
+    );
+    console.log(existingUser);
+    if (!existingUser) {
       users.users.push({
-        id: `${discordId}`,
+        id: discordId.toString(),
         username,
         steamID: steamId.toString(),
       });
@@ -27,10 +31,10 @@ async function addUser(steamId, message, callback) {
       let newData = JSON.stringify(users);
       await fs.writeFile("./users.json", newData, "utf8");
       callback(true);
-      return;
-    }
-
-    if (getUser && discordId !== getUser.id && steamId !== getUser.steamID) {
+    } else if (
+      discordId !== existingUser.id ||
+      steamId !== existingUser.steamID
+    ) {
       callback(false);
       try {
         await message.author.send(
@@ -42,10 +46,7 @@ async function addUser(steamId, message, callback) {
           message.author.username
         );
       }
-      return;
-    }
-
-    if (getUser && discordId === getUser.id && steamId === getUser.steamID) {
+    } else {
       callback(true);
     }
   } catch (err) {
