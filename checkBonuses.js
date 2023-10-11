@@ -49,6 +49,11 @@ async function checkBonuses(steamId, message, vipRole, user, dblink) {
         );
       }
       await clientdb.close();
+
+      try {
+        message.delete();
+      } catch (error) {}
+
       return;
     }
 
@@ -73,8 +78,8 @@ async function checkBonuses(steamId, message, vipRole, user, dblink) {
       } else {
         try {
           message.delete();
-          await clientdb.close();
         } catch (error) {}
+        await clientdb.close();
       }
     });
   } catch (e) {
