@@ -45,7 +45,7 @@ async function addUser(steamId, message, callback) {
       return;
     }
 
-    if (getUser && discordId === getUser.id) {
+    if (getUser && discordId === getUser.id && steamId === getUser.steamID) {
       callback(true);
     }
   } catch (err) {
