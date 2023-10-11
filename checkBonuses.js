@@ -28,9 +28,9 @@ async function checkBonuses(steamId, message, vipRole, user, dblink) {
     const dbUser = await collection.findOne({
       _id: steamId,
     });
-    const userName = dbUser.name;
-    const discordId = message.author.id;
     if (!dbUser) return;
+    const userName = dbUser?.name;
+    const discordId = message.author.id;
     const changeBonuses = Math.abs(15000 - dbUser.bonuses);
     if (dbUser.bonuses < 15000) {
       console.log(
