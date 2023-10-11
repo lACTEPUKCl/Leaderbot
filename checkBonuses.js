@@ -29,7 +29,21 @@ async function checkBonuses(steamId, message, vipRole, user, dblink) {
     const dbUser = await collection.findOne({
       _id: steamId,
     });
-    if (!dbUser) return;
+    if (!dbUser) {
+      try {
+        await message.author.send(
+          `Пользователь не найден в списках игроков, проверьте правильность ввода SteamID/Ссылки на провиль STEAM`
+        );
+      } catch (error) {
+        console.log(
+          "Невозможно отправить сообщение пользователю",
+          message.author.username
+        );
+      }
+      message.delete();
+      await clientdb.close();
+      return;
+    }
     const userName = dbUser.name;
     const discordId = message.author.id;
     const changeBonuses = Math.abs(15000 - dbUser.bonuses);

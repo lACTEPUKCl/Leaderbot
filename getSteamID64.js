@@ -1,7 +1,7 @@
 import fetch from "node-fetch";
 
 async function getSteamId64(message, steamApi, content, callback) {
-  const steamID64 = content.match(/[0-9]{17}/)?.[0];
+  const steamID64 = content.match(/\b[0-9]{17}\b/)?.[0];
   const steamId = /^https?:\/\/steamcommunity.com\/id\/(?<steamId>.*)/;
   const groupsId = content.match(steamId)?.groups;
   const splitSteamId = groupsId?.steamId.split("/")[0];
