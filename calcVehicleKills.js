@@ -70,6 +70,7 @@ async function calcVehicleKills(weapons) {
     "_L30A1_",
     "_L94A1_",
     "_BM21_",
+    "_120mm_",
   ];
 
   // Используем метод reduce для вычисления общей суммы
