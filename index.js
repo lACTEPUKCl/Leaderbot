@@ -183,6 +183,12 @@ client.on("ready", async () => {
         message.delete();
       }
     }
+
+    if (message.content.includes(":oluh1:")) {
+      message.channel.send("<@1153482882443120700>").then((botMessage) => {
+        botMessage.delete().catch(console.error);
+      });
+    }
   });
 });
 client.login(process.env.CLIENT_TOKEN);
