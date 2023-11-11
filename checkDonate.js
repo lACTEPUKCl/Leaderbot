@@ -49,11 +49,11 @@ async function checkDonate(
 
       if (!matchFound) {
         console.log(
-          `Совпадений не найдено. Повторная попытка через 30 секунд... ${
+          `Совпадений не найдено. Повторная попытка через минуту... ${
             retryCount + 1
           }/3`
         );
-        await new Promise((resolve) => setTimeout(resolve, 30000));
+        await new Promise((resolve) => setTimeout(resolve, 60000));
         retryCount++;
       }
     }
