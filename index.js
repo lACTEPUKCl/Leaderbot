@@ -1,4 +1,11 @@
-import { Client, GatewayIntentBits } from "discord.js";
+import pkg from "discord.js";
+const {
+  Client,
+  GatewayIntentBits,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+} = pkg;
 import { config } from "dotenv";
 config();
 import cleaner from "./vip-cleaner.js";
@@ -12,6 +19,7 @@ import getBanFromBattlemetrics from "./getBansFromBattlemertics.js";
 import getSteamIDFromMessage from "./getSteamIDFromMessage.js";
 import creater from "./vip-creater.js";
 import chartInitialization from "./chartInitialization.js";
+import { exec } from "child_process";
 
 const client = new Client({
   intents: [
@@ -41,6 +49,7 @@ client.on("ready", async () => {
   const vipBonusChannelId = client.channels.cache.get("1161743444411175024");
   const statsChannelId = ["1091073082510278748", "1093615841624465498"];
   const bansChannelId = "1115705521119440937";
+  const adminChannel = "771353664526352424";
   const tickRateChannelId = client.channels.cache.get("1137378898762551357");
   const memeChannelId = "1151479560047706162";
   const db = process.env.DATABASE_URL;
@@ -188,11 +197,66 @@ client.on("ready", async () => {
       }
     }
 
-    // if (message.content.includes(":oluh1:")) {
-    //   message.channel.send("<@1153482882443120700>").then((botMessage) => {
-    //     botMessage.delete().catch(console.error);
-    //   });
-    // }
+    if (
+      adminChannel.includes(message.channelId) &&
+      message.content === "!restart"
+    ) {
+      const servers = [
+        { id: "server1", label: "Сервер 1" },
+        { id: "server2", label: "Сервер 2" },
+        { id: "server3", label: "Сервер 3" },
+        { id: "server4", label: "Сервер 4" },
+      ];
+
+      const buttons = servers.map((server) =>
+        new ButtonBuilder()
+          .setCustomId(server.id)
+          .setLabel(server.label)
+          .setStyle(ButtonStyle.Primary)
+      );
+
+      const row = new ActionRowBuilder().addComponents(...buttons);
+
+      const sentMessage = await message.channel.send({
+        content: "Выберите сервер бота, который вы хотите перезагрузить?",
+        components: [row],
+      });
+
+      message.client.sentMessages = message.client.sentMessages || new Map();
+      message.client.sentMessages.set(message.channelId, sentMessage.id);
+    }
   });
+
+  client.on("interactionCreate", async (interaction) => {
+    if (!interaction.isButton()) return;
+    const userID = interaction.user.id;
+    const { customId } = interaction;
+
+    const serverNumber = customId.replace("server", "");
+
+    try {
+      await interaction.message.delete();
+
+      exec(`pm2 restart SERVER${serverNumber}`, (error) => {
+        if (error) {
+          console.error(`Ошибка: ${error}`);
+        }
+      });
+
+      await interaction.channel.send({
+        content: `<@${userID}> Бот #${serverNumber} RNS перезагружен!`,
+      });
+
+      console.log(`<@${userID}> Бот #${serverNumber} RNS перезагружен!`);
+    } catch (error) {
+      console.error("Ошибка при обработке взаимодействия:", error);
+    }
+  });
+
+  // if (message.content.includes(":oluh1:")) {
+  //   message.channel.send("<@1153482882443120700>").then((botMessage) => {
+  //     botMessage.delete().catch(console.error);
+  //   });
+  // }
 });
 client.login(process.env.CLIENT_TOKEN);
