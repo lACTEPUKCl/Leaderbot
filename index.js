@@ -18,7 +18,7 @@ import getStatsOnDiscordWithoutSteamID from "./getStatsOnDiscordWithoutSteamID.j
 import getBanFromBattlemetrics from "./getBansFromBattlemertics.js";
 import getSteamIDFromMessage from "./getSteamIDFromMessage.js";
 import creater from "./vip-creater.js";
-import chartInitialization from "./chartInitialization.js";
+//import chartInitialization from "./chartInitialization.js";
 import { exec } from "child_process";
 
 const client = new Client({
@@ -61,7 +61,7 @@ client.on("ready", async () => {
   setInterval(() => {
     top20StatsMain(leaderboadChannelMainId, db);
     top20StatsTemp(leaderboadChannelTempId, db);
-    chartInitialization(tickRateChannelId);
+    //chartInitialization(tickRateChannelId);
   }, 600000);
 
   // Очистка Vip пользователей, удаление ролей + отправка им уведомлений
