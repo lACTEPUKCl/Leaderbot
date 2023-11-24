@@ -100,9 +100,9 @@ async function getStatsOnDiscord(dblink, steamId, message, steamApi) {
     const vehicleKills = await calcVehicleKills(user.weapons);
     const heliTime = (await gettime(vehicle[1])) || 0;
     const heavyTime = (await gettime(vehicle[0])) || 0;
-    const historyTime1 = (await gettime(player[0]?.timeplayed, "sec")) || 0;
-    const historyTime2 = (await gettime(player[1]?.timeplayed, "sec")) || 0;
-    const historyTime3 = (await gettime(player[2]?.timeplayed, "sec")) || 0;
+    const historyTime1 = (await gettime(player[0]?.timeplayed, "sec")) || `0m`;
+    const historyTime2 = (await gettime(player[1]?.timeplayed, "sec")) || `0m`;
+    const historyTime3 = (await gettime(player[2]?.timeplayed, "sec")) || `0m`;
     const killPerMatch = user.kills / user.matches.matches;
     const exp = getExp(user);
     registerFont("./img/Tektur-Bold.ttf", {
