@@ -234,6 +234,13 @@ client.on("ready", async () => {
 
     const serverNumber = customId.replace("server", "");
 
+    const originalMessage = await interaction.channel.messages.fetch(
+      interaction.client.sentMessages.get(interaction.channelId)
+    );
+    if (originalMessage) {
+      await originalMessage.delete();
+    }
+
     try {
       await interaction.message.delete();
 
@@ -259,4 +266,5 @@ client.on("ready", async () => {
   //   });
   // }
 });
-client.login(process.env.CLIENT_TOKEN);
+
+await client.login(process.env.CLIENT_TOKEN);

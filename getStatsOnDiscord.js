@@ -243,37 +243,37 @@ async function getStatsOnDiscord(dblink, steamId, message, steamApi) {
     ctx.textAlign = "left";
     ctx.fillStyle = "#efefef";
     ctx.font = "20pt MyFont";
-    // if (player[0]?.layer) {
-    //   ctx.fillText(player[0].layer, 354, 575);
-    //   ctx.textAlign = "right";
-    //   ctx.fillText(historyTime1, 780, 575);
-    //   ctx.fillText(player[0].result, 971, 575);
-    //   ctx.fillText(player[0].kd, 1089, 575);
-    //   ctx.fillText(player[0].kills, 1218, 575);
-    //   ctx.fillText(player[0].death, 1351, 575);
-    // }
+    if (player[0]?.layer) {
+      ctx.fillText(player[0].layer, 354, 575);
+      ctx.textAlign = "right";
+      ctx.fillText(historyTime1, 780, 575);
+      ctx.fillText(player[0].result, 971, 575);
+      ctx.fillText(player[0].kd, 1089, 575);
+      ctx.fillText(player[0].kills, 1218, 575);
+      ctx.fillText(player[0].death, 1351, 575);
+    }
 
-    // if (player[1]?.layer) {
-    //   ctx.textAlign = "left";
-    //   ctx.fillText(player[1].layer, 354, 625);
-    //   ctx.textAlign = "right";
-    //   ctx.fillText(historyTime2, 780, 625);
-    //   ctx.fillText(player[1].result, 971, 625);
-    //   ctx.fillText(player[1].kd, 1089, 625);
-    //   ctx.fillText(player[1].kills, 1218, 625);
-    //   ctx.fillText(player[1].death, 1351, 625);
-    // }
+    if (player[1]?.layer) {
+      ctx.textAlign = "left";
+      ctx.fillText(player[1].layer, 354, 625);
+      ctx.textAlign = "right";
+      ctx.fillText(historyTime2, 780, 625);
+      ctx.fillText(player[1].result, 971, 625);
+      ctx.fillText(player[1].kd, 1089, 625);
+      ctx.fillText(player[1].kills, 1218, 625);
+      ctx.fillText(player[1].death, 1351, 625);
+    }
 
-    // if (player[2]?.layer) {
-    //   ctx.textAlign = "left";
-    //   ctx.fillText(player[2].layer, 354, 675);
-    ctx.textAlign = "right";
-    //   ctx.fillText(historyTime3, 780, 675);
-    //   ctx.fillText(player[2].result, 971, 675);
-    //   ctx.fillText(player[2].kd, 1089, 675);
-    //   ctx.fillText(player[2].kills, 1218, 675);
-    //   ctx.fillText(player[2].death, 1351, 675);
-    // }
+    if (player[2]?.layer) {
+      ctx.textAlign = "left";
+      ctx.fillText(player[2].layer, 354, 675);
+      ctx.textAlign = "right";
+      ctx.fillText(historyTime3, 780, 675);
+      ctx.fillText(player[2].result, 971, 675);
+      ctx.fillText(player[2].kd, 1089, 675);
+      ctx.fillText(player[2].kills, 1218, 675);
+      ctx.fillText(player[2].death, 1351, 675);
+    }
 
     const x0 = 20;
     const y0 = 150;
