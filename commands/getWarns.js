@@ -10,7 +10,7 @@ const allowedChannelId = process.env.ADMINACTIVITY_CHANNELID;
 const getWarnCommand = new SlashCommandBuilder()
   .setName("getwarn")
   .setDescription("Получить список предупреждений")
-  .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
+  .setDefaultMemberPermissions(PermissionFlagsBits.KickMembers);
 getWarnCommand.addUserOption((option) =>
   option
     .setName("name")
