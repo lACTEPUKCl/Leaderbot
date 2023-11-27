@@ -1,23 +1,13 @@
-import pkg from "discord.js";
-const {
-  Client,
-  GatewayIntentBits,
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-} = pkg;
+import { Client, GatewayIntentBits, Collection, Events } from "discord.js";
+import getCommands from "./commands/getCommands.js";
 import { config } from "dotenv";
 config();
-import cleaner from "./vip-cleaner.js";
-import top20StatsMain from "./top20StatsMain.js";
-import top20StatsTemp from "./top20StatsTemp.js";
-import getDonate from "./getDonate.js";
-import dateDonateExpires from "./dateDonateExpires.js";
-import getStatsOnDiscord from "./getStatsOnDiscord.js";
-import getStatsOnDiscordWithoutSteamID from "./getStatsOnDiscordWithoutSteamID.js";
-import getBanFromBattlemetrics from "./getBansFromBattlemertics.js";
-import getSteamIDFromMessage from "./getSteamIDFromMessage.js";
-import creater from "./vip-creater.js";
+import cleaner from "./utility/vip-cleaner.js";
+import top20StatsMain from "./utility/top20StatsMain.js";
+import top20StatsTemp from "./utility/top20StatsTemp.js";
+import getDonate from "./utility/getDonate.js";
+import getBanFromBattlemetrics from "./utility/getBansFromBattlemertics.js";
+import getSteamIDFromMessage from "./utility/getSteamIDFromMessage.js";
 //import chartInitialization from "./chartInitialization.js";
 import { exec } from "child_process";
 
@@ -32,6 +22,15 @@ const client = new Client({
   ],
 });
 
+client.commands = new Collection();
+const commands = await getCommands();
+
+for (const command of commands) {
+  if ("data" in command && "execute" in command)
+    client.commands.set(command.data.name, command);
+  else logger.verbose("discord", 1, `The command missing! in index.js`);
+}
+
 client.on("ready", async () => {
   console.log(`Logged in as ${client.user.tag}!`);
   // Список каналов
@@ -41,21 +40,20 @@ client.on("ready", async () => {
   const leaderboadChannelTempId = client.channels.cache.get(
     "1119326545572544562"
   );
-  const channelId = client.guilds.cache.get("735515208348598292");
+  const guildId = client.guilds.cache.get(process.env.GUILD_ID);
   const donateChannelId = client.channels.cache.get("1073712072220754001");
   const checkDonateChannelId = client.channels.cache.get("1073712072220754001");
-  const vipManualyChannel = client.channels.cache.get("1122110171380994178");
   const vipChannelId = client.channels.cache.get("819484295709851649");
   const vipBonusChannelId = client.channels.cache.get("1161743444411175024");
-  const statsChannelId = ["1091073082510278748", "1093615841624465498"];
   const bansChannelId = "1115705521119440937";
-  const adminChannel = "771353664526352424";
-  const tickRateChannelId = client.channels.cache.get("1137378898762551357");
   const memeChannelId = "1151479560047706162";
+  const activitiAdminsChannelId = process.env.ADMINACTIVITY_CHANNELID;
+  const vipManualChannelId = process.env.VIP_CHANNELID;
+  const statsChannesId1 = process.env.STATS_CHANNELID;
+  const statsChannesId2 = process.env.STATS_CHANNELID2;
   const db = process.env.DATABASE_URL;
   const steamApi = process.env.STEAM_API;
   const donateUrl = process.env.DONATE_URL;
-  const adminsUrl = process.env.ADMINS_URL;
 
   // Обновление двух таблиц лидеров
   setInterval(() => {
@@ -68,9 +66,9 @@ client.on("ready", async () => {
   cleaner.vipCleaner((ids) =>
     ids.forEach(async (element) => {
       let role =
-        channelId.roles.cache.find((r) => r.name === "VIP") ||
-        (await channelId.roles.fetch("1072902141666136125"));
-      let getUserList = await channelId.members
+        guildId.roles.cache.find((r) => r.name === "VIP") ||
+        (await guildId.roles.fetch("1072902141666136125"));
+      let getUserList = await guildId.members
         .fetch({ cache: true })
         .catch(console.error);
       let findUser = getUserList.find((r) => r.user.id === element);
@@ -88,6 +86,20 @@ client.on("ready", async () => {
 
   client.on("messageCreate", async (message) => {
     if (message.author.bot) return;
+    // Автоудаление сообщений в каналах в которых можно использовать только команды
+    const channelIdsToDelete = [
+      activitiAdminsChannelId,
+      vipManualChannelId,
+      statsChannesId1,
+      statsChannesId2,
+    ];
+    for (const channelId of channelIdsToDelete) {
+      if (channelId && !message.interaction) {
+        message.delete();
+        break;
+      }
+    }
+
     const user = message.guild.members.cache.get(message.author.id);
     const vipRole = message.guild.roles.cache.get("1072902141666136125");
 
@@ -95,26 +107,12 @@ client.on("ready", async () => {
     if (message.channelId === checkDonateChannelId.id)
       await getDonate(process.env.DONATE_URL, donateChannelId);
 
-    // Канал для выдачи Vip слота вручную
-    if (message.channelId === vipManualyChannel.id) {
-      const msg = message.content.split(" ");
-      const [steamID64, discordId, name, sum] = [
-        msg[0].match(/[0-9]{17}/),
-        msg[1].match(/[0-9]+/),
-        msg[2],
-        msg[3].match(/[0-9]+/),
-      ];
-
-      if (msg.length != 4 || sum[0].length > 4) {
-        message.delete();
-        return;
-      }
-      message.react("👍");
-      creater.vipCreater(steamID64[0], name, sum[0], discordId[0]);
-    }
-
     // Канал для автовыдачи Vip слота за бонусы
     if (message.channelId === vipBonusChannelId.id) {
+      client.users.fetch("132225869698564096", false).then((user) => {
+        user.send(`${message.author.username}\n${message.content} VIP бонус`);
+      }); //Отправляет уведомление в лс меламори
+
       await getSteamIDFromMessage(
         true,
         db,
@@ -134,7 +132,7 @@ client.on("ready", async () => {
       );
 
       client.users.fetch("132225869698564096", false).then((user) => {
-        user.send(`${message.author.username}\n${message.content}`);
+        user.send(`${message.author.username}\n${message.content} VIP донат`);
       }); //Отправляет уведомление в лс меламори
 
       await getSteamIDFromMessage(
@@ -147,31 +145,6 @@ client.on("ready", async () => {
         user,
         (result) => {}
       );
-    }
-
-    // Команды для вывода !vip - даты окончания Vip, !stats - статистики игрока
-    if (statsChannelId.includes(message.channelId)) {
-      if (message.content.toLowerCase().includes("!vip")) {
-        await dateDonateExpires(message.author.id, adminsUrl, message);
-        return;
-      }
-
-      if (message.content.toLowerCase().includes("!stats")) {
-        const contentParts = message.content.split(" ");
-        if (contentParts.length > 1) {
-          await getStatsOnDiscord(db, contentParts[1], message, steamApi);
-        } else {
-          await getStatsOnDiscordWithoutSteamID(
-            db,
-            adminsUrl,
-            message,
-            steamApi
-          );
-        }
-        return;
-      }
-
-      message.delete();
     }
 
     if (bansChannelId.includes(message.channelId)) {
@@ -196,68 +169,49 @@ client.on("ready", async () => {
         message.delete();
       }
     }
-
-    if (
-      adminChannel.includes(message.channelId) &&
-      message.content === "!restart"
-    ) {
-      const servers = [
-        { id: "server1", label: "Сервер 1" },
-        { id: "server2", label: "Сервер 2" },
-        { id: "server3", label: "Сервер 3" },
-        { id: "server4", label: "Сервер 4" },
-      ];
-
-      const buttons = servers.map((server) =>
-        new ButtonBuilder()
-          .setCustomId(server.id)
-          .setLabel(server.label)
-          .setStyle(ButtonStyle.Primary)
-      );
-
-      const row = new ActionRowBuilder().addComponents(...buttons);
-
-      const sentMessage = await message.channel.send({
-        content: "Выберите сервер бота, который вы хотите перезагрузить?",
-        components: [row],
-      });
-
-      message.client.sentMessages = message.client.sentMessages || new Map();
-      message.client.sentMessages.set(message.channelId, sentMessage.id);
-    }
   });
 
-  client.on("interactionCreate", async (interaction) => {
-    if (!interaction.isButton()) return;
-    const userID = interaction.user.id;
-    const { customId } = interaction;
-
-    const serverNumber = customId.replace("server", "");
-
-    try {
-      await interaction.message.delete();
-
-      exec(`pm2 restart SERVER${serverNumber}`, (error) => {
-        if (error) {
-          console.error(`Ошибка: ${error}`);
+  client.on(Events.InteractionCreate, async (interaction) => {
+    const command = interaction.client.commands.get(interaction.commandName);
+    if (interaction.isChatInputCommand()) {
+      try {
+        await command.execute(interaction);
+      } catch (error) {
+        console.error(error);
+        if (interaction.replied || interaction.deferred) {
+          await interaction.followUp({
+            content: "There was an error while executing this command!",
+            ephemeral: true,
+          });
+        } else {
+          await interaction.reply({
+            content: "There was an error while executing this command!",
+            ephemeral: true,
+          });
         }
-      });
+      }
+    } else if (interaction.isButton()) {
+      const userID = interaction.user.id;
+      const { customId } = interaction;
+      const serverNumber = customId.replace("server", "");
 
-      await interaction.channel.send({
-        content: `<@${userID}> Бот #${serverNumber} RNS перезагружен!`,
-      });
+      try {
+        exec(`pm2 restart SERVER${serverNumber}`, (error) => {
+          if (error) {
+            console.error(`Ошибка: ${error}`);
+          }
+        });
 
-      console.log(`<@${userID}> Бот #${serverNumber} RNS перезагружен!`);
-    } catch (error) {
-      console.error("Ошибка при обработке взаимодействия:", error);
+        await interaction.channel.send({
+          content: `<@${userID}> Бот #${serverNumber} RNS перезагружен!`,
+        });
+        await buttonInteraction(interaction);
+        console.log(`<@${userID}> Бот #${serverNumber} RNS перезагружен!`);
+      } catch (error) {
+        console.error("Ошибка при обработке взаимодействия:", error);
+      }
     }
   });
-
-  // if (message.content.includes(":oluh1:")) {
-  //   message.channel.send("<@1153482882443120700>").then((botMessage) => {
-  //     botMessage.delete().catch(console.error);
-  //   });
-  // }
 });
 
 await client.login(process.env.CLIENT_TOKEN);
