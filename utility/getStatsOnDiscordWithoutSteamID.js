@@ -4,7 +4,7 @@ import getStatsOnDiscord from "./getStatsOnDiscord.js";
 async function getStatsOnDiscordWithoutSteamID(
   db,
   adminUrl,
-  message,
+  interaction,
   steamApi
 ) {
   let steamId = [];
@@ -19,14 +19,14 @@ async function getStatsOnDiscordWithoutSteamID(
     data.split("\r\n").some((e) => {
       const user = e.match(regexp);
       if (user) {
-        const getUser = user.filter((el) => el.includes(message.author.id));
+        const getUser = user.filter((el) => el.includes(interaction.user.id));
         if (getUser.length > 0) {
           steamId.push(getUser.toString().match(/[0-9]{17}/));
           return true;
         }
       }
     });
-    getStatsOnDiscord(db, steamId.toString(), message, steamApi);
+    getStatsOnDiscord(db, steamId.toString(), interaction, steamApi);
   });
 }
 export default getStatsOnDiscordWithoutSteamID;

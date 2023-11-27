@@ -1,6 +1,6 @@
 import fs from "fs";
 
-async function dateDonateExpires(discordId, adminUrl, message) {
+async function dateDonateExpires(adminUrl, interaction) {
   const currentUser = [];
   const date = [];
   const regexp =
@@ -13,12 +13,12 @@ async function dateDonateExpires(discordId, adminUrl, message) {
     data.split("\r\n").some((e) => {
       const user = e.match(regexp);
       if (user) {
-        if (user.toString().includes(discordId)) {
+        if (user.toString().includes(interaction.user.id)) {
           currentUser.push(user);
           date.push(
             currentUser[0].toString().match(/[0-9]{2}\.[0-9]{2}\.[0-9]{4}/)[0]
           );
-          message.reply(`Дата окончания Vip статуса - ${date.toString()}`);
+          interaction.reply(`Дата окончания Vip статуса - ${date.toString()}`);
           return true;
         }
       }

@@ -4,6 +4,7 @@
     "axios": "^1.4.0",
     "battlemetrics": "^1.1.0",
     "canvas": "^2.11.2",
+    "cli-table": "^0.3.11",
     "discord.js": "^14.14.1",
     "dotenv": "^16.0.3",
     "firebase": "^9.18.0",

@@ -32,7 +32,7 @@ async function gettime(time, field) {
   return dDisplay + hDisplay;
 }
 
-async function getStatsOnDiscord(dblink, steamId, message, steamApi) {
+async function getStatsOnDiscord(dblink, steamId, interaction, steamApi) {
   const clientdb = new MongoClient(dblink);
   const dbName = "SquadJS";
   const dbCollection = "mainstats";
@@ -298,7 +298,7 @@ async function getStatsOnDiscord(dblink, steamId, message, steamApi) {
     const buffer = canvas.toBuffer("image/png");
     fs.writeFileSync("./stats.png", buffer);
     const imageToSend = new AttachmentBuilder("stats.png");
-    message.reply({ files: [imageToSend] });
+    interaction.reply({ files: [imageToSend] });
   } catch (e) {
     console.error(e);
   } finally {
