@@ -88,7 +88,7 @@ async function getStatsOnDiscord(dblink, steamId, interaction, steamApi) {
       (a, b) => b[1] - a[1]
     );
 
-    const time = (await gettime(user.squad.timeplayed)) || 0;
+    const time = (await gettime(user.squad.timeplayed / 2)) || 0;
     const player = user.matches.history.matches;
     const roleTime1 = await gettime(sortRoles[0][1].toString());
     const roleTime2 = await gettime(sortRoles[1][1].toString());
