@@ -94,8 +94,7 @@ client.on("ready", async () => {
       statsChannesId2,
     ];
     if (allowedCommandChannels.includes(message.channel.id)) {
-      // Если сообщение не начинается с "/" (или другого префикса команд), удаляем его
-      if (!message.content.startsWith("/")) {
+      if (!message.interaction) {
         try {
           await message.delete();
         } catch (error) {
