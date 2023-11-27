@@ -87,6 +87,22 @@ client.on("ready", async () => {
   client.on("messageCreate", async (message) => {
     if (message.author.bot) return;
     // Автоудаление сообщений в каналах в которых можно использовать только команды
+    const allowedCommandChannels = [
+      activitiAdminsChannelId,
+      vipManualChannelId,
+      statsChannesId1,
+      statsChannesId2,
+    ];
+    if (allowedCommandChannels.includes(message.channel.id)) {
+      // Если сообщение не начинается с "/" (или другого префикса команд), удаляем его
+      if (!message.content.startsWith("/")) {
+        try {
+          await message.delete();
+        } catch (error) {
+          console.error("Error deleting message:", error);
+        }
+      }
+    }
 
     const user = message.guild.members.cache.get(message.author.id);
     const vipRole = message.guild.roles.cache.get("1072902141666136125");
