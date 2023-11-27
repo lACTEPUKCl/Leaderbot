@@ -87,18 +87,6 @@ client.on("ready", async () => {
   client.on("messageCreate", async (message) => {
     if (message.author.bot) return;
     // Автоудаление сообщений в каналах в которых можно использовать только команды
-    const channelIdsToDelete = [
-      activitiAdminsChannelId,
-      vipManualChannelId,
-      statsChannesId1,
-      statsChannesId2,
-    ];
-    for (const channelId of channelIdsToDelete) {
-      if (channelId && !message.interaction) {
-        message.delete();
-        break;
-      }
-    }
 
     const user = message.guild.members.cache.get(message.author.id);
     const vipRole = message.guild.roles.cache.get("1072902141666136125");
