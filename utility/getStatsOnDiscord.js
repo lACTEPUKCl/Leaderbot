@@ -92,7 +92,6 @@ async function getStatsOnDiscord(dblink, steamId, interaction, steamApi) {
     const resultArray = Object.entries(resultWeapons).sort(
       (a, b) => b[1] - a[1]
     );
-    console.log(await getTimePlayedFromBM(steamId));
     const time = (await getTimePlayedFromBM(steamId)) || 0;
     const player = user.matches.history.matches;
     const roleTime1 = await gettime(sortRoles[0][1].toString());
@@ -303,7 +302,7 @@ async function getStatsOnDiscord(dblink, steamId, interaction, steamApi) {
     const buffer = canvas.toBuffer("image/png");
     fs.writeFileSync("./stats.png", buffer);
     const imageToSend = new AttachmentBuilder("stats.png");
-    interaction.reply({ files: [imageToSend] });
+    interaction.editReply({ files: [imageToSend] });
   } catch (e) {
     console.error(e);
   } finally {
