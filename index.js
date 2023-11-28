@@ -6,7 +6,7 @@ import cleaner from "./utility/vip-cleaner.js";
 import top20StatsMain from "./utility/top20StatsMain.js";
 import top20StatsTemp from "./utility/top20StatsTemp.js";
 import getDonate from "./utility/getDonate.js";
-import getBanFromBattlemetrics from "./utility/getBansFromBattlemertics.js";
+import getBanFromBattlemetrics from "./utility/getBansFromBattlemetrics.js";
 import getSteamIDFromMessage from "./utility/getSteamIDFromMessage.js";
 //import chartInitialization from "./chartInitialization.js";
 import { exec } from "child_process";
