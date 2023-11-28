@@ -1,7 +1,6 @@
 import { MongoClient } from "mongodb";
 import { config } from "dotenv";
-const envPath = "../.env";
-config({ path: envPath });
+config();
 
 async function getAllData(client) {
   const database = client.db("SquadJS");

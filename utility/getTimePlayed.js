@@ -1,6 +1,5 @@
 import { config } from "dotenv";
-const envPath = "../.env";
-config({ path: envPath });
+config();
 import axios from "axios";
 
 const apiURL_BM = "https://api.battlemetrics.com/players/match";
