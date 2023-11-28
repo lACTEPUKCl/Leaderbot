@@ -18,7 +18,7 @@ async function loadImageAndDraw(ctx, imgPath, x, y, width, height) {
 }
 async function getTimePlayedFromBM(steamId) {
   const timePlayed = await getTimePlayed(steamId);
-  return await gettime(timePlayed);
+  return await gettime(timePlayed / 60);
 }
 
 async function gettime(time, field) {
@@ -92,7 +92,7 @@ async function getStatsOnDiscord(dblink, steamId, interaction, steamApi) {
     const resultArray = Object.entries(resultWeapons).sort(
       (a, b) => b[1] - a[1]
     );
-
+    console.log(await getTimePlayedFromBM(steamId));
     const time = (await getTimePlayedFromBM(steamId)) || 0;
     const player = user.matches.history.matches;
     const roleTime1 = await gettime(sortRoles[0][1].toString());
