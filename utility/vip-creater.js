@@ -1,8 +1,8 @@
 import fs from "fs";
-import { config } from "dotenv";
 import { exec } from "child_process";
-
-config();
+import { config } from "dotenv";
+const envPath = "../.env";
+config({ path: envPath });
 
 const regexp =
   /^Admin=(?<steamID>[0-9]*):Reserved [//]* DiscordID (?<discordId>[0-9]*) do (?<date>[0-9]{2}\.[0-9]{2}\.[0-9]{4})/gm;
