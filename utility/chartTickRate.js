@@ -1,8 +1,7 @@
 import { createCanvas, registerFont } from "canvas";
 import { MongoClient } from "mongodb";
 import { config } from "dotenv";
-const envPath = "../.env";
-config({ path: envPath });
+config();
 import { writeFile } from "fs/promises";
 import { AttachmentBuilder } from "discord.js";
 

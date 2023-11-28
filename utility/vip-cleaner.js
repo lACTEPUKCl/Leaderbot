@@ -1,7 +1,6 @@
 import fs from "fs";
 import { config } from "dotenv";
-const envPath = "../.env";
-config({ path: envPath });
+config();
 const regexp =
   /^Admin=(?<steamID>[0-9]*):Reserved [//]* DiscordID (?<discordId>[0-9]*) do (?<date>[0-9]{2}\.[0-9]{2}\.[0-9]{4})/gm;
 
