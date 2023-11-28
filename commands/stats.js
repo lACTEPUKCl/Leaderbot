@@ -23,6 +23,7 @@ statsCommand.addStringOption((option) =>
 
 const execute = async (interaction) => {
   try {
+    await interaction.deferReply();
     const userParam = interaction.options.getString("steamid64");
 
     const channelId = interaction.channelId;
