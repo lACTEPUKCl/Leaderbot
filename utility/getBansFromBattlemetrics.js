@@ -1,7 +1,8 @@
 import axios from "axios";
 import checkBansFromBattlemetrics from "./checkBansFromBattlemetrics.js";
 import { config } from "dotenv";
-config();
+const envPath = "../.env";
+config({ path: envPath });
 
 async function searchBanFromBattlemetrics(message) {
   const apiKey = process.env.BATTLEMETRICS_API_KEY;
