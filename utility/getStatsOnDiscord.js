@@ -5,6 +5,7 @@ import * as fs from "fs";
 import { loadImage, createCanvas, registerFont } from "canvas";
 import calcVehicleTime from "./calcVehicleTime.js";
 import calcVehicleKills from "./calcVehicleKills.js";
+import getTimePlayed from "./getTimePlayed.js";
 import getExp from "./getExp.js";
 
 async function loadImageAndDraw(ctx, imgPath, x, y, width, height) {
@@ -14,6 +15,10 @@ async function loadImageAndDraw(ctx, imgPath, x, y, width, height) {
   } catch (err) {
     console.log(`Image ${imgPath} not found`);
   }
+}
+async function getTimePlayedFromBM(steamId) {
+  const timePlayed = await getTimePlayed(steamId);
+  return await gettime(timePlayed);
 }
 
 async function gettime(time, field) {
@@ -88,7 +93,7 @@ async function getStatsOnDiscord(dblink, steamId, interaction, steamApi) {
       (a, b) => b[1] - a[1]
     );
 
-    const time = (await gettime(user.squad.timeplayed / 2)) || 0;
+    const time = (await getTimePlayedFromBM(steamId)) || 0;
     const player = user.matches.history.matches;
     const roleTime1 = await gettime(sortRoles[0][1].toString());
     const roleTime2 = await gettime(sortRoles[1][1].toString());
