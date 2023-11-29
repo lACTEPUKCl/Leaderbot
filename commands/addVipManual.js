@@ -47,18 +47,17 @@ const execute = async (interaction) => {
     const discordid = interaction.options.getString("discordid");
     const sum = interaction.options.getString("сумма");
     const name = interaction.options.getString("имя");
-    const user = await interaction.guild.members.fetch(discordid);
-    const vipRole = interaction.guild.roles.cache.find(
-      (role) => role.name === "VIP"
-    );
 
-    if (vipRole) {
+    try {
+      const user = await interaction.guild.members.fetch(discordid);
+      const vipRole = interaction.guild.roles.cache.find(
+        (role) => role.name === "VIP"
+      );
       await user.roles.add(vipRole);
-    } else {
-      console.error("Роль 'VIP' не найдена.");
-    }
+    } catch (error) {}
+
     vipCreater.vipCreater(steamid64, name, sum, discordid);
-    await interaction.channel.send(
+    await interaction.reply(
       `Игроку ${name} ${steamid64} ${discordid} был выдан VIP слот и роль`
     );
   } catch (error) {
