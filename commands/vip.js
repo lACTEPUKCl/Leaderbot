@@ -4,7 +4,7 @@ import { config } from "dotenv";
 config();
 
 const adminsUrl = process.env.ADMINS_URL;
-const allowedChannelId = process.env.VIP_CHANNELID;
+const allowedChannelId = process.env.STATS_CHANNELID;
 const vipCommand = new SlashCommandBuilder()
   .setName("vip")
   .setDescription("Получить дату окончания VIP статуса");
