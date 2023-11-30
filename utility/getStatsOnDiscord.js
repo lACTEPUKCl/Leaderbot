@@ -304,7 +304,10 @@ async function getStatsOnDiscord(dblink, steamId, interaction, steamApi) {
     const imageToSend = new AttachmentBuilder("stats.png");
     interaction.editReply({ files: [imageToSend] });
   } catch (e) {
-    console.error(e);
+    await interaction.editReply({
+      content: "Сыграно слишком мало игр для отображения статистики.",
+      ephemeral: true,
+    });
   } finally {
     await clientdb.close();
   }
