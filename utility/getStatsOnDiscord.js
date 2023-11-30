@@ -54,7 +54,13 @@ async function getStatsOnDiscord(dblink, steamId, interaction, steamApi) {
     const user = await collection.findOne({
       _id: steamId,
     });
-    if (!user) return;
+    if (!user) {
+      await interaction.editReply({
+        content: "Игрок не найден в базе данных.",
+        ephemeral: true,
+      });
+      return;
+    }
     const roles = Object.entries(user.roles);
     let sortRoles = roles.sort((a, b) => b[1] - a[1]);
     const weapons = Object.entries(user.weapons);
