@@ -42,9 +42,11 @@ const execute = async (interaction) => {
     });
 
     if (existingData && existingData.reasons.length !== 0) {
-      const formattedStrikes = existingData.reasons.map(([date, reason]) => {
-        return `Дата: ${date} Причина: ${reason}`;
-      });
+      const formattedStrikes = existingData.reasons.map(
+        ([date, reason, userInitianor]) => {
+          return `Дата: ${date} Причина: ${reason} Инициатор: ${userInitianor}`;
+        }
+      );
 
       const strike = formattedStrikes.join("\n");
       await interaction.reply({
