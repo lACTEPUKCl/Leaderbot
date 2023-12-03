@@ -7,20 +7,14 @@ config();
 const db = process.env.DATABASE_URL;
 const allowedChannelId = process.env.ADMINACTIVITY_CHANNELID;
 
-const addWarnCommand = new SlashCommandBuilder()
-  .setName("addwarn")
-  .setDescription("Выдать предупреждение")
-  .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages);
-addWarnCommand.addUserOption((option) =>
+const getStrikeCommand = new SlashCommandBuilder()
+  .setName("getstrike")
+  .setDescription("Получить список предупреждений")
+  .setDefaultMemberPermissions(PermissionFlagsBits.KickMembers);
+getStrikeCommand.addUserOption((option) =>
   option
     .setName("name")
     .setDescription("Напишите имя администратора в дискорде")
-    .setRequired(true)
-);
-addWarnCommand.addStringOption((option) =>
-  option
-    .setName("reason")
-    .setDescription("Напишите причину вынесения предупреждения")
     .setRequired(true)
 );
 const execute = async (interaction) => {
@@ -34,7 +28,6 @@ const execute = async (interaction) => {
       });
     }
     const user = interaction.options.getUser("name");
-    const reason = interaction.options.getString("reason");
     const discordID = user.id;
     const client = new MongoClient(db, {
       useNewUrlParser: true,
@@ -43,33 +36,24 @@ const execute = async (interaction) => {
     await client.connect();
     const database = client.db("SquadJS");
     const collection = database.collection("discordadmins");
-    const date = new Date();
-    const options = {
-      timeZone: "Europe/Moscow",
-      year: "numeric",
-      month: "numeric",
-      day: "numeric",
-      hour: "numeric",
-      minute: "numeric",
-      second: "numeric",
-      hour12: false,
-    };
 
-    const time = new Intl.DateTimeFormat("ru-RU", options).format(date);
     const existingData = await collection.findOne({
       _id: discordID,
     });
-    if (existingData) {
-      await collection.updateOne(
-        { _id: discordID },
-        {
-          $inc: { warn: 1 },
-          $push: { reasons: [time, reason] },
-        }
-      );
-      await updateAdmins(interaction);
+
+    if (existingData && existingData.reasons.length !== 0) {
+      const formattedStrikes = existingData.reasons.map(([date, reason]) => {
+        return `Дата: ${date} Причина: ${reason}`;
+      });
+
+      const strike = formattedStrikes.join("\n");
       await interaction.reply({
-        content: `Данные успешно обновлены для Admin Discord ID: ${discordID}, Warn увеличен на 1, добавлена причина: ${reason}`,
+        content: strike,
+        ephemeral: true,
+      });
+    } else if (existingData && existingData.reasons.length === 0) {
+      await interaction.reply({
+        content: `Предупреждений нет.`,
         ephemeral: true,
       });
     } else {
@@ -88,4 +72,4 @@ const execute = async (interaction) => {
   }
 };
 
-export default { data: addWarnCommand, execute };
+export default { data: getStrikeCommand, execute };
