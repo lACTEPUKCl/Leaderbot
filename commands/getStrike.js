@@ -44,7 +44,7 @@ const execute = async (interaction) => {
     if (existingData && existingData.reasons.length !== 0) {
       const formattedStrikes = existingData.reasons.map(
         ([date, reason, userInitianor]) => {
-          return `Дата: ${date} Причина: ${reason} Инициатор: ${userInitianor}`;
+          return `[Дата: ${date}] [Причина: ${reason}] [Инициатор: ${userInitianor}]`;
         }
       );
 
