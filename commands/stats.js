@@ -29,7 +29,7 @@ const execute = async (interaction) => {
     const channelId = interaction.channelId;
 
     if (channelId !== allowedChannelId || channelId !== allowedChannelId2) {
-      return await interaction.reply({
+      return await interaction.editReply({
         content:
           "Команда доступна только VIP пользователям в канале 'Статистика'",
         ephemeral: true,
