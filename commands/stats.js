@@ -23,18 +23,17 @@ statsCommand.addStringOption((option) =>
 
 const execute = async (interaction) => {
   try {
-    await interaction.deferReply();
-    const userParam = interaction.options.getString("steamid64");
-
     const channelId = interaction.channelId;
 
     if (channelId !== allowedChannelId && channelId !== allowedChannelId2) {
-      return await interaction.editReply({
+      return await interaction.reply({
         content:
           "Команда доступна только VIP пользователям в канале 'Статистика'",
         ephemeral: true,
       });
     }
+    await interaction.deferReply();
+    const userParam = interaction.options.getString("steamid64");
     if (userParam) {
       await getStatsOnDiscord(db, userParam, interaction, steamApi);
     } else {
