@@ -28,7 +28,7 @@ const execute = async (interaction) => {
 
     const channelId = interaction.channelId;
 
-    if (channelId !== allowedChannelId && channelId !== allowedChannelId2) {
+    if (channelId !== allowedChannelId || channelId !== allowedChannelId2) {
       return await interaction.reply({
         content:
           "Команда доступна только VIP пользователям в канале 'Статистика'",
