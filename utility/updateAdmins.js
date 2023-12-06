@@ -21,7 +21,7 @@ async function updateAdmins(interaction) {
 
     const allData = await getAllData(mongoClient);
     const tableRows = allData
-      .map((admin) => ` ${admin.name}  [${admin.warn}] `)
+      .map((admin) => ` ${admin.name}  [${admin.warn}] [${admin.lastseen}]`)
       .join("\n");
 
     const channelId = interaction.channelId;

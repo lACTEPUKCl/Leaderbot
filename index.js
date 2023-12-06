@@ -8,6 +8,7 @@ import top20StatsTemp from "./utility/top20StatsTemp.js";
 import getDonate from "./utility/getDonate.js";
 import getBanFromBattlemetrics from "./utility/getBansFromBattlemetrics.js";
 import getSteamIDFromMessage from "./utility/getSteamIDFromMessage.js";
+import getLastActivity from "./utility/getLastActivity.js";
 //import chartInitialization from "./chartInitialization.js";
 import { exec } from "child_process";
 
@@ -59,6 +60,7 @@ client.on("ready", async () => {
   setInterval(() => {
     top20StatsMain(leaderboadChannelMainId, db);
     top20StatsTemp(leaderboadChannelTempId, db);
+    getLastActivity();
     //chartInitialization(tickRateChannelId);
   }, 600000);
 
