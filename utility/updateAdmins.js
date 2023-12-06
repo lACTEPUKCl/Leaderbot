@@ -24,21 +24,16 @@ async function updateAdmins(interaction) {
     const tableRows = allData
       .map((admin) => {
         const dateObject = new Date(admin.lastseen);
-        const formattedDate = `${dateObject.getFullYear()}-${(
-          dateObject.getMonth() + 1
-        )
-          .toString()
-          .padStart(2, "0")}-${dateObject
+        const formattedDate = `${dateObject
           .getDate()
           .toString()
-          .padStart(2, "0")} ${dateObject
+          .padStart(2, "0")}:${(dateObject.getMonth() + 1)
+          .toString()
+          .padStart(2, "0")}:${dateObject.getFullYear()} ${dateObject
           .getHours()
           .toString()
           .padStart(2, "0")}:${dateObject
           .getMinutes()
-          .toString()
-          .padStart(2, "0")}:${dateObject
-          .getSeconds()
           .toString()
           .padStart(2, "0")}`;
 
