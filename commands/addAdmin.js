@@ -17,7 +17,7 @@ addAdminCommand.addUserOption((option) =>
     .setDescription("Напишите имя администратора в дискорде")
     .setRequired(true)
 );
-addAdminCommand.addUserOption((option) =>
+addAdminCommand.addStringOption((option) =>
   option
     .setName("bmuserid")
     .setDescription("Напишите battlemetrics ID администратора")
@@ -34,7 +34,7 @@ const execute = async (interaction) => {
       });
     }
     const user = interaction.options.getUser("name");
-    const BMUserId = interaction.options.getUser("bmuserid");
+    const BMUserId = interaction.options.getString("bmuserid");
     const discordID = user.id;
     const guildMember = await interaction.guild.members.fetch(discordID);
     const nickname = guildMember
