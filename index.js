@@ -60,7 +60,7 @@ client.on("ready", async () => {
   setInterval(() => {
     top20StatsMain(leaderboadChannelMainId, db);
     top20StatsTemp(leaderboadChannelTempId, db);
-    getLastActivity();
+    //getLastActivity();
     //chartInitialization(tickRateChannelId);
   }, 600000);
 
