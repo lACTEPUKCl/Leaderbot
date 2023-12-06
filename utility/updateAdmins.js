@@ -20,27 +20,30 @@ async function updateAdmins(interaction) {
     await mongoClient.connect();
 
     const allData = await getAllData(mongoClient);
-    const dateObject = new Date(admin.lastseen);
 
-    const formattedDate = `${dateObject.getFullYear()}-${(
-      dateObject.getMonth() + 1
-    )
-      .toString()
-      .padStart(2, "0")}-${dateObject
-      .getDate()
-      .toString()
-      .padStart(2, "0")} ${dateObject
-      .getHours()
-      .toString()
-      .padStart(2, "0")}:${dateObject
-      .getMinutes()
-      .toString()
-      .padStart(2, "0")}:${dateObject
-      .getSeconds()
-      .toString()
-      .padStart(2, "0")}`;
     const tableRows = allData
-      .map((admin) => ` ${admin.name}  [${admin.warn}] [${formattedDate}]`)
+      .map((admin) => {
+        const dateObject = new Date(admin.lastseen);
+        const formattedDate = `${dateObject.getFullYear()}-${(
+          dateObject.getMonth() + 1
+        )
+          .toString()
+          .padStart(2, "0")}-${dateObject
+          .getDate()
+          .toString()
+          .padStart(2, "0")} ${dateObject
+          .getHours()
+          .toString()
+          .padStart(2, "0")}:${dateObject
+          .getMinutes()
+          .toString()
+          .padStart(2, "0")}:${dateObject
+          .getSeconds()
+          .toString()
+          .padStart(2, "0")}`;
+
+        return ` ${admin.name}  [${admin.warn}] [${formattedDate}]`;
+      })
       .join("\n");
 
     const channelId = interaction.channelId;
