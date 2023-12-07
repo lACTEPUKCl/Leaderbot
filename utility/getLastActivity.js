@@ -20,42 +20,50 @@ const getLastActivity = async () => {
 
     const admins = await collection.find({}).toArray();
 
-    await Promise.all(
-      admins.map(async (admin) => {
-        const existingData = await collection.findOne({ _id: admin._id });
-        let latestLastSeen = existingData.lastseen;
-        if (existingData.bmuserid) {
-          await Promise.all(
-            serverId.map(async (server) => {
-              try {
-                const searchUrl = `https://api.battlemetrics.com/players/${existingData.bmuserid}/servers/${server}`;
-                const response = await axios.get(searchUrl, {
-                  headers: {
-                    Authorization: `Bearer ${tokenBM}`,
-                  },
-                });
+    const delayBetweenServers = 1000;
+    const delayBetweenAdmins = 5000;
 
-                const tempLastSeen = response.data.data.attributes.lastSeen;
-                const tempLastSeenDate = new Date(tempLastSeen);
+    for (const admin of admins) {
+      const existingData = await collection.findOne({ _id: admin._id });
+      let latestLastSeen = existingData.lastseen;
 
-                if (!latestLastSeen || tempLastSeenDate > latestLastSeen) {
-                  latestLastSeen = tempLastSeenDate;
-                }
-              } catch (err) {}
-            })
-          );
+      if (existingData.bmuserid) {
+        for (const server of serverId) {
+          try {
+            const searchUrl = `https://api.battlemetrics.com/players/${existingData.bmuserid}/servers/${server}`;
+            const response = await axios.get(searchUrl, {
+              headers: {
+                Authorization: `Bearer ${tokenBM}`,
+              },
+            });
 
-          if (latestLastSeen > existingData.lastseen) {
-            await collection.updateOne(
-              { _id: admin._id },
-              {
-                $set: { lastseen: latestLastSeen },
-              }
+            const tempLastSeen = response.data.data.attributes.lastSeen;
+            const tempLastSeenDate = new Date(tempLastSeen);
+            console.log(existingData.name);
+            if (!latestLastSeen || tempLastSeenDate > latestLastSeen) {
+              latestLastSeen = tempLastSeenDate;
+            }
+
+            await new Promise((resolve) =>
+              setTimeout(resolve, delayBetweenServers)
             );
+          } catch (err) {
+            console.log(err);
           }
         }
-      })
-    );
+
+        if (latestLastSeen > existingData.lastseen) {
+          await collection.updateOne(
+            { _id: admin._id },
+            {
+              $set: { lastseen: latestLastSeen },
+            }
+          );
+        }
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, delayBetweenAdmins));
+    }
   } finally {
     await client.close();
   }
