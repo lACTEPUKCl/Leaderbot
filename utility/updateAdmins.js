@@ -22,17 +22,18 @@ async function updateAdmins(interaction) {
     const allData = await getAllData(mongoClient);
 
     const tableRows = allData
+      .sort((a, b) => new Date(b.lastseen) - new Date(a.lastseen))
       .map((admin) => {
         const dateObject = new Date(admin.lastseen);
         const formattedDate = `${dateObject
           .getDate()
           .toString()
-          .padStart(2, "0")}:${(dateObject.getMonth() + 1)
+          .padStart(2, "0")}.${(dateObject.getMonth() + 1)
           .toString()
-          .padStart(2, "0")}:${dateObject.getFullYear()} ${dateObject
+          .padStart(2, "0")}.${dateObject.getFullYear()} ${dateObject
           .getHours()
           .toString()
-          .padStart(2, "0")}:${dateObject
+          .padStart(2, "0")}.${dateObject
           .getMinutes()
           .toString()
           .padStart(2, "0")}`;
