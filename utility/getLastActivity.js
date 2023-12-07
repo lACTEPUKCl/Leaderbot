@@ -39,7 +39,6 @@ const getLastActivity = async () => {
 
             const tempLastSeen = response.data.data.attributes.lastSeen;
             const tempLastSeenDate = new Date(tempLastSeen);
-            console.log(existingData.name);
             if (!latestLastSeen || tempLastSeenDate > latestLastSeen) {
               latestLastSeen = tempLastSeenDate;
             }
