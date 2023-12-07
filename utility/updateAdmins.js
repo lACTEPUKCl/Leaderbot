@@ -33,7 +33,7 @@ async function updateAdmins(interaction) {
           .padStart(2, "0")}.${dateObject.getFullYear()} ${dateObject
           .getHours()
           .toString()
-          .padStart(2, "0")}.${dateObject
+          .padStart(2, "0")}:${dateObject
           .getMinutes()
           .toString()
           .padStart(2, "0")}`;
