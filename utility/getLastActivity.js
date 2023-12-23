@@ -21,12 +21,12 @@ const getLastActivity = async () => {
     const admins = await collection.find({}).toArray();
 
     const delayBetweenServers = 1000;
-    const delayBetweenAdmins = 5000;
+    const delayBetweenAdmins = 10000;
 
     for (const admin of admins) {
       const existingData = await collection.findOne({ _id: admin._id });
       let latestLastSeen = existingData.lastseen;
-
+      console.log(admin);
       if (existingData.bmuserid) {
         for (const server of serverId) {
           try {
@@ -46,9 +46,7 @@ const getLastActivity = async () => {
             await new Promise((resolve) =>
               setTimeout(resolve, delayBetweenServers)
             );
-          } catch (err) {
-            console.log(err);
-          }
+          } catch (err) {}
         }
 
         if (latestLastSeen > existingData.lastseen) {
