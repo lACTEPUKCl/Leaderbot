@@ -7,7 +7,7 @@ const updateCommand = new SlashCommandBuilder()
   .setDescription("Обновить список активности");
 
 const execute = async (interaction) => {
-  await interaction.deferReply();
+  await interaction.deferReply({ ephemeral: true });
   await getLastActivity();
   try {
     await updateAdmins(interaction);
