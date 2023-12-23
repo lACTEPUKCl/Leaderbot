@@ -26,7 +26,6 @@ const getLastActivity = async () => {
     for (const admin of admins) {
       const existingData = await collection.findOne({ _id: admin._id });
       let latestLastSeen = existingData.lastseen;
-      console.log(admin);
       if (existingData.bmuserid) {
         for (const server of serverId) {
           try {
