@@ -8,9 +8,9 @@ import top20StatsTemp from "./utility/top20StatsTemp.js";
 import getDonate from "./utility/getDonate.js";
 import getBanFromBattlemetrics from "./utility/getBansFromBattlemetrics.js";
 import getSteamIDFromMessage from "./utility/getSteamIDFromMessage.js";
-import getLastActivity from "./utility/getLastActivity.js";
 //import chartInitialization from "./chartInitialization.js";
 import { exec } from "child_process";
+import * as fs from "fs";
 
 const client = new Client({
   intents: [
@@ -55,12 +55,10 @@ client.on("ready", async () => {
   const db = process.env.DATABASE_URL;
   const steamApi = process.env.STEAM_API;
   const donateUrl = process.env.DONATE_URL;
-
   // Обновление двух таблиц лидеров
   setInterval(() => {
     top20StatsMain(leaderboadChannelMainId, db);
     top20StatsTemp(leaderboadChannelTempId, db);
-    getLastActivity();
     //chartInitialization(tickRateChannelId);
   }, 600000);
 
@@ -95,6 +93,7 @@ client.on("ready", async () => {
       statsChannesId1,
       statsChannesId2,
     ];
+
     if (allowedCommandChannels.includes(message.channel.id)) {
       if (!message.interaction) {
         try {
