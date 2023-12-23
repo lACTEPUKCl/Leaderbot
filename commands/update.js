@@ -7,10 +7,11 @@ const updateCommand = new SlashCommandBuilder()
   .setDescription("Обновить список активности");
 
 const execute = async (interaction) => {
+  await interaction.deferReply();
   await getLastActivity();
   try {
     await updateAdmins(interaction);
-    await interaction.reply({
+    await interaction.editReply({
       content: `Список активности обновлен.`,
       ephemeral: true,
     });
