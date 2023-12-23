@@ -1,13 +1,13 @@
 import { SlashCommandBuilder } from "discord.js";
 import updateAdmins from "../utility/updateAdmins.js";
 import getLastActivity from "./utility/getLastActivity.js";
-getLastActivity();
 
 const updateCommand = new SlashCommandBuilder()
   .setName("update")
   .setDescription("Обновить список активности");
 
 const execute = async (interaction) => {
+  await getLastActivity();
   try {
     await updateAdmins(interaction);
     await interaction.reply({
