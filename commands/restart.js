@@ -6,7 +6,7 @@ import {
   ButtonStyle,
 } from "discord.js";
 import { config } from "dotenv";
-import { exec } from "child_process"; // Предполагается, что вы используете child_process.exec
+import { exec } from "child_process";
 config();
 
 const allowedChannelId = process.env.RESTART_CHANNELID;
@@ -30,7 +30,6 @@ const execute = async (interaction) => {
       { id: "server1", label: "Сервер 1" },
       { id: "server2", label: "Сервер 2" },
       { id: "server3", label: "Сервер 3" },
-      { id: "server4", label: "Сервер 4" },
     ];
 
     const buttons = servers.map((server) =>
@@ -42,9 +41,10 @@ const execute = async (interaction) => {
 
     const row = new ActionRowBuilder().addComponents(...buttons);
 
-    await interaction.reply({
+    await interaction.deferReply({
       content: "Выберите сервер бота, который вы хотите перезагрузить?",
       components: [row],
+      ephemeral: true,
     });
   } catch (error) {
     console.error("Ошибка при выполнении команды:", error);
@@ -72,7 +72,7 @@ const buttonInteraction = async (interaction) => {
       }
     });
 
-    await interaction.channel.send({
+    await interaction.editReply({
       content: `<@${userID}> Бот #${serverNumber} RNS перезагружен!`,
     });
 
