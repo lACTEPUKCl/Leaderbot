@@ -41,7 +41,7 @@ const execute = async (interaction) => {
 
     const row = new ActionRowBuilder().addComponents(...buttons);
 
-    await interaction.deferReply({
+    await interaction.reply({
       content: "Выберите сервер бота, который вы хотите перезагрузить?",
       components: [row],
       ephemeral: true,
