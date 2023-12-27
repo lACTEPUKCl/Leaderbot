@@ -1,4 +1,13 @@
-import { Client, GatewayIntentBits, Collection, Events } from "discord.js";
+import {
+  Client,
+  GatewayIntentBits,
+  Collection,
+  Events,
+  ButtonBuilder,
+  ButtonStyle,
+  ActionRowBuilder,
+  TextInputBuilder,
+} from "discord.js";
 import getCommands from "./commands/getCommands.js";
 import { config } from "dotenv";
 config();
@@ -86,6 +95,19 @@ client.on("ready", async () => {
 
   client.on("messageCreate", async (message) => {
     if (message.author.bot) return;
+    console.log(message.channelId === "1189653903738949723");
+    if (message.channelId === "1189653903738949723") {
+      const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId("SteamID")
+          .setLabel("Привязать SteamID")
+          .setStyle("Success")
+      );
+
+      await message.channel.send({
+        components: [row],
+      });
+    }
     // Автоудаление сообщений в каналах в которых можно использовать только команды
     const allowedCommandChannels = [
       activitiAdminsChannelId,
@@ -194,24 +216,40 @@ client.on("ready", async () => {
         }
       }
     } else if (interaction.isButton()) {
-      const userID = interaction.user.id;
-      const { customId } = interaction;
-      const serverNumber = customId.replace("server", "");
-
-      try {
-        exec(`pm2 restart SERVER${serverNumber}`, (error) => {
-          if (error) {
-            console.error(`Ошибка: ${error}`);
-          }
+      const commandName = interaction?.message?.interaction?.commandName;
+      if (commandName === "SteamID") {
+        const row = new ActionRowBuilder().addComponents(
+          new TextInputBuilder()
+            .setCustomId("steamIdInput")
+            .setPlaceholder("Введите SteamID64")
+        );
+        await interaction.reply({
+          content: "Введите SteamID64!",
+          components: [row],
+          ephemeral: true,
         });
+      }
+      if (commandName === "restart") {
+        const userID = interaction.user.id;
+        const { customId } = interaction;
+        const serverNumber = customId.replace("server", "");
 
-        await interaction.channel.send({
-          content: `<@${userID}> Бот #${serverNumber} RNS перезагружен!`,
-        });
-        await buttonInteraction(interaction);
-        console.log(`<@${userID}> Бот #${serverNumber} RNS перезагружен!`);
-      } catch (error) {
-        console.error("Ошибка при обработке взаимодействия:", error);
+        try {
+          exec(`pm2 restart SERVER${serverNumber}`, (error) => {
+            if (error) {
+              console.error(`Ошибка: ${error}`);
+            }
+          });
+
+          await interaction.channel.send({
+            content: `<@${userID}> Бот #${serverNumber} RNS перезагружен!`,
+          });
+          await buttonInteraction(interaction);
+          console.log(`<@${userID}> Бот #${serverNumber} RNS перезагружен!`);
+        } catch (error) {
+          console.error("Ошибка при обработке взаимодействия:", error);
+        }
+        return;
       }
     }
   });
