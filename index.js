@@ -95,19 +95,19 @@ client.on("ready", async () => {
 
   client.on("messageCreate", async (message) => {
     if (message.author.bot) return;
-    console.log(message.channelId === "1189653903738949723");
-    if (message.channelId === "1189653903738949723") {
-      const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-          .setCustomId("SteamID")
-          .setLabel("Привязать SteamID")
-          .setStyle("Success")
-      );
 
-      await message.channel.send({
-        components: [row],
-      });
-    }
+    // if (message.channelId === "1189653903738949723") {
+    //   const row = new ActionRowBuilder().addComponents(
+    //     new ButtonBuilder()
+    //       .setCustomId("SteamID")
+    //       .setLabel("Привязать SteamID")
+    //       .setStyle("Success")
+    //   );
+
+    //   await message.channel.send({
+    //     components: [row],
+    //   });
+    // }
     // Автоудаление сообщений в каналах в которых можно использовать только команды
     const allowedCommandChannels = [
       activitiAdminsChannelId,
