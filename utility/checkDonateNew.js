@@ -4,7 +4,7 @@ import { MongoClient } from "mongodb";
 import creater from "./vip-creater.js";
 import getSteamId64 from "./getSteamID64.js";
 
-async function main(guildId, db) {
+async function main(guildId, db, steamApi) {
   try {
     let response = await fetch(
       "https://donatepay.ru/api/v1/transactions?access_token=FGQ0h6vAsbvDtBn3d0NZTeKvN93D7bDZ33IKlqck52xhpWU6MyZFaEsLMeuG&limit=10&type=donation&status=success"
