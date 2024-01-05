@@ -63,7 +63,7 @@ async function main(guildId, db, steamApi) {
               // });
 
               let newData = JSON.stringify(transaction);
-              fs.writeFile(`../transactionId.json`, newData, (err) => {
+              fs.writeFile(`./transactionId.json`, newData, (err) => {
                 if (err) return;
               });
             }
