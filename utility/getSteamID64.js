@@ -1,6 +1,6 @@
 import fetch from "node-fetch";
 
-async function getSteamId64(message, steamApi, content, callback) {
+async function getSteamId64(steamApi, content, callback) {
   const steamID64 = content.match(/\b[0-9]{17}\b/)?.[0];
   const steamId = /^https?:\/\/steamcommunity.com\/id\/(?<steamId>.*)/;
   const groupsId = content.match(steamId)?.groups;
@@ -18,10 +18,6 @@ async function getSteamId64(message, steamApi, content, callback) {
       }
     } catch (error) {
       callback(false);
-      console.log(
-        `Не удалось получить steamID пользователя ${message.author.username}`,
-        error
-      );
     }
   }
 

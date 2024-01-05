@@ -7,6 +7,10 @@ import {
   ButtonStyle,
   ActionRowBuilder,
   TextInputBuilder,
+  ModalBuilder,
+  TextInputStyle,
+  EmbedBuilder,
+  AttachmentBuilder,
 } from "discord.js";
 import getCommands from "./commands/getCommands.js";
 import { config } from "dotenv";
@@ -19,7 +23,12 @@ import getBanFromBattlemetrics from "./utility/getBansFromBattlemetrics.js";
 import getSteamIDFromMessage from "./utility/getSteamIDFromMessage.js";
 //import chartInitialization from "./chartInitialization.js";
 import { exec } from "child_process";
-import * as fs from "fs";
+import getSteamIdModal from "./utility/getSteamIdModal.js";
+import getSteamIdFormSubmit from "./utility/getSteamIdFormSubmit.js";
+import donateInteraction from "./utility/donateInteraction.js";
+import checkDonateNew from "./utility/checkDonateNew.js";
+import bonusInteraction from "./utility/bonusInteraction.js";
+import checkVipInteraction from "./utility/checkVipInteraction.js";
 
 const client = new Client({
   intents: [
@@ -50,7 +59,7 @@ client.on("ready", async () => {
   const leaderboadChannelTempId = client.channels.cache.get(
     "1119326545572544562"
   );
-  const guildId = client.guilds.cache.get(process.env.GUILD_ID);
+  const guildId = client.guilds.cache.get("735515208348598292");
   const donateChannelId = client.channels.cache.get("1073712072220754001");
   const checkDonateChannelId = client.channels.cache.get("1073712072220754001");
   const vipChannelId = client.channels.cache.get("819484295709851649");
@@ -64,6 +73,12 @@ client.on("ready", async () => {
   const db = process.env.DATABASE_URL;
   const steamApi = process.env.STEAM_API;
   const donateUrl = process.env.DONATE_URL;
+  const adminsUrl = process.env.ADMINS_URL;
+
+  setInterval(() => {
+    checkDonateNew(guildId, db);
+  }, 60000);
+
   // Обновление двух таблиц лидеров
   setInterval(() => {
     top20StatsMain(leaderboadChannelMainId, db);
@@ -97,17 +112,52 @@ client.on("ready", async () => {
     if (message.author.bot) return;
 
     // if (message.channelId === "1189653903738949723") {
-    //   const row = new ActionRowBuilder().addComponents(
-    //     new ButtonBuilder()
-    //       .setCustomId("SteamID")
-    //       .setLabel("Привязать SteamID")
-    //       .setStyle("Success")
+    //   const imagePath1 = "../image1.png";
+    //   const imagePath2 = "../image2.png";
+
+    //   const attachment1 = new AttachmentBuilder(imagePath1, {
+    //     name: "image1.png",
+    //   });
+    //   const attachment2 = new AttachmentBuilder(imagePath2, {
+    //     name: "image2.png",
+    //   });
+
+    //   message.channel.send({ files: [attachment2] });
+
+    //   const embed1 = new EmbedBuilder().setColor("#275318").setDescription(
+    //     `⠀⠀В награду за активность на наших игровых серверах, мы поощряем игроков предоставлением **VIP** статуса. Для этого в игре действует система бонусных баллов.
+    //       ⠀Каждому игроку начисляется 1 бонусный балл за 1 минуту, проведенную на игровом сервере, на обычной карте и 2 бонусных балла за 1 минуту на seed-карте.
+    //       ⠀За каждые __15000 бонусных__ баллов можно активировать **VIP** статус сроком на 1 месяц. Узнать количество начисленных бонусных баллов можно в игре на нашем сервере написав в чат команду \`"!bonus"\`.
+
+    //       ⠀Чтобы активировать **VIP** за бонусные баллы нажмите на кнопку \`"VIP статус за бонусные баллы"\`.
+
+    //       ⠀Пожалуйста, обратите внимание, что **VIP** статус в игре начнет действовать только после смены карты на сервере!`
     //   );
+
+    //    message.channel.send({ embeds: [embed1] });
+
+    //   const cancel = new ButtonBuilder()
+    //     .setCustomId("donatVip")
+    //     .setLabel("VIP статус за донат")
+    //     .setStyle("Success");
+
+    //   const bonus = new ButtonBuilder()
+    //     .setCustomId("bonusVip")
+    //     .setLabel("VIP статус за бонусные баллы")
+    //     .setStyle("Success");
+
+    //   const checkVip = new ButtonBuilder()
+    //     .setCustomId("checkVip")
+    //     .setLabel("Проверить VIP статус")
+    //     .setStyle("Primary");
+
+    //   const row = new ActionRowBuilder().addComponents(cancel, bonus, checkVip);
 
     //   await message.channel.send({
     //     components: [row],
     //   });
     // }
+
     // Автоудаление сообщений в каналах в которых можно использовать только команды
     const allowedCommandChannels = [
       activitiAdminsChannelId,
@@ -199,6 +249,16 @@ client.on("ready", async () => {
 
   client.on(Events.InteractionCreate, async (interaction) => {
     const command = interaction.client.commands.get(interaction.commandName);
+
+    if (interaction.isModalSubmit()) {
+      const steamIdField = interaction.fields.fields.get("steamid64input");
+
+      if (steamIdField) {
+        const steamLink = steamIdField.value;
+        getSteamIdFormSubmit(interaction, steamLink, db, steamApi);
+      }
+    }
+
     if (interaction.isChatInputCommand()) {
       try {
         await command.execute(interaction);
@@ -217,18 +277,21 @@ client.on("ready", async () => {
       }
     } else if (interaction.isButton()) {
       const commandName = interaction?.message?.interaction?.commandName;
-      if (commandName === "SteamID") {
-        const row = new ActionRowBuilder().addComponents(
-          new TextInputBuilder()
-            .setCustomId("steamIdInput")
-            .setPlaceholder("Введите SteamID64")
-        );
-        await interaction.reply({
-          content: "Введите SteamID64!",
-          components: [row],
-          ephemeral: true,
-        });
+      const buttonId = interaction?.customId;
+
+      if (buttonId === "SteamID") {
+        await getSteamIdModal(interaction);
       }
+      if (buttonId === "donatVip") {
+        await donateInteraction(interaction, db);
+      }
+      if (buttonId === "bonusVip") {
+        await bonusInteraction(interaction, db);
+      }
+      if (buttonId === "checkVip") {
+        await checkVipInteraction(interaction, adminsUrl);
+      }
+
       if (commandName === "restart") {
         const userID = interaction.user.id;
         const { customId } = interaction;
