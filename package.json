@@ -4,6 +4,7 @@
     "axios": "^1.4.0",
     "battlemetrics": "^1.1.0",
     "canvas": "^2.11.2",
+    "centrifuge": "^3.1.2",
     "cli-table": "^0.3.11",
     "discord.js": "^14.14.1",
     "dotenv": "^16.0.3",
@@ -13,7 +14,8 @@
     "node-fetch": "^3.3.0",
     "nodemon": "^2.0.21",
     "pureimage": "^0.3.17",
-    "set-interval-async": "^3.0.3"
+    "set-interval-async": "^3.0.3",
+    "websocket": "^1.0.34"
   },
   "scripts": {
     "start": "nodemon index.js"
