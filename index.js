@@ -76,7 +76,7 @@ client.on("ready", async () => {
   const adminsUrl = process.env.ADMINS_URL;
 
   setInterval(() => {
-    checkDonateNew(guildId, db);
+    checkDonateNew(guildId, db, steamApi);
     console.log("checkDonate");
   }, 60000);
 
