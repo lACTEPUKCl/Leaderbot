@@ -18,7 +18,6 @@ async function updateUserBonuses(collection, steamID, count) {
 }
 
 async function bonusInteraction(interaction, db) {
-  console.log("asd1");
   const clientdb = new MongoClient(db);
   const dbName = "SquadJS";
   const dbCollection = "mainstats";
