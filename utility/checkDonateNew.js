@@ -2,6 +2,7 @@ import fetch from "node-fetch";
 import fs from "fs/promises";
 import { MongoClient } from "mongodb";
 import creater from "./vip-creater.js";
+import getSteamId64 from "./getSteamID64.js";
 
 async function main(guildId, db) {
   try {
