@@ -77,7 +77,6 @@ client.on("ready", async () => {
 
   setInterval(() => {
     checkDonateNew(guildId, db, steamApi);
-    console.log("checkDonate");
   }, 60000);
 
   // Обновление двух таблиц лидеров

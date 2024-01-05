@@ -70,7 +70,7 @@ async function steamIdFormSubmit(interaction, steamLink, dbLink, steamApi) {
           }
 
           return interaction.reply({
-            content: "Steam профиль успешно привязан к аккаунту!",
+            content: `Steam профиль успешно привязан к аккаунту!\nСкопируйте ваш SteamID: **${steamId}** или свою ссылку на Steam профиль\nВставьте его в поле 'Сообщение стримеру' по ссылке https://donatepay.ru/don/rns/`,
             ephemeral: true,
           });
         }
