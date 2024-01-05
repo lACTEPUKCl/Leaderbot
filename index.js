@@ -77,6 +77,7 @@ client.on("ready", async () => {
 
   setInterval(() => {
     checkDonateNew(guildId, db);
+    console.log("checkDonate");
   }, 60000);
 
   // Обновление двух таблиц лидеров
