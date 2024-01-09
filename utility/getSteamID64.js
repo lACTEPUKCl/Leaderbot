@@ -1,6 +1,6 @@
 import fetch from "node-fetch";
 
-async function getSteamId64(steamApi, content, callback) {
+async function getSteamId64(steamApi, content) {
   const steamID64 = content.match(/\b[0-9]{17}\b/)?.[0];
   const steamId = /^https?:\/\/steamcommunity.com\/id\/(?<steamId>.*)/;
   const groupsId = content.match(steamId)?.groups;
@@ -13,20 +13,17 @@ async function getSteamId64(steamApi, content, callback) {
       );
       const dataSteam = await responseSteam.json();
       if (dataSteam.response.success === 1) {
-        callback(dataSteam.response.steamid);
-        return;
+        return dataSteam.response.steamid;
       }
     } catch (error) {
-      callback(false);
+      return false;
     }
   }
 
   if (steamID64) {
-    callback(steamID64);
-    return;
+    return steamID64;
   }
-  callback(false);
-  return null;
+  return false;
 }
 
 export default getSteamId64;
