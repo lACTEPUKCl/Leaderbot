@@ -16,8 +16,12 @@ async function main(guildId, db, steamApi, donateUrl) {
     for (const jsonEl of json.data) {
       const { id, what, comment, sum } = jsonEl;
       if (!existingIds.includes(id.toString())) {
+        if (
+          !comment.includes("steamcommunity") &&
+          !comment.match(/\b[0-9]{17}\b/)?.[0]
+        )
+          return;
         const steamId = await getSteamId64(steamApi, comment);
-        console.log("test");
         if (steamId) {
           const clientdb = new MongoClient(db);
           const dbName = "SquadJS";
