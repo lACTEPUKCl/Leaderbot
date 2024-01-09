@@ -76,7 +76,7 @@ client.on("ready", async () => {
   const adminsUrl = process.env.ADMINS_URL;
 
   setInterval(() => {
-    checkDonateNew(guildId, db, steamApi);
+    checkDonateNew(guildId, db, steamApi, donateUrl);
   }, 60000);
 
   // Обновление двух таблиц лидеров
