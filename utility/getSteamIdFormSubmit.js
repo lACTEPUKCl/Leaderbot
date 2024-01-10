@@ -8,10 +8,7 @@ async function steamIdFormSubmit(interaction, steamLink, dbLink, steamApi) {
   const discordId = interaction.user.id;
 
   try {
-    const steamId64 = await getSteamId64(
-      steamApi,
-      steamLink,
-      async (steamId) => {
+    const steamId = await getSteamId64(steamApi, steamLink);
         if (steamId) {
           await clientdb.connect();
           const db = clientdb.db(dbName);
@@ -74,8 +71,6 @@ async function steamIdFormSubmit(interaction, steamLink, dbLink, steamApi) {
             ephemeral: true,
           });
         }
-      }
-    );
   } catch (e) {
     console.error("Error in steamIdFormSubmit:", e);
   }
