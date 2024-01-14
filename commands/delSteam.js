@@ -30,7 +30,10 @@ const execute = async (interaction) => {
 
     if (existingData) {
       const { _id, name } = existingData;
-      await collection.deleteOne({ discordid: discordID });
+      const result = await collection.updateOne(
+        { discordid: discordID },
+        { $unset: { discordid: "" } }
+      );
 
       await interaction.reply({
         content: `DiscordID игрока ${name} со SteamID:${_id} удален из базы данных`,
