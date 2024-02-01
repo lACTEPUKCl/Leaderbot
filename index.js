@@ -29,6 +29,9 @@ import donateInteraction from "./utility/donateInteraction.js";
 import checkDonateNew from "./utility/checkDonateNew.js";
 import bonusInteraction from "./utility/bonusInteraction.js";
 import checkVipInteraction from "./utility/checkVipInteraction.js";
+import rulesDiscord from "./utility/rulesDiscord.js";
+import rulesPalWorld from "./utility/rulesPalWorld.js";
+import rulesSquad from "./utility/rulesSquad.js";
 
 const client = new Client({
   intents: [
@@ -110,6 +113,9 @@ client.on("ready", async () => {
 
   client.on("messageCreate", async (message) => {
     if (message.author.bot) return;
+    // if (message.channelId === "1200212158282207293") rulesDiscord(message);
+    // if (message.channelId === "1200212107271077930") rulesPalWorld(message);
+    // if (message.channelId === "776064758867820545") rulesSquad(message);
 
     // if (message.channelId === "1189653903738949723") {
     //   const imagePath1 = "../image1.png";

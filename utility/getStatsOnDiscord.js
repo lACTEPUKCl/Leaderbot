@@ -104,8 +104,8 @@ async function getStatsOnDiscord(dblink, steamId, interaction, steamApi) {
     const roleTime2 = await gettime(sortRoles[1][1].toString());
     const role1Img = sortRoles[0][0].split("_").join("");
     const role2Img = sortRoles[1][0].split("_").join("");
-    const leader = (await gettime(user.squad.leader.toString())) || 0;
-    const cmd = (await gettime(user.squad.cmd.toString())) || 0;
+    const leader = (await gettime(user.squad.leader?.toString())) || 0;
+    const cmd = (await gettime(user.squad.cmd?.toString())) || 0;
     const vehicle = await calcVehicleTime(user.possess);
     const vehicleKills = await calcVehicleKills(user.weapons);
     const heliTime = (await gettime(vehicle[1])) || 0;
@@ -310,6 +310,7 @@ async function getStatsOnDiscord(dblink, steamId, interaction, steamApi) {
     const imageToSend = new AttachmentBuilder("stats.png");
     interaction.editReply({ files: [imageToSend] });
   } catch (e) {
+    console.log(e);
     await interaction.editReply({
       content: "Сыграно слишком мало игр для отображения статистики.",
       ephemeral: true,
