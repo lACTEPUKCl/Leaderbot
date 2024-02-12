@@ -49,7 +49,6 @@ const execute = async (interaction) => {
       components: [row],
       ephemeral: true,
     });
-    await interaction.deferReply({ ephemeral: true });
   } catch (error) {
     console.error("Ошибка при выполнении команды:", error);
     await interaction.reply({
