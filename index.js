@@ -20,7 +20,6 @@ import top20StatsMain from "./utility/top20StatsMain.js";
 import top20StatsTemp from "./utility/top20StatsTemp.js";
 import getDonate from "./utility/getDonate.js";
 import getBanFromBattlemetrics from "./utility/getBansFromBattlemetrics.js";
-import getSteamIDFromMessage from "./utility/getSteamIDFromMessage.js";
 //import chartInitialization from "./chartInitialization.js";
 import { exec } from "child_process";
 import getSteamIdModal from "./utility/getSteamIdModal.js";
@@ -29,9 +28,9 @@ import donateInteraction from "./utility/donateInteraction.js";
 import checkDonateNew from "./utility/checkDonateNew.js";
 import bonusInteraction from "./utility/bonusInteraction.js";
 import checkVipInteraction from "./utility/checkVipInteraction.js";
-import rulesDiscord from "./utility/rulesDiscord.js";
-import rulesPalWorld from "./utility/rulesPalWorld.js";
-import rulesSquad from "./utility/rulesSquad.js";
+// import rulesDiscord from "./utility/rulesDiscord.js";
+// import rulesPalWorld from "./utility/rulesPalWorld.js";
+// import rulesSquad from "./utility/rulesSquad.js";
 
 const client = new Client({
   intents: [
@@ -65,8 +64,7 @@ client.on("ready", async () => {
   const guildId = client.guilds.cache.get("735515208348598292");
   const donateChannelId = client.channels.cache.get("1073712072220754001");
   const checkDonateChannelId = client.channels.cache.get("1073712072220754001");
-  const vipChannelId = client.channels.cache.get("819484295709851649");
-  const vipBonusChannelId = client.channels.cache.get("1161743444411175024");
+  // const threadChannelId = client.channels.cache.get("1204124602230374471");
   const bansChannelId = "1115705521119440937";
   const memeChannelId = "1151479560047706162";
   const activitiAdminsChannelId = process.env.ADMINACTIVITY_CHANNELID;
@@ -115,7 +113,14 @@ client.on("ready", async () => {
     if (message.author.bot) return;
     // if (message.channelId === "1200212158282207293") rulesDiscord(message);
     // if (message.channelId === "1200212107271077930") rulesPalWorld(message);
-    // if (message.channelId === "776064758867820545") rulesSquad(message);
+
+    // serverlist ("galactic", "vanila", "mee", "squadv")
+    // if (message.channelId === "1119060668046389308") {
+    //   rulesSquad("galactic", threadChannelId);
+    //   rulesSquad("mee", threadChannelId);
+    //   rulesSquad("squadv", threadChannelId);
+    //   rulesSquad("squad", threadChannelId);
+    // }
 
     // if (message.channelId === "1189653903738949723") {
     //   const imagePath1 = "../image1.png";
@@ -182,52 +187,9 @@ client.on("ready", async () => {
       }
     }
 
-    const user = message.guild.members.cache.get(message.author.id);
-    const vipRole = message.guild.roles.cache.get("1072902141666136125");
-
     // Канал для вывода списка донатов
     if (message.channelId === checkDonateChannelId.id)
       await getDonate(process.env.DONATE_URL, donateChannelId);
-
-    // Канал для автовыдачи Vip слота за бонусы
-    if (message.channelId === vipBonusChannelId.id) {
-      client.users.fetch("132225869698564096", false).then((user) => {
-        user.send(`${message.author.username}\n${message.content} VIP бонус`);
-      }); //Отправляет уведомление в лс меламори
-
-      await getSteamIDFromMessage(
-        true,
-        db,
-        message,
-        steamApi,
-        donateUrl,
-        vipRole,
-        user,
-        (result) => {}
-      );
-    }
-
-    // Канал для автовыдачи Vip слота
-    if (message.channelId === vipChannelId.id) {
-      console.log(
-        `Получен запрос на получение Vip слота от игрока ${message.author.username}`
-      );
-
-      client.users.fetch("132225869698564096", false).then((user) => {
-        user.send(`${message.author.username}\n${message.content} VIP донат`);
-      }); //Отправляет уведомление в лс меламори
-
-      await getSteamIDFromMessage(
-        false,
-        db,
-        message,
-        steamApi,
-        donateUrl,
-        vipRole,
-        user,
-        (result) => {}
-      );
-    }
 
     if (bansChannelId.includes(message.channelId)) {
       getBanFromBattlemetrics(message);
