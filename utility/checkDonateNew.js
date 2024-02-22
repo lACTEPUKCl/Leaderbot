@@ -58,14 +58,6 @@ async function main(guildId, db, steamApi, donateUrl) {
             console.log(error);
           }
 
-          discordUser
-            .send(
-              "Ваш Vip статус успешно получен, активация на серверах произойдет после смены карты, при наличии проблем создайте тикет в https://discord.com/channels/735515208348598292/1068565169694851182"
-            )
-            .catch((error) => {
-              console.log("Невозможно отправить сообщение пользователю");
-            });
-
           // message.channel.send({
           //   content: `Игроку <@${message.author.id}> - выдан VIP статус, спасибо за поддержку!`,
           // });
