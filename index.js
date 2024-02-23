@@ -76,7 +76,6 @@ client.on("ready", async () => {
   const steamApi = process.env.STEAM_API;
   const donateUrl = process.env.DONATE_URL;
   const adminsUrl = process.env.ADMINS_URL;
-  const userChannels = {};
 
   setInterval(() => {
     checkDonateNew(guildId, db, steamApi, donateUrl);
@@ -325,8 +324,6 @@ client.on("ready", async () => {
         parent: categoryId,
       });
 
-      userChannels[newState.member.id] = newChannel;
-
       const everyoneRole = newState.guild.roles.everyone;
 
       // Создаем разрешения для ролей
@@ -376,7 +373,6 @@ client.on("ready", async () => {
     ) {
       if (oldUserChannel.members.size === 0) {
         await oldUserChannel.delete();
-        delete userChannels[oldState.member.id];
       }
     }
   });
