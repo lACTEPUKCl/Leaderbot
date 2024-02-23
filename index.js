@@ -78,16 +78,16 @@ client.on("ready", async () => {
   const adminsUrl = process.env.ADMINS_URL;
   const userChannels = {};
 
-  // setInterval(() => {
-  //   checkDonateNew(guildId, db, steamApi, donateUrl);
-  // }, 60000);
+  setInterval(() => {
+    checkDonateNew(guildId, db, steamApi, donateUrl);
+  }, 60000);
 
-  // // Обновление двух таблиц лидеров
-  // setInterval(() => {
-  //   top20StatsMain(leaderboadChannelMainId, db);
-  //   top20StatsTemp(leaderboadChannelTempId, db);
-  //   //chartInitialization(tickRateChannelId);
-  // }, 600000);
+  // Обновление двух таблиц лидеров
+  setInterval(() => {
+    top20StatsMain(leaderboadChannelMainId, db);
+    top20StatsTemp(leaderboadChannelTempId, db);
+    //chartInitialization(tickRateChannelId);
+  }, 600000);
 
   // Очистка Vip пользователей, удаление ролей + отправка им уведомлений
   cleaner.vipCleaner((ids) =>
