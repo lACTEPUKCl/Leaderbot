@@ -40,6 +40,7 @@ const client = new Client({
     GatewayIntentBits.GuildMembers,
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildMessageReactions,
+    GatewayIntentBits.GuildVoiceStates,
   ],
 });
 
@@ -75,17 +76,18 @@ client.on("ready", async () => {
   const steamApi = process.env.STEAM_API;
   const donateUrl = process.env.DONATE_URL;
   const adminsUrl = process.env.ADMINS_URL;
+  const userChannels = {};
 
-  setInterval(() => {
-    checkDonateNew(guildId, db, steamApi, donateUrl);
-  }, 60000);
+  // setInterval(() => {
+  //   checkDonateNew(guildId, db, steamApi, donateUrl);
+  // }, 60000);
 
-  // Обновление двух таблиц лидеров
-  setInterval(() => {
-    top20StatsMain(leaderboadChannelMainId, db);
-    top20StatsTemp(leaderboadChannelTempId, db);
-    //chartInitialization(tickRateChannelId);
-  }, 600000);
+  // // Обновление двух таблиц лидеров
+  // setInterval(() => {
+  //   top20StatsMain(leaderboadChannelMainId, db);
+  //   top20StatsTemp(leaderboadChannelTempId, db);
+  //   //chartInitialization(tickRateChannelId);
+  // }, 600000);
 
   // Очистка Vip пользователей, удаление ролей + отправка им уведомлений
   cleaner.vipCleaner((ids) =>
@@ -281,6 +283,100 @@ client.on("ready", async () => {
           console.error("Ошибка при обработке взаимодействия:", error);
         }
         return;
+      }
+    }
+  });
+
+  client.on("voiceStateUpdate", async (oldState, newState) => {
+    const newUserChannel = newState.channel;
+    const oldUserChannel = oldState.channel;
+    const channelIdToCreate = "1184077084495204453";
+    const categoryId = "1087301137645981747";
+
+    // Функция для создания разрешений для ролей
+    const createRolePermissions = () => ({
+      ViewChannel: true,
+      AddReactions: true,
+      Stream: true,
+      SendMessages: true,
+      AttachFiles: true,
+      Connect: true,
+      Speak: true,
+    });
+
+    // Проверяем, если пользователь входит в канал для создания
+    if (
+      newUserChannel?.id === channelIdToCreate &&
+      !oldUserChannel &&
+      newUserChannel
+    ) {
+      const playerName = newState.member.displayName;
+      const rolesToAllow = [
+        "Генерал",
+        "Замполит",
+        "Офицер",
+        "Сержант",
+        "Курсант",
+        "Роль",
+      ];
+      const newChannel = await newUserChannel.guild.channels.create({
+        name: playerName,
+        type: "2",
+        parent: categoryId,
+      });
+
+      userChannels[newState.member.id] = newChannel;
+
+      const everyoneRole = newState.guild.roles.everyone;
+
+      // Создаем разрешения для ролей
+      const rolePermissions = rolesToAllow.map((roleName) => {
+        const role = newState.guild.roles.cache.find(
+          (role) => role.name === roleName
+        );
+        if (role) {
+          return newChannel.permissionOverwrites.create(
+            role,
+            createRolePermissions(role, true)
+          );
+        } else {
+          console.log(`Роль ${roleName} не найдена.`);
+          return null;
+        }
+      });
+
+      const memberPermission = newChannel.permissionOverwrites.create(
+        newState.member,
+        createRolePermissions(newState.member)
+      );
+
+      // Создаем разрешения для @everyone
+      const everyonePermission = newChannel.permissionOverwrites.create(
+        everyoneRole,
+        {
+          ViewChannel: false,
+        }
+      );
+
+      // Ждем завершения всех операций по созданию разрешений
+      await Promise.all([
+        ...rolePermissions,
+        memberPermission,
+        everyonePermission,
+      ]);
+
+      // Перемещаем пользователя в созданный канал
+      await newState.member.voice.setChannel(newChannel);
+    }
+
+    // Проверяем, если пользователь покидает любой канал в категории
+    if (
+      oldUserChannel?.parentId === categoryId &&
+      oldUserChannel?.id !== channelIdToCreate
+    ) {
+      if (oldUserChannel.members.size === 0) {
+        await oldUserChannel.delete();
+        delete userChannels[oldState.member.id];
       }
     }
   });
