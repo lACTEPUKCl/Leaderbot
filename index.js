@@ -291,7 +291,7 @@ client.on("ready", async () => {
     const oldUserChannel = oldState.channel;
     const channelIdToCreate = "1184077084495204453";
     const categoryId = "1087301137645981747";
-
+    let newChannel;
     // Функция для создания разрешений для ролей
     const createRolePermissions = () => ({
       ViewChannel: true,
@@ -318,7 +318,7 @@ client.on("ready", async () => {
         "Курсант",
         "Роль",
       ];
-      const newChannel = await newUserChannel.guild.channels.create({
+      newChannel = await newUserChannel.guild.channels.create({
         name: playerName,
         type: "2",
         parent: categoryId,
@@ -363,7 +363,11 @@ client.on("ready", async () => {
       ]);
 
       // Перемещаем пользователя в созданный канал
-      await newState.member.voice.setChannel(newChannel);
+      try {
+        await newState.member.voice.setChannel(newChannel);
+      } catch (error) {
+        await newChannel.delete();
+      }
     }
 
     // Проверяем, если пользователь покидает любой канал в категории
