@@ -200,16 +200,16 @@ client.on("ready", async () => {
       if (message.attachments.size > 0) {
         const isImage = message.attachments.every(
           (attachment) =>
-            /\.(jpg|jpeg|png|gif)$/.test(attachment.url) ||
-            /\.(jpg|jpeg|png|gif)(\?.*)?$/.test(attachment.url)
+            /\.(jpg|jpeg|png|gif|mp4|mov|avi)$/.test(attachment.url) ||
+            /\.(jpg|jpeg|png|gif|mp4|mov|avi)(\?.*)?$/.test(attachment.url)
         );
 
         if (!isImage) {
           message.delete();
         }
       } else if (
-        !/\.(jpg|jpeg|png|gif)$/.test(message.content) &&
-        !/\.(jpg|jpeg|png|gif)(\?.*)?$/.test(message.content)
+        !/\.(jpg|jpeg|png|gif|mp4|mov|avi)$/.test(message.content) &&
+        !/\.(jpg|jpeg|png|gif|mp4|mov|avi)(\?.*)?$/.test(message.content)
       ) {
         message.delete();
       }
