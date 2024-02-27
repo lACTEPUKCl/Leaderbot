@@ -332,9 +332,10 @@ client.on("ready", async () => {
           (role) => role.name === roleName
         );
         if (role) {
-          return newChannel.permissionOverwrites.create(role, {
-            ViewChannel: true,
-          });
+          return newChannel.permissionOverwrites.create(
+            role,
+            createRolePermissions(role, true)
+          );
         } else {
           console.log(`Роль ${roleName} не найдена.`);
           return null;
