@@ -332,14 +332,21 @@ client.on("ready", async () => {
           (role) => role.name === roleName
         );
         if (role) {
-          return newChannel.permissionOverwrites.create(
-            role,
-            createRolePermissions(role, true)
-          );
+          return newChannel.permissionOverwrites.create(role, {
+            ViewChannel: true,
+          });
         } else {
           console.log(`Роль ${roleName} не найдена.`);
           return null;
         }
+      });
+      const botRole = newState.guild.roles.cache.find(
+        (role) => role.name === "Русский Народный Бот"
+      );
+      const botPermission = newChannel.permissionOverwrites.create(botRole, {
+        ViewChannel: true,
+        ManageChannels: true,
+        MoveMembers: true,
       });
 
       const memberPermission = newChannel.permissionOverwrites.create(
@@ -360,6 +367,7 @@ client.on("ready", async () => {
         ...rolePermissions,
         memberPermission,
         everyonePermission,
+        botPermission,
       ]);
 
       // Перемещаем пользователя в созданный канал
