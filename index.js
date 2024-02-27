@@ -341,6 +341,14 @@ client.on("ready", async () => {
           return null;
         }
       });
+      const botRole = newState.guild.roles.cache.find(
+        (role) => role.name === "Русский Народный Бот"
+      );
+      const botPermission = newChannel.permissionOverwrites.create(botRole, {
+        ViewChannel: true,
+        ManageChannels: true,
+        MoveMembers: true,
+      });
 
       const memberPermission = newChannel.permissionOverwrites.create(
         newState.member,
@@ -360,6 +368,7 @@ client.on("ready", async () => {
         ...rolePermissions,
         memberPermission,
         everyonePermission,
+        botPermission,
       ]);
 
       // Перемещаем пользователя в созданный канал
