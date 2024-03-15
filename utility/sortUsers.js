@@ -25,7 +25,6 @@ async function sortUsers(db, sort, status) {
       const matchesMatches = matches.matches;
       return `${name.trim()} ${kills} ${death} ${revives} ${teamkills} ${kd} ${matchesMatches}`;
     });
-    console.log(players);
     return players;
   } catch (e) {
     console.error(e);
