@@ -49,6 +49,20 @@ async function steamIdFormSubmit(interaction, steamLink, dbLink, steamApi) {
         });
       }
 
+      const filter = {
+        _id: steamId,
+      };
+
+      const update = {
+        $set: {
+          discordid: discordId,
+        },
+      };
+
+      await collection.updateOne(filter, update, {
+        upsert: true,
+      });
+
       await clientdb.close();
 
       return interaction.reply({
