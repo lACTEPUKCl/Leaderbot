@@ -76,10 +76,12 @@ const execute = async (interaction) => {
         clanUsers[currentClan] = clanUsers[currentClan] || [];
         clanUsers[currentClan].push(user);
         if (user.steamId === steamID64 || user.discordID === discordIDuser) {
-          const clanRole = interaction.guild.roles.cache.find(
-            (role) => role.name === `${currentClan}`
-          );
-          guildMember.roles.remove(clanRole);
+          if (guildMember) {
+            const clanRole = interaction.guild.roles.cache.find(
+              (role) => role.name === `${currentClan}`
+            );
+            guildMember.roles.remove(clanRole);
+          }
           foundUser = true;
           return;
         }
