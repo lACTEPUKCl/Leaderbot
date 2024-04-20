@@ -100,7 +100,7 @@ const execute = async (interaction) => {
 
     await fs.promises.writeFile(
       `${adminsCfgPath}Admins.cfg`,
-      updatedLines.join("\n")
+      updatedLines.join("\r\n")
     );
 
     await interaction.reply({
@@ -115,7 +115,7 @@ const execute = async (interaction) => {
           timeZone: "Europe/Moscow",
         }
       )}.cfg`,
-      data,
+      updatedLines.join("\r\n"),
       (err) => {
         if (err) {
           console.error(err);
