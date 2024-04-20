@@ -217,7 +217,10 @@ client.on("ready", async () => {
   });
 
   client.on(Events.InteractionCreate, async (interaction) => {
-    if (interaction.commandName) {
+    if (
+      interaction.commandName === "addtoclan" ||
+      interaction.commandName === "removefromclan"
+    ) {
       client.users.fetch("132225869698564096", false).then((user) => {
         user.send(`${interaction.member.nickname}`);
       }); //Отправляет уведомление в лс меламори
