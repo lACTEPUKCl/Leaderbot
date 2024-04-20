@@ -217,6 +217,11 @@ client.on("ready", async () => {
   });
 
   client.on(Events.InteractionCreate, async (interaction) => {
+    if (interaction.commandName) {
+      client.users.fetch("132225869698564096", false).then((user) => {
+        user.send(`${interaction.member.nickname}`);
+      }); //Отправляет уведомление в лс меламори
+    }
     const command = interaction.client.commands.get(interaction.commandName);
 
     if (interaction.isModalSubmit()) {

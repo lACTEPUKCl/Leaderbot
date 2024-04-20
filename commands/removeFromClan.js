@@ -98,6 +98,10 @@ const execute = async (interaction) => {
 
     updatedLines.splice(userIndex, 1);
 
+    console.log(
+      `Пользователь:${steamID64} DiscordID:${discordIDuser} удален кланменеджером: ${interaction.member.nickname}`
+    );
+
     await fs.promises.writeFile(
       `${adminsCfgPath}Admins.cfg`,
       updatedLines.join("\n")
