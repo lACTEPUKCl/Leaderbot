@@ -7,7 +7,7 @@ config();
 const addToClanCommand = new SlashCommandBuilder()
   .setName("addtoclan")
   .setDescription("Добавить игрока в клан")
-  .setDefaultMemberPermissions(PermissionFlagsBits.RequestToSpeak);
+  .setDefaultMemberPermissions(PermissionFlagsBits.CreatePrivateThreads);
 addToClanCommand.addStringOption((option) =>
   option
     .setName("steamid64")
@@ -108,7 +108,7 @@ const execute = async (interaction) => {
         );
         fs.writeFile(
           `${adminsCfgPath}Admins.cfg`,
-          updatedLines.join("\n"),
+          updatedLines.join("\n").trim(),
           (err) => {
             if (err) {
               console.error("Ошибка записи файла:", err);
@@ -128,7 +128,7 @@ const execute = async (interaction) => {
               timeZone: "Europe/Moscow",
             }
           )}.cfg`,
-          updatedLines.join("\n"),
+          updatedLines.join("\n").trim(),
           (err) => {
             if (err) {
               console.error(err);
@@ -147,7 +147,10 @@ const execute = async (interaction) => {
           }
         );
       } else {
-        await interaction.reply("У вас нет прав на добавление в этот клан.");
+        await interaction.reply({
+          content: "У вас нет прав на добавление в клан.",
+          ephemeral: true,
+        });
       }
     });
   } catch (error) {

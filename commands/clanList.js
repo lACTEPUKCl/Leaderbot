@@ -6,7 +6,7 @@ config();
 const clanListCommand = new SlashCommandBuilder()
   .setName("clanlist")
   .setDescription("Получить список VIP в клане")
-  .setDefaultMemberPermissions(PermissionFlagsBits.RequestToSpeak);
+  .setDefaultMemberPermissions(PermissionFlagsBits.CreatePrivateThreads);
 
 const execute = async (interaction) => {
   try {
@@ -70,9 +70,10 @@ const execute = async (interaction) => {
           ephemeral: true,
         });
       } else {
-        await interaction.reply(
-          "У вас нет прав на просмотр этого списка клана."
-        );
+        await interaction.reply({
+          content: "У вас нет прав на просмотр этого списка клана.",
+          ephemeral: true,
+        });
       }
     });
   } catch (error) {

@@ -7,7 +7,7 @@ config();
 const removeFromClanCommand = new SlashCommandBuilder()
   .setName("removefromclan")
   .setDescription("Удалить игрока из клана")
-  .setDefaultMemberPermissions(PermissionFlagsBits.RequestToSpeak);
+  .setDefaultMemberPermissions(PermissionFlagsBits.CreatePrivateThreads);
 removeFromClanCommand.addUserOption((option) =>
   option.setName("name").setDescription("Напишите имя игрока в дискорде")
 );
@@ -104,7 +104,7 @@ const execute = async (interaction) => {
 
     await fs.promises.writeFile(
       `${adminsCfgPath}Admins.cfg`,
-      updatedLines.join("\n")
+      updatedLines.join("\n").trim()
     );
 
     await interaction.reply({
@@ -119,7 +119,7 @@ const execute = async (interaction) => {
           timeZone: "Europe/Moscow",
         }
       )}.cfg`,
-      updatedLines.join("\n"),
+      updatedLines.join("\n").trim(),
       (err) => {
         if (err) {
           console.error(err);
