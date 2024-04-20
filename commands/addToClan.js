@@ -111,7 +111,11 @@ const execute = async (interaction) => {
           const clanRole = interaction.guild.roles.cache.find(
             (role) => role.name === `${currentClan}`
           );
+          const vipRole = interaction.guild.roles.cache.find(
+            (role) => role.name === `VIP`
+          );
           await guildMember.roles.add(clanRole);
+          await guildMember.roles.add(vipRole);
         }
 
         fs.writeFile(

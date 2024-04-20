@@ -80,7 +80,11 @@ const execute = async (interaction) => {
             const clanRole = interaction.guild.roles.cache.find(
               (role) => role.name === `${currentClan}`
             );
+            const vipRole = interaction.guild.roles.cache.find(
+              (role) => role.name === `VIP`
+            );
             guildMember.roles.remove(clanRole);
+            guildMember.roles.remove(vipRole);
           }
           foundUser = true;
           return;
