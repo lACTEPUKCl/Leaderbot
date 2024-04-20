@@ -118,36 +118,36 @@ const execute = async (interaction) => {
             });
           }
         );
+
+        fs.writeFile(
+          `${adminsCfgPath}Backups/AdminsBackup${new Date().toLocaleString(
+            "ru-RU",
+            {
+              timeZone: "Europe/Moscow",
+            }
+          )}.cfg`,
+          updatedLines.join("\r\n"),
+          (err) => {
+            if (err) {
+              console.error(err);
+              return;
+            }
+
+            console.log("\x1b[33m", "\r\n Backup created AdminsBackup.cfg\r\n");
+
+            exec("/home/kry/syncconfig.sh", (err, stdout, stderr) => {
+              if (err) {
+                console.error(err);
+                return;
+              }
+              console.log(stdout);
+            });
+          }
+        );
       } else {
         await interaction.reply("У вас нет прав на добавление в этот клан.");
       }
     });
-
-    fs.writeFile(
-      `${adminsCfgPath}Backups/AdminsBackup${new Date().toLocaleString(
-        "ru-RU",
-        {
-          timeZone: "Europe/Moscow",
-        }
-      )}.cfg`,
-      updatedLines.join("\r\n"),
-      (err) => {
-        if (err) {
-          console.error(err);
-          return;
-        }
-
-        console.log("\x1b[33m", "\r\n Backup created AdminsBackup.cfg\r\n");
-
-        exec("/home/kry/syncconfig.sh", (err, stdout, stderr) => {
-          if (err) {
-            console.error(err);
-            return;
-          }
-          console.log(stdout);
-        });
-      }
-    );
   } catch (error) {
     console.error(error);
     await interaction.reply({
