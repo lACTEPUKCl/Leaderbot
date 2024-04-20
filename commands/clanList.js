@@ -14,7 +14,7 @@ const execute = async (interaction) => {
     const discordID = interaction.user.id;
     const extractUsers = (line) => {
       const match = line.match(
-        /Admin=(\d+):Reserved \/\/ DiscordID (\d+) do (.+)/
+        /Admin=(\d+):ClanVip \/\/ DiscordID (\d+) do (.+)/
       );
       if (match) {
         return { steamId: match[1], discordID: match[2] };

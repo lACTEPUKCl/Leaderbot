@@ -24,7 +24,7 @@ const execute = async (interaction) => {
     const adminsCfgPath = process.env.ADMINS_URL;
     const extractUsers = (line) => {
       const match = line.match(
-        /Admin=(\d+):Reserved \/\/ DiscordID (\d+) do (.+)/
+        /Admin=(\d+):ClanVip \/\/ DiscordID (\d+) do (.+)/
       );
       if (match) {
         return { steamId: match[1], discordID: match[2] };
@@ -99,7 +99,7 @@ const execute = async (interaction) => {
     }
 
     const userIndex = updatedLines.findIndex((line) =>
-      line.includes(`Admin=${steamID64}:Reserved // DiscordID ${discordIDuser}`)
+      line.includes(`Admin=${steamID64}:ClanVip // DiscordID ${discordIDuser}`)
     );
 
     console.log(
