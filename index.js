@@ -77,38 +77,38 @@ client.on("ready", async () => {
   const donateUrl = process.env.DONATE_URL;
   const adminsUrl = process.env.ADMINS_URL;
 
-  setInterval(() => {
-    checkDonateNew(guildId, db, steamApi, donateUrl);
-  }, 60000);
+  // setInterval(() => {
+  //   checkDonateNew(guildId, db, steamApi, donateUrl);
+  // }, 60000);
 
-  // Обновление двух таблиц лидеров
-  setInterval(() => {
-    top20StatsMain(leaderboadChannelMainId, db);
-    top20StatsTemp(leaderboadChannelTempId, db);
-    //chartInitialization(tickRateChannelId);
-  }, 600000);
+  // // Обновление двух таблиц лидеров
+  // setInterval(() => {
+  //   top20StatsMain(leaderboadChannelMainId, db);
+  //   top20StatsTemp(leaderboadChannelTempId, db);
+  //   //chartInitialization(tickRateChannelId);
+  // }, 600000);
 
-  // Очистка Vip пользователей, удаление ролей + отправка им уведомлений
-  cleaner.vipCleaner((ids) =>
-    ids.forEach(async (element) => {
-      let role =
-        guildId.roles.cache.find((r) => r.name === "VIP") ||
-        (await guildId.roles.fetch("1072902141666136125"));
-      let getUserList = await guildId.members
-        .fetch({ cache: true })
-        .catch(console.error);
-      let findUser = getUserList.find((r) => r.user.id === element);
-      if (!findUser) return;
-      findUser
-        .send(
-          "Ваш Vip статус на сервере RNS закончился, для продления вип статуса перейдите по ссылке https://discord.com/channels/735515208348598292/1189653903738949723"
-        )
-        .catch((error) => {
-          console.log("Невозможно отправить сообщение пользователю");
-        });
-      findUser.roles.remove(role);
-    })
-  );
+  // // Очистка Vip пользователей, удаление ролей + отправка им уведомлений
+  // cleaner.vipCleaner((ids) =>
+  //   ids.forEach(async (element) => {
+  //     let role =
+  //       guildId.roles.cache.find((r) => r.name === "VIP") ||
+  //       (await guildId.roles.fetch("1072902141666136125"));
+  //     let getUserList = await guildId.members
+  //       .fetch({ cache: true })
+  //       .catch(console.error);
+  //     let findUser = getUserList.find((r) => r.user.id === element);
+  //     if (!findUser) return;
+  //     findUser
+  //       .send(
+  //         "Ваш Vip статус на сервере RNS закончился, для продления вип статуса перейдите по ссылке https://discord.com/channels/735515208348598292/1189653903738949723"
+  //       )
+  //       .catch((error) => {
+  //         console.log("Невозможно отправить сообщение пользователю");
+  //       });
+  //     findUser.roles.remove(role);
+  //   })
+  // );
 
   client.on("messageCreate", async (message) => {
     if (message.author.bot) return;
