@@ -103,7 +103,9 @@ const execute = async (interaction) => {
           0,
           `Admin=${steamID64}:Reserved // DiscordID ${discordIDuser} do ${expireDate}`
         );
-
+        console.log(
+          `Пользователь:${steamID64} DiscordID:${discordIDuser} добавлен кланменеджером: ${interaction.member.nickname}`
+        );
         fs.writeFile(
           `${adminsCfgPath}Admins.cfg`,
           updatedLines.join("\n"),
