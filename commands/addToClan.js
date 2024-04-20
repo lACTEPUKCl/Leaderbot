@@ -106,7 +106,7 @@ const execute = async (interaction) => {
 
         fs.writeFile(
           `${adminsCfgPath}Admins.cfg`,
-          updatedLines.join("\n"),
+          updatedLines.join("\r\n"),
           (err) => {
             if (err) {
               console.error("Ошибка записи файла:", err);
@@ -130,7 +130,7 @@ const execute = async (interaction) => {
           timeZone: "Europe/Moscow",
         }
       )}.cfg`,
-      data,
+      updatedLines.join("\r\n"),
       (err) => {
         if (err) {
           console.error(err);
