@@ -25,7 +25,7 @@ const execute = async (interaction) => {
     const adminsCfgPath = process.env.ADMINS_URL;
     const extractUsers = (line) => {
       const match = line.match(
-        /Admin=(\d+):Reserved \/\/ DiscordID (\d+) do (.+)/
+        /Admin=(\d+):ClanVip \/\/ DiscordID (\d+) do (.+)/
       );
       if (match) {
         return { steamId: match[1], discordID: match[2] };
@@ -101,7 +101,7 @@ const execute = async (interaction) => {
         updatedLines.splice(
           clanBlockEndIndex,
           0,
-          `Admin=${steamID64}:Reserved // DiscordID ${discordIDuser} do ${expireDate}`
+          `Admin=${steamID64}:ClanVip // DiscordID ${discordIDuser} do ${expireDate}`
         );
         console.log(
           `Пользователь:${steamID64} DiscordID:${discordIDuser} добавлен кланменеджером: ${interaction.member.nickname}`
