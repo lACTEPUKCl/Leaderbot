@@ -76,6 +76,10 @@ const execute = async (interaction) => {
         clanUsers[currentClan] = clanUsers[currentClan] || [];
         clanUsers[currentClan].push(user);
         if (user.steamId === steamID64 || user.discordID === discordIDuser) {
+          const clanRole = interaction.guild.roles.cache.find(
+            (role) => role.name === `${currentClan}`
+          );
+          guildMember.roles.remove(clanRole);
           foundUser = true;
           return;
         }
@@ -95,8 +99,6 @@ const execute = async (interaction) => {
     const userIndex = updatedLines.findIndex((line) =>
       line.includes(`Admin=${steamID64}:Reserved // DiscordID ${discordIDuser}`)
     );
-
-    updatedLines.splice(userIndex, 1);
 
     console.log(
       `Пользователь:${steamID64} DiscordID:${discordIDuser} удален кланменеджером: ${interaction.member.nickname}`

@@ -106,6 +106,12 @@ const execute = async (interaction) => {
         console.log(
           `Пользователь:${steamID64} DiscordID:${discordIDuser} добавлен кланменеджером: ${interaction.member.nickname}`
         );
+
+        const clanRole = interaction.guild.roles.cache.find(
+          (role) => role.name === `${currentClan}`
+        );
+        await guildMember.roles.add(clanRole);
+
         fs.writeFile(
           `${adminsCfgPath}Admins.cfg`,
           updatedLines.join("\n").trim(),
