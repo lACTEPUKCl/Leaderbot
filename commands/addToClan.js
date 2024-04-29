@@ -114,7 +114,7 @@ const execute = async (interaction) => {
           const vipRole = interaction.guild.roles.cache.find(
             (role) => role.name === `VIP`
           );
-          console.log(clanRole);
+
           await guildMember.roles.add(clanRole);
           await guildMember.roles.add(vipRole);
         }
