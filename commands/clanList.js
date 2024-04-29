@@ -1,7 +1,16 @@
 import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
 import fs from "fs";
+import getUsernameFromDB from "../utility/getUsernameFromDB.js";
 import { config } from "dotenv";
 config();
+
+const extractUsers = (line) => {
+  const match = line.match(/Admin=(\d+):ClanVip \/\/ DiscordID (\d+) do (.+)/);
+  if (match) {
+    return { steamId: match[1], discordID: match[2] };
+  }
+  return null;
+};
 
 const clanListCommand = new SlashCommandBuilder()
   .setName("clanlist")
@@ -10,17 +19,9 @@ const clanListCommand = new SlashCommandBuilder()
 
 const execute = async (interaction) => {
   try {
+    await interaction.deferReply({ ephemeral: true });
     const adminsCfgPath = process.env.ADMINS_URL;
     const discordID = interaction.user.id;
-    const extractUsers = (line) => {
-      const match = line.match(
-        /Admin=(\d+):ClanVip \/\/ DiscordID (\d+) do (.+)/
-      );
-      if (match) {
-        return { steamId: match[1], discordID: match[2] };
-      }
-      return null;
-    };
 
     fs.readFile(`${adminsCfgPath}Admins.cfg`, "utf8", async (err, data) => {
       if (err) {
@@ -33,7 +34,7 @@ const execute = async (interaction) => {
       let currentClan = null;
       let clanOwner = null;
       let date = null;
-      lines.forEach((line) => {
+      for (const line of lines) {
         const clanMatch = line.match(/\/\/CLAN \[(.+)] (\d+) do (.+)/);
         if (clanMatch) {
           const clanName = clanMatch[1];
@@ -52,25 +53,26 @@ const execute = async (interaction) => {
         if (user && currentClan) {
           clanUsers[currentClan].push(user);
         }
-      });
+      }
 
       if (clanOwner === discordID) {
-        let response;
+        let response = "";
         for (const [clanName, users] of Object.entries(clanUsers)) {
-          response = `**${clanName} дата окончания VIP: ${date}**:\n`;
-          users.forEach((user, index) => {
-            response += `${index + 1}. SteamID: **${
-              user.steamId
-            }**, DiscordID: **${user.discordID}**\n`;
-          });
+          response += `**${clanName} дата окончания VIP: ${date}**:\n`;
+          for (const user of users) {
+            const userName = await getUsernameFromDB(user.steamId);
+            response += `SteamID: **${user.steamId}**, DiscordID: **${
+              user.discordID
+            }**, Имя: **${userName ? userName : "Unknown"}**\n`;
+          }
         }
 
-        await interaction.reply({
-          content: response,
+        await interaction.editReply({
+          content: response || "Нет доступных данных о клане.",
           ephemeral: true,
         });
       } else {
-        await interaction.reply({
+        await interaction.editReply({
           content: "У вас нет прав на просмотр этого списка клана.",
           ephemeral: true,
         });
@@ -78,7 +80,7 @@ const execute = async (interaction) => {
     });
   } catch (error) {
     console.log(error);
-    await interaction.reply({
+    await interaction.editReply({
       content: "Произошла ошибка.",
       ephemeral: true,
     });
