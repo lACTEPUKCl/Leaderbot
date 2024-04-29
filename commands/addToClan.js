@@ -104,7 +104,7 @@ const execute = async (interaction) => {
           `Admin=${steamID64}:ClanVip // DiscordID ${discordIDuser} do ${expireDate}`
         );
         console.log(
-          `Пользователь:${steamID64} DiscordID:${discordIDuser} добавлен кланменеджером: ${interaction.member.nickname}`
+          `Пользователь:${steamID64} DiscordID:${discordIDuser} добавлен кланменеджером: ${interaction.user.globalName}`
         );
 
         if (guildMember) {
