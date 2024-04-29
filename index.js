@@ -222,7 +222,7 @@ client.on("ready", async () => {
       interaction.commandName === "removefromclan"
     ) {
       client.users.fetch("132225869698564096", false).then((user) => {
-        user.send(`${interaction.member.nickname}`);
+        user.send(`${interaction.user.globalName}`);
       }); //Отправляет уведомление в лс меламори
     }
     const command = interaction.client.commands.get(interaction.commandName);
