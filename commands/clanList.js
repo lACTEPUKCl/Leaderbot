@@ -63,7 +63,7 @@ const execute = async (interaction) => {
             const userName = await getUsernameFromDB(user.steamId);
             response += `SteamID: **${user.steamId}**, DiscordID: **${
               user.discordID
-            }**, Имя: **${userName ? userName : "Unknown"}**\n`;
+            }**, Имя: **${userName !== null ? userName : "Unknown"}**\n`;
           }
         }
 
