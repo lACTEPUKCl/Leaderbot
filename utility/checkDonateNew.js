@@ -20,7 +20,7 @@ async function main(guildId, db, steamApi, donateUrl) {
           !comment.includes("steamcommunity") &&
           !comment.match(/\b[0-9]{17}\b/)?.[0]
         )
-          return;
+          continue;
         const steamId = await getSteamId64(steamApi, comment);
         if (steamId) {
           const clientdb = new MongoClient(db);
