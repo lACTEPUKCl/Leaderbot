@@ -61,9 +61,7 @@ const execute = async (interaction) => {
           response += `**${clanName} дата окончания VIP: ${date}**:\n`;
           for (const user of users) {
             const userName = await getUsernameFromDB(user.steamId);
-            response += `SteamID: **${user.steamId}**, DiscordID: **${
-              user.discordID
-            }**, Имя: **${userName !== null ? userName : "Unknown"}**\n`;
+            response += `SteamID: **${user.steamId}**, DiscordID: **${user.discordID}**, Имя: **${userName}**\n`;
           }
         }
 
