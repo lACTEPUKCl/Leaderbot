@@ -66,7 +66,7 @@ const execute = async (interaction) => {
             }
 
             const role = guild.roles.cache.find(
-              (role) => role.name === clanName
+              (role) => role.name === `[${clanName}]`
             );
             if (role) {
               member.roles.add(role);
