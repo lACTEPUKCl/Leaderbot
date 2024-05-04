@@ -3,7 +3,7 @@ import fs from "fs";
 async function dateDonateExpires(adminUrl, interaction) {
   const currentUser = [];
   const date = [];
-  const regexpAdmin =
+  const regexpReserved =
     /^Admin=[0-9]*:Reserved [//]* DiscordID [0-9]* do [0-9]{2}\.[0-9]{2}\.[0-9]{4}/gm;
   const regexpClanVip =
     /^Admin=[0-9]*:ClanVip [//]* DiscordID [0-9]* do [0-9]{2}\.[0-9]{2}\.[0-9]{4}/gm;
@@ -14,11 +14,11 @@ async function dateDonateExpires(adminUrl, interaction) {
       return;
     }
     data.split("\r\n").some((e) => {
-      const userAdmin = e.match(regexpAdmin);
+      const userVip = e.match(regexpReserved);
       const userClanVip = e.match(regexpClanVip);
-      if (userAdmin) {
-        if (userAdmin.toString().includes(interaction.user.id)) {
-          currentUser.push(userAdmin);
+      if (userVip) {
+        if (userVip.toString().includes(interaction.user.id)) {
+          currentUser.push(userVip);
           date.push(
             currentUser[0].toString().match(/[0-9]{2}\.[0-9]{2}\.[0-9]{4}/)[0]
           );
