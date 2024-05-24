@@ -66,7 +66,7 @@ const execute = async (interaction) => {
         for (const [clanName, users] of Object.entries(clanUsers)) {
           response += `**${clanName} дата окончания VIP: ${date}**:\n`;
           for (const user of users) {
-            const userName = await getUsernameFromDB(user.discordID);
+            const userName = await getUsernameFromDB(user.steamId);
             const userInfo = `SteamID: **${user.steamId}**, DiscordID: **${user.discordID}**, Имя: **${userName}**\n`;
             if (
               (response + userInfo).length > 2000 ||
