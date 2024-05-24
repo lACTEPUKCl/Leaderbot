@@ -30,7 +30,7 @@ import bonusInteraction from "./utility/bonusInteraction.js";
 import checkVipInteraction from "./utility/checkVipInteraction.js";
 // import rulesDiscord from "./utility/rulesDiscord.js";
 // import rulesPalWorld from "./utility/rulesPalWorld.js";
-// import rulesSquad from "./utility/rulesSquad.js";
+import rulesSquad from "./utility/rulesSquad.js";
 
 const client = new Client({
   intents: [
@@ -65,7 +65,7 @@ client.on("ready", async () => {
   const guildId = client.guilds.cache.get("735515208348598292");
   const donateChannelId = client.channels.cache.get("1073712072220754001");
   const checkDonateChannelId = client.channels.cache.get("1073712072220754001");
-  // const threadChannelId = client.channels.cache.get("1204124602230374471");
+  const threadChannelId = client.channels.cache.get("1204124602230374471");
   const bansChannelId = "1115705521119440937";
   const memeChannelId = "1151479560047706162";
   const activitiAdminsChannelId = process.env.ADMINACTIVITY_CHANNELID;
@@ -119,7 +119,7 @@ client.on("ready", async () => {
     // if (message.channelId === "1119060668046389308") {
     //   rulesSquad("galactic", threadChannelId);
     //   rulesSquad("mee", threadChannelId);
-    //   rulesSquad("squadv", threadChannelId);
+    // rulesSquad("squadv", threadChannelId);
     //   rulesSquad("squad", threadChannelId);
     // }
 

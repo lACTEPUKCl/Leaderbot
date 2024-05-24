@@ -1,11 +1,12 @@
 import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
 import fs from "fs";
 import getUsernameFromDB from "../utility/getUsernameFromDB.js";
+import options from "../config.js";
 import { config } from "dotenv";
 config();
 
 const extractUsers = (line) => {
-  const match = line.match(/Admin=(\d+):ClanVip \/\/ DiscordID (\d+) do (.+)/);
+  const match = line.match(/Admin=(\d+):VIP \/\/ DiscordID (\d+) do (.+)/);
   if (match) {
     return { steamId: match[1], discordID: match[2] };
   }
@@ -20,12 +21,16 @@ const clanListCommand = new SlashCommandBuilder()
 const execute = async (interaction) => {
   try {
     await interaction.deferReply({ ephemeral: true });
-    const adminsCfgPath = process.env.ADMINS_URL;
+    const { adminsCfgPath } = options;
     const discordID = interaction.user.id;
 
     fs.readFile(`${adminsCfgPath}Admins.cfg`, "utf8", async (err, data) => {
       if (err) {
         console.error("Ошибка чтения файла:", err);
+        await interaction.editReply({
+          content: "Произошла ошибка при чтении файла.",
+          ephemeral: true,
+        });
         return;
       }
 
@@ -57,18 +62,32 @@ const execute = async (interaction) => {
 
       if (clanOwner === discordID) {
         let response = "";
+        let messageChunks = [];
+
         for (const [clanName, users] of Object.entries(clanUsers)) {
           response += `**${clanName} дата окончания VIP: ${date}**:\n`;
           for (const user of users) {
-            const userName = await getUsernameFromDB(user.steamId);
-            response += `SteamID: **${user.steamId}**, DiscordID: **${user.discordID}**, Имя: **${userName}**\n`;
+            const userName = await getUsernameFromDB(user.discordID);
+            const userInfo = `SteamID: **${user.steamId}**, DiscordID: **${user.discordID}**, Имя: **${userName}**\n`;
+            if (
+              (response + userInfo).length > 2000 ||
+              response.split("\n").length >= 16
+            ) {
+              messageChunks.push(response);
+              response = "";
+            }
+            response += userInfo;
           }
         }
 
-        await interaction.editReply({
-          content: response || "Нет доступных данных о клане.",
-          ephemeral: true,
-        });
+        if (response) messageChunks.push(response);
+
+        for (const chunk of messageChunks) {
+          await interaction.followUp({
+            content: chunk || "Нет доступных данных о клане.",
+            ephemeral: true,
+          });
+        }
       } else {
         await interaction.editReply({
           content: "У вас нет прав на просмотр этого списка клана.",
