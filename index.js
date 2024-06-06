@@ -278,44 +278,63 @@ client.on("ready", async () => {
 
     if (interaction.isModalSubmit()) {
       const steamIdField = interaction.fields.fields.get("steamid64input");
-      const steamLink = steamIdField.value;
+      const steamLink = steamIdField?.value;
 
-      if (interaction.customId === "saModal" && steamIdField) {
-        const squadTime = interaction.fields.fields.get("squadTime");
-        const squadRules = interaction.fields.fields.get("squadRules");
-        const steamID64 = await getSteamId64(steamApi, steamLink);
-        const embed = new EmbedBuilder()
-          .setColor("#275318")
-          .setTitle("Ссылка на профиль Steam")
-          .setURL(steamLink)
-          .setDescription(
-            `Пользователь: <@${interaction.user.id}>
-        Наигранное время в Squad: ${squadTime.value}
-        Ознакомлены с правилами сервера РНС? ${squadRules.value}
-        SteamID64: ${steamID64}
-        `
-          );
-
-        saArchive.send({ embeds: [embed] });
-
-        const discordUser = await guildId.members.fetch(interaction.user.id);
-        if (discordUser.nickname) {
-          await discordUser.setNickname(`[SAr]${discordUser.nickname}`);
-        } else {
-          await discordUser.setNickname(`[SAr]${discordUser.user.globalName}`);
+      if (steamLink) {
+        if (interaction.customId === "saModal") {
+          handleSaModalSubmit(interaction, steamLink);
+        } else if (interaction.customId === "steamidModal") {
+          getSteamIdFormSubmit(interaction, steamLink, db, steamApi);
         }
+      }
+    }
+
+    async function handleSaModalSubmit(interaction, steamLink) {
+      const squadTime = interaction.fields.fields.get("squadTime")?.value;
+      const squadRules = interaction.fields.fields.get("squadRules")?.value;
+      const steamID64 = await getSteamId64(steamApi, steamLink);
+
+      const embed = new EmbedBuilder()
+        .setColor("#275318")
+        .setTitle("Ссылка на профиль Steam")
+        .setURL(steamLink)
+        .setDescription(
+          `Пользователь: <@${interaction.user.id}>
+          Наигранное время в Squad: ${squadTime}
+          Ознакомлены с правилами сервера РНС? ${squadRules}
+          SteamID64: ${steamID64}`
+        );
+
+      await saArchive.send({ embeds: [embed] });
+
+      const discordUser = await guildId.members.fetch(interaction.user.id);
+      await updateUserNickname(discordUser);
+      await assignSarRole(discordUser);
+
+      await interaction.reply({
+        content: "Добро пожаловать в Squad Academy",
+        ephemeral: true,
+      });
+    }
+
+    async function updateUserNickname(discordUser) {
+      try {
+        const nickname = discordUser.nickname
+          ? `[SAr]${discordUser.nickname}`
+          : `[SAr]${discordUser.user.globalName}`;
+        await discordUser.setNickname(nickname);
+      } catch (error) {}
+    }
+
+    async function assignSarRole(discordUser) {
+      try {
         const sarRole = guildId.roles.cache.find(
           (role) => role.name === "[SAr]"
         );
-        await discordUser.roles.add(sarRole);
-        await interaction.reply({
-          content: "Добро пожаловать в Squad Academy",
-          ephemeral: true,
-        });
-      }
-
-      if (interaction.customId === "steamidModal" && steamIdField)
-        getSteamIdFormSubmit(interaction, steamLink, db, steamApi);
+        if (sarRole) {
+          await discordUser.roles.add(sarRole);
+        }
+      } catch (error) {}
     }
 
     if (interaction.isChatInputCommand()) {
@@ -335,92 +354,71 @@ client.on("ready", async () => {
         }
       }
     } else if (interaction.isButton()) {
-      const commandName = interaction?.message?.interaction?.commandName;
       const buttonId = interaction?.customId;
 
-      if (buttonId === "saSum") {
-        const discordUser = await guildId.members.fetch(interaction.user.id);
-        const sarRole = guildId.roles.cache.find(
-          (role) => role.name === "[SAr]"
-        );
-        const userRole = discordUser.roles.cache.some(
-          (role) => role.id === sarRole.id
-        );
+      const discordUser = await guildId.members.fetch(interaction.user.id);
 
-        if (userRole) {
-          await interaction.reply({
-            content: "Вы уже состоите в Squad Academy :c",
-            ephemeral: true,
-          });
-          return;
-        }
-        await getSaSumModal(interaction);
+      if (buttonId === "saSum")
+        await handleSaSumButton(discordUser, interaction);
+
+      if (buttonId === "saSumLeave")
+        await handleSaSumLeaveButton(discordUser, interaction);
+
+      if (buttonId === "SteamID") await getSteamIdModal(interaction);
+
+      if (buttonId === "donatVip") await donateInteraction(interaction, db);
+
+      if (buttonId === "bonusVip") await bonusInteraction(interaction, db);
+
+      if (buttonId === "checkVip")
+        await checkVipInteraction(interaction, adminsUrl);
+    }
+
+    async function handleSaSumButton(discordUser, interaction) {
+      const sarRole = guildId.roles.cache.find((role) => role.name === "[SAr]");
+      const userRole = discordUser.roles.cache.some(
+        (role) => role.id === sarRole.id
+      );
+
+      if (userRole) {
+        await interaction.reply({
+          content: "Вы уже состоите в Squad Academy :c",
+          ephemeral: true,
+        });
+        return;
+      }
+      await getSaSumModal(interaction);
+    }
+
+    async function handleSaSumLeaveButton(discordUser, interaction) {
+      const sarRole = guildId.roles.cache.find((role) => role.name === "[SAr]");
+      const userRole = discordUser.roles.cache.some(
+        (role) => role.id === sarRole.id
+      );
+
+      if (!userRole) {
+        await interaction.reply({
+          content: "Вы не состоите в Squad Academy :c",
+          ephemeral: true,
+        });
+        return;
       }
 
-      if (buttonId === "saSumLeave") {
-        const discordUser = await guildId.members.fetch(interaction.user.id);
-        const sarRole = guildId.roles.cache.find(
-          (role) => role.name === "[SAr]"
-        );
-        const userRole = discordUser.roles.cache.some(
-          (role) => role.id === sarRole.id
-        );
-
-        if (!userRole) {
-          await interaction.reply({
-            content: "Вы не состоите в Squad Academy :c",
-            ephemeral: true,
-          });
-          return;
-        }
-
+      try {
         if (discordUser.nickname.includes("[SAr]")) {
           const newNickName = discordUser.nickname.replace("[SAr]", "").trim();
           await discordUser.setNickname(newNickName);
         }
+      } catch (error) {}
 
+      try {
         await discordUser.roles.remove(sarRole);
-        await interaction.reply({
-          content: "Как жаль, что вы покинули Squad Academy :c",
-          ephemeral: true,
-        });
-      }
+      } catch (error) {}
 
-      if (buttonId === "SteamID") {
-        await getSteamIdModal(interaction);
-      }
-      if (buttonId === "donatVip") {
-        await donateInteraction(interaction, db);
-      }
-      if (buttonId === "bonusVip") {
-        await bonusInteraction(interaction, db);
-      }
-      if (buttonId === "checkVip") {
-        await checkVipInteraction(interaction, adminsUrl);
-      }
-
-      if (commandName === "restart") {
-        const userID = interaction.user.id;
-        const { customId } = interaction;
-        const serverNumber = customId.replace("server", "");
-
-        try {
-          exec(`pm2 restart SERVER${serverNumber}`, (error) => {
-            if (error) {
-              console.error(`Ошибка: ${error}`);
-            }
-          });
-
-          await interaction.channel.send({
-            content: `<@${userID}> Бот #${serverNumber} RNS перезагружен!`,
-          });
-          await buttonInteraction(interaction);
-          console.log(`<@${userID}> Бот #${serverNumber} RNS перезагружен!`);
-        } catch (error) {
-          console.error("Ошибка при обработке взаимодействия:", error);
-        }
-        return;
-      }
+      await interaction.reply({
+        content: "Как жаль, что вы покинули Squad Academy :c",
+        ephemeral: true,
+      });
     }
   });
 
