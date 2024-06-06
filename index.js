@@ -353,7 +353,7 @@ client.on("ready", async () => {
         );
         await discordUser.roles.remove(sarRole);
         await interaction.reply({
-          content: "Добро пожаловать в Squad Academy",
+          content: "Успешно покинули Squad Academy :c",
           ephemeral: true,
         });
       }
