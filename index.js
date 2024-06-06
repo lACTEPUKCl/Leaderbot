@@ -339,21 +339,47 @@ client.on("ready", async () => {
       const buttonId = interaction?.customId;
 
       if (buttonId === "saSum") {
+        const discordUser = await guildId.members.fetch(interaction.user.id);
+        const sarRole = guildId.roles.cache.find(
+          (role) => role.name === "[SAr]"
+        );
+        const userRole = discordUser.roles.cache.some(
+          (role) => role.id === sarRole.id
+        );
+
+        if (userRole) {
+          await interaction.reply({
+            content: "Вы уже состоите в Squad Academy :c",
+            ephemeral: true,
+          });
+        }
         await getSaSumModal(interaction);
       }
 
       if (buttonId === "saSumLeave") {
         const discordUser = await guildId.members.fetch(interaction.user.id);
+        const sarRole = guildId.roles.cache.find(
+          (role) => role.name === "[SAr]"
+        );
+        const userRole = discordUser.roles.cache.some(
+          (role) => role.id === sarRole.id
+        );
+
+        if (!userRole) {
+          await interaction.reply({
+            content: "Вы не состоите в Squad Academy :c",
+            ephemeral: true,
+          });
+        }
+
         if (discordUser.nickname.includes("[SAr]")) {
           const newNickName = discordUser.nickname.replace("[SAr]", "").trim();
           await discordUser.setNickname(newNickName);
         }
-        const sarRole = guildId.roles.cache.find(
-          (role) => role.name === "[SAr]"
-        );
+
         await discordUser.roles.remove(sarRole);
         await interaction.reply({
-          content: "Успешно покинули Squad Academy :c",
+          content: "Как жаль, что вы покинули Squad Academy :c",
           ephemeral: true,
         });
       }
