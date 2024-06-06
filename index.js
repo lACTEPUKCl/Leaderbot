@@ -31,6 +31,8 @@ import checkVipInteraction from "./utility/checkVipInteraction.js";
 // import rulesDiscord from "./utility/rulesDiscord.js";
 // import rulesPalWorld from "./utility/rulesPalWorld.js";
 import rulesSquad from "./utility/rulesSquad.js";
+import getSaSumModal from "./utility/getSaSumModal.js";
+import getSteamId64 from "./utility/getSteamID64.js";
 
 const client = new Client({
   intents: [
@@ -68,6 +70,8 @@ client.on("ready", async () => {
   const threadChannelId = client.channels.cache.get("1204124602230374471");
   const bansChannelId = "1115705521119440937";
   const memeChannelId = "1151479560047706162";
+  const saSummary = client.channels.cache.get("1248006142790209616");
+  const saArchive = client.channels.cache.get("1248316669139615776");
   const activitiAdminsChannelId = process.env.ADMINACTIVITY_CHANNELID;
   const vipManualChannelId = process.env.VIP_CHANNELID;
   const statsChannesId1 = process.env.STATS_CHANNELID;
@@ -77,16 +81,61 @@ client.on("ready", async () => {
   const donateUrl = process.env.DONATE_URL;
   const adminsUrl = process.env.ADMINS_URL;
 
-  setInterval(() => {
-    checkDonateNew(guildId, db, steamApi, donateUrl);
-  }, 60000);
+  //кнопка
+  const imagePath2 = "../image1.png";
 
-  // Обновление двух таблиц лидеров
-  setInterval(() => {
-    top20StatsMain(leaderboadChannelMainId, db);
-    top20StatsTemp(leaderboadChannelTempId, db);
-    //chartInitialization(tickRateChannelId);
-  }, 600000);
+  const attachment2 = new AttachmentBuilder(imagePath2, {
+    name: "image1.png",
+  });
+
+  saSummary.send({ files: [attachment2] });
+  setTimeout(async () => {
+    const embed1 = new EmbedBuilder().setColor("#275318").setDescription(
+      `Приветствуем всех, кто хочет стать частью нашего дружного сообщества! Русский народный сервер создает клан под названием Squad Academy, чтобы улучшить игровой опыт у новых игроков, стремящихся к развитию своих навыков и достижению новых высот в игре.
+  
+    Что мы предлагаем:
+  
+    -Обучение и поддержку от опытных игроков.
+  
+    -Совместные тренировки и игры.
+  
+    -Обмен опытом и знаниями.
+  
+    Мы ищем активных и целеустремленных игроков, готовых работать над собой и развиваться вместе с нами. Если вы хотите стать частью нашей команды, отправьте заявку на вступление в клан. Мы будем рады видеть вас в Squad Academy!
+  
+    Чтобы вступить в клан нажмите на кнопку ниже и заполните маленькую анкету!`
+    );
+
+    saSummary.send({ embeds: [embed1] });
+
+    const saButton = new ButtonBuilder()
+      .setCustomId("saSum")
+      .setLabel("Вступить в Squad Academy")
+      .setStyle("Success");
+    const saButtonLeave = new ButtonBuilder()
+      .setCustomId("saSumLeave")
+      .setLabel("Покинуть Squad Academy")
+      .setStyle("Danger");
+
+    const row = new ActionRowBuilder().addComponents(saButton, saButtonLeave);
+
+    await saSummary.send({
+      components: [row],
+    });
+  }, 3000);
+
+  //кнопка
+
+  // setInterval(() => {
+  //   checkDonateNew(guildId, db, steamApi, donateUrl);
+  // }, 60000);
+
+  // // Обновление двух таблиц лидеров
+  // setInterval(() => {
+  //   top20StatsMain(leaderboadChannelMainId, db);
+  //   top20StatsTemp(leaderboadChannelTempId, db);
+  //   //chartInitialization(tickRateChannelId);
+  // }, 600000);
 
   // Очистка Vip пользователей, удаление ролей + отправка им уведомлений
   cleaner.vipCleaner((ids) =>
@@ -229,11 +278,44 @@ client.on("ready", async () => {
 
     if (interaction.isModalSubmit()) {
       const steamIdField = interaction.fields.fields.get("steamid64input");
+      const steamLink = steamIdField.value;
 
-      if (steamIdField) {
-        const steamLink = steamIdField.value;
-        getSteamIdFormSubmit(interaction, steamLink, db, steamApi);
+      if (interaction.customId === "saModal" && steamIdField) {
+        const squadTime = interaction.fields.fields.get("squadTime");
+        const squadRules = interaction.fields.fields.get("squadRules");
+        const steamID64 = await getSteamId64(steamApi, steamLink);
+        const embed = new EmbedBuilder()
+          .setColor("#275318")
+          .setTitle("Ссылка на профиль Steam")
+          .setURL(steamLink)
+          .setDescription(
+            `Пользователь: <@${interaction.user.id}>
+        Наигранное время в Squad: ${squadTime.value}
+        Ознакомлены с правилами сервера РНС? ${squadRules.value}
+        SteamID64: ${steamID64}
+        `
+          );
+
+        saArchive.send({ embeds: [embed] });
+
+        const discordUser = await guildId.members.fetch(interaction.user.id);
+        if (discordUser.nickname) {
+          await discordUser.setNickname(`[SAr]${discordUser.nickname}`);
+        } else {
+          await discordUser.setNickname(`[SAr]${discordUser.user.globalName}`);
+        }
+        const sarRole = guildId.roles.cache.find(
+          (role) => role.name === "[SAr]"
+        );
+        await discordUser.roles.add(sarRole);
+        await interaction.reply({
+          content: "Добро пожаловать в Squad Academy",
+          ephemeral: true,
+        });
       }
+
+      if (interaction.customId === "steamidModal" && steamIdField)
+        getSteamIdFormSubmit(interaction, steamLink, db, steamApi);
     }
 
     if (interaction.isChatInputCommand()) {
@@ -255,6 +337,26 @@ client.on("ready", async () => {
     } else if (interaction.isButton()) {
       const commandName = interaction?.message?.interaction?.commandName;
       const buttonId = interaction?.customId;
+
+      if (buttonId === "saSum") {
+        await getSaSumModal(interaction);
+      }
+
+      if (buttonId === "saSumLeave") {
+        const discordUser = await guildId.members.fetch(interaction.user.id);
+        if (discordUser.nickname.includes("[SAr]")) {
+          const newNickName = discordUser.nickname.replace("[SAr]", "").trim();
+          await discordUser.setNickname(newNickName);
+        }
+        const sarRole = guildId.roles.cache.find(
+          (role) => role.name === "[SAr]"
+        );
+        await discordUser.roles.remove(sarRole);
+        await interaction.reply({
+          content: "Добро пожаловать в Squad Academy",
+          ephemeral: true,
+        });
+      }
 
       if (buttonId === "SteamID") {
         await getSteamIdModal(interaction);
