@@ -352,6 +352,7 @@ client.on("ready", async () => {
             content: "Вы уже состоите в Squad Academy :c",
             ephemeral: true,
           });
+          return;
         }
         await getSaSumModal(interaction);
       }
@@ -370,6 +371,7 @@ client.on("ready", async () => {
             content: "Вы не состоите в Squad Academy :c",
             ephemeral: true,
           });
+          return;
         }
 
         if (discordUser.nickname.includes("[SAr]")) {
