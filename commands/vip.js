@@ -1,4 +1,4 @@
-import { SlashCommandBuilder } from "discord.js";
+import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
 import dateDonateExpires from "../utility/dateDonateExpires.js";
 import { config } from "dotenv";
 config();
@@ -7,7 +7,8 @@ const adminsUrl = process.env.ADMINS_URL;
 const allowedChannelId = process.env.STATS_CHANNELID;
 const vipCommand = new SlashCommandBuilder()
   .setName("vip")
-  .setDescription("Получить дату окончания VIP статуса");
+  .setDescription("Получить дату окончания VIP статуса")
+  .setDefaultMemberPermissions(PermissionFlagsBits.RequestToSpeak);
 
 const execute = async (interaction) => {
   try {
