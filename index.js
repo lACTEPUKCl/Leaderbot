@@ -340,6 +340,16 @@ client.on("ready", async () => {
 
     if (interaction.isChatInputCommand()) {
       try {
+        if (interaction.commandName === "duel") {
+          if (interCollections.has(interaction.user.id)) {
+            await interaction.reply({
+              content: "У вас уже есть активная дуэль",
+              ephemeral: true,
+            });
+            return;
+          }
+          interCollections.set(interaction.user.id, interaction);
+        }
         await command.execute(interaction);
       } catch (error) {
         if (interaction.replied || interaction.deferred) {
@@ -438,7 +448,8 @@ client.on("ready", async () => {
     const user1 = interaction.customId.split("_")[1];
     const user2 = interaction.user.id;
 
-    let loserId, winnerId;
+    let loserId;
+    let winnerId;
     if (Math.random() < 0.5) {
       loserId = user1;
       winnerId = user2;
@@ -477,7 +488,7 @@ client.on("ready", async () => {
     const randomString = deathReasons[randomIndex];
     await interaction.reply(randomString);
     const member = interaction.guild.members.cache.get(loserId);
-    member.timeout(5 * 60 * 1000);
+    member.timeout(600000);
   }
 
   client.on("voiceStateUpdate", async (oldState, newState) => {
