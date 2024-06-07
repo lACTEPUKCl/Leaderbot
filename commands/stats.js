@@ -1,4 +1,4 @@
-import { SlashCommandBuilder } from "discord.js";
+import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
 import getStatsOnDiscord from "../utility/getStatsOnDiscord.js";
 import getStatsOnDiscordWithoutSteamID from "../utility/getStatsOnDiscordWithoutSteamID.js";
 import { config } from "dotenv";
@@ -10,7 +10,8 @@ const allowedChannelId = process.env.STATS_CHANNELID;
 const allowedChannelId2 = process.env.STATS_CHANNELID2;
 const statsCommand = new SlashCommandBuilder()
   .setName("stats")
-  .setDescription("Получить статистику игрока");
+  .setDescription("Получить статистику игрока")
+  .setDefaultMemberPermissions(PermissionFlagsBits.RequestToSpeak);
 
 statsCommand.addStringOption((option) =>
   option
