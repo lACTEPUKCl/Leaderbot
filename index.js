@@ -48,6 +48,7 @@ const client = new Client({
 
 client.commands = new Collection();
 const commands = await getCommands();
+const interCollections = new Map();
 
 for (const command of commands) {
   if ("data" in command && "execute" in command)
@@ -361,6 +362,8 @@ client.on("ready", async () => {
       if (buttonId === "saSum")
         await handleSaSumButton(discordUser, interaction);
 
+      if (buttonId.includes("duel")) await handleDuelButton(interaction);
+
       if (buttonId === "saSumLeave")
         await handleSaSumLeaveButton(discordUser, interaction);
 
@@ -421,6 +424,61 @@ client.on("ready", async () => {
       });
     }
   });
+
+  async function handleDuelButton(interaction) {
+    if (interCollections.has(interaction.customId.split("_")[1])) {
+      interCollections
+        .get(interaction.customId.split("_")[1])
+        .deleteReply()
+        .catch((error) =>
+          console.error("Failed to delete the interaction:", error)
+        );
+      interCollections.delete(interaction.customId.split("_")[1]);
+    }
+    const user1 = interaction.customId.split("_")[1];
+    const user2 = interaction.user.id;
+
+    let loserId, winnerId;
+    if (Math.random() < 0.5) {
+      loserId = user1;
+      winnerId = user2;
+    } else {
+      loserId = user2;
+      winnerId = user1;
+    }
+    const deathReasons = [
+      `Пуля попала <@${loserId}> прямо в сердце.`,
+      `Рапира пронзила <@${loserId}> насквозь.`,
+      `Стрела пронзила грудь <@${loserId}>.`,
+      `Сабля разрубила <@${loserId}> на две части.`,
+      `<@${loserId}> пронзили кинжалом в спину.`,
+      `<@${loserId}> ударили по голове настолько сильно, что он мгновенно умер.`,
+      `<@${loserId}> упал замертво от отравленного дротика.`,
+      `Удар шпагою попал в жизненно важный орган <@${loserId}>.`,
+      `<@${loserId}> обезглавили одним ударом меча.`,
+      `Копье пробило <@${loserId}> насквозь.`,
+      `<@${loserId}> захлебнулся собственной кровью после ранения в легкое.`,
+      `Меч пронзил сердце <@${loserId}>.`,
+      `<@${loserId}> утопили в реке после смертельного удара.`,
+      `Яд израненной раной проник в кровь <@${loserId}>.`,
+      `Смертельный удар шипом в шею <@${loserId}>.`,
+      `Граната разорвала <@${loserId}> на куски.`,
+      `<@${loserId}> истек кровью после глубокого ранения.`,
+      `Сердце <@${loserId}> остановилось от ножевого удара.`,
+      `Голову <@${loserId}> пронзила стрела.`,
+      `Пуля пробила череп <@${loserId}>.`,
+      `<@${loserId}> разорвала на части пушка.`,
+      `Бомба взорвалась прямо у ног <@${loserId}>.`,
+      `Смертельный удар кинжалом в грудь <@${loserId}>.`,
+      `<@${loserId}> ранили насмерть ядовитым кинжалом.`,
+      `Стрела попала прямо в сердце <@${loserId}>.`,
+    ];
+    const randomIndex = Math.floor(Math.random() * deathReasons.length);
+    const randomString = deathReasons[randomIndex];
+    await interaction.reply(randomString);
+    const member = interaction.guild.members.cache.get(loserId);
+    member.timeout(5 * 60 * 1000);
+  }
 
   client.on("voiceStateUpdate", async (oldState, newState) => {
     const newUserChannel = newState.channel;
