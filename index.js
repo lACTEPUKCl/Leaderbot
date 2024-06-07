@@ -488,7 +488,7 @@ client.on("ready", async () => {
     const randomString = deathReasons[randomIndex];
     await interaction.reply(randomString);
     const member = interaction.guild.members.cache.get(loserId);
-    member.timeout(-600000);
+    member.timeout(-10_800_000);
   }
 
   client.on("voiceStateUpdate", async (oldState, newState) => {
