@@ -349,6 +349,10 @@ client.on("ready", async () => {
             return;
           }
           interCollections.set(interaction.user.id, interaction);
+
+          setTimeout(() => {
+            interCollections.delete(interaction.user.id);
+          }, 300000);
         }
         await command.execute(interaction);
       } catch (error) {
@@ -435,6 +439,13 @@ client.on("ready", async () => {
     }
   });
 
+  async function muteMember(memberId, guild) {
+    try {
+      const member = await guild.members.fetch(memberId);
+      await member.timeout(600000, "Duel loss");
+    } catch (error) {}
+  }
+
   async function handleDuelButton(interaction) {
     if (interCollections.has(interaction.customId.split("_")[1])) {
       interCollections
@@ -470,7 +481,7 @@ client.on("ready", async () => {
       `<@${winnerId}> ударил копьем и пробил <@${loserId}> насквозь.`,
       `<@${winnerId}> пронзил сердце <@${loserId}>.`,
       `<@${winnerId}> утопил <@${loserId}> в реке после смертельного удара.`,
-      `<@${winnerId}> нанем смертельный удар шипом в шею <@${loserId}>.`,
+      `<@${winnerId}> нанес смертельный удар шипом в шею <@${loserId}>.`,
       `<@${winnerId}> кинул гранату и разорвал <@${loserId}> на куски.`,
       `<@${loserId}> истек кровью после глубокого ранения.`,
       `Сердце <@${loserId}> остановилось от ножевого удара <@${winnerId}>.`,
@@ -484,8 +495,9 @@ client.on("ready", async () => {
     const randomIndex = Math.floor(Math.random() * deathReasons.length);
     const randomString = deathReasons[randomIndex];
     await interaction.reply(randomString);
-    const member = interaction.guild.members.cache.get(loserId);
-    member.timeout(-10_200_000);
+
+    // Мьютим проигравшего
+    await muteMember(loserId, interaction.guild);
   }
 
   client.on("voiceStateUpdate", async (oldState, newState) => {
