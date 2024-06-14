@@ -445,9 +445,7 @@ client.on("ready", async () => {
     try {
       const member = await guild.members.fetch(memberId);
       await member.timeout(600000, "Duel loss");
-    } catch (error) {
-      console.log(error);
-    }
+    } catch (error) {}
   }
 
   async function handleDuelButton(interaction) {
