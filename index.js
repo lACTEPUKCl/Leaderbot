@@ -351,7 +351,9 @@ client.on("ready", async () => {
           interCollections.set(interaction.user.id, interaction);
 
           setTimeout(() => {
-            interCollections.delete(interaction.user.id);
+            try {
+              interCollections.delete(interaction.user.id);
+            } catch (error) {}
           }, 300000);
         }
         await command.execute(interaction);
@@ -448,12 +450,11 @@ client.on("ready", async () => {
 
   async function handleDuelButton(interaction) {
     if (interCollections.has(interaction.customId.split("_")[1])) {
-      interCollections
-        .get(interaction.customId.split("_")[1])
-        .deleteReply()
-        .catch((error) =>
-          console.error("Failed to delete the interaction:", error)
-        );
+      try {
+        await interCollections
+          .get(interaction.customId.split("_")[1])
+          .deleteReply();
+      } catch (error) {}
       interCollections.delete(interaction.customId.split("_")[1]);
     }
     const user1 = interaction.customId.split("_")[1];
