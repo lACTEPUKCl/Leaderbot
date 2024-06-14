@@ -444,7 +444,7 @@ client.on("ready", async () => {
   async function muteMember(memberId, guild) {
     try {
       const member = await guild.members.fetch(memberId);
-      await member.timeout(-10_200_000, "Duel loss");
+      await member.timeout(600000, "Duel loss");
     } catch (error) {}
   }
 
