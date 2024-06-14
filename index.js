@@ -128,7 +128,7 @@ client.on("ready", async () => {
   //кнопка
 
   setInterval(() => {
-    checkDonateNew(guildId, db, steamApi, donateUrl);
+    // checkDonateNew(guildId, db, steamApi, donateUrl);
   }, 60000);
 
   // Обновление двух таблиц лидеров
@@ -444,8 +444,10 @@ client.on("ready", async () => {
   async function muteMember(memberId, guild) {
     try {
       const member = await guild.members.fetch(memberId);
-      await member.timeout(-10_200_000, "Duel loss");
-    } catch (error) {}
+      await member.timeout(600000, "Duel loss");
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   async function handleDuelButton(interaction) {
