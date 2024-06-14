@@ -81,6 +81,8 @@ client.on("ready", async () => {
   const steamApi = process.env.STEAM_API;
   const donateUrl = process.env.DONATE_URL;
   const adminsUrl = process.env.ADMINS_URL;
+  const targetChannelId = "1184077084495204453";
+  const userVoiceChannels = new Map();
 
   //кнопка
   // const imagePath2 = "../image1.png";
@@ -497,110 +499,63 @@ client.on("ready", async () => {
     const randomString = deathReasons[randomIndex];
     await interaction.reply(randomString);
 
-    // Мьютим проигравшего
     await muteMember(loserId, interaction.guild);
   }
 
   client.on("voiceStateUpdate", async (oldState, newState) => {
-    const newUserChannel = newState.channel;
-    const oldUserChannel = oldState.channel;
-    const channelIdToCreate = "1184077084495204453";
-    const categoryId = "1087301137645981747";
-    let newChannel;
-    // Функция для создания разрешений для ролей
-    const createRolePermissions = () => ({
-      ViewChannel: true,
-      AddReactions: true,
-      Stream: true,
-      SendMessages: true,
-      AttachFiles: true,
-      Connect: true,
-      Speak: true,
-    });
-
-    // Проверяем, если пользователь входит в канал для создания
     if (
-      newUserChannel?.id === channelIdToCreate &&
-      !oldUserChannel &&
-      newUserChannel
+      newState.channelId === targetChannelId &&
+      !userVoiceChannels.has(newState.channelId)
     ) {
-      const playerName = newState.member.displayName;
-      const rolesToAllow = [
-        "Генерал",
-        "Замполит",
-        "Офицер",
-        "Сержант",
-        "Курсант",
-        "Роль",
-      ];
-      newChannel = await newUserChannel.guild.channels.create({
-        name: playerName,
-        type: "2",
-        parent: categoryId,
-      });
-
-      const everyoneRole = newState.guild.roles.everyone;
-
-      // Создаем разрешения для ролей
-      const rolePermissions = rolesToAllow.map((roleName) => {
-        const role = newState.guild.roles.cache.find(
-          (role) => role.name === roleName
-        );
-        if (role) {
-          return newChannel.permissionOverwrites.create(
-            role,
-            createRolePermissions(role, true)
-          );
-        } else {
-          console.log(`Роль ${roleName} не найдена.`);
-          return null;
-        }
-      });
-      const botRole = newState.guild.roles.cache.find(
-        (role) => role.name === "Русский Народный Бот"
-      );
-      const botPermission = newChannel.permissionOverwrites.create(botRole, {
-        ViewChannel: true,
-        ManageChannels: true,
-        MoveMembers: true,
-      });
-
-      const memberPermission = newChannel.permissionOverwrites.create(
-        newState.member,
-        createRolePermissions(newState.member)
-      );
-
-      // Создаем разрешения для @everyone
-      const everyonePermission = newChannel.permissionOverwrites.create(
-        everyoneRole,
-        {
-          ViewChannel: false,
-        }
-      );
-
-      // Ждем завершения всех операций по созданию разрешений
-      await Promise.all([
-        ...rolePermissions,
-        memberPermission,
-        everyonePermission,
-        botPermission,
-      ]);
-
-      // Перемещаем пользователя в созданный канал
       try {
-        await newState.member.voice.setChannel(newChannel);
+        const channel = await newState.guild.channels.create({
+          name: newState.member.displayName,
+          type: 2,
+          parent: "1087301137645981747",
+        });
+        userVoiceChannels.set(channel.id, channel);
+
+        await newState.setChannel(channel);
+
+        const everyoneRole = newState.guild.roles.everyone;
+        await channel.permissionOverwrites.create(everyoneRole, {
+          ViewChannel: false,
+        });
+
+        const squadRole = newState.guild.roles.cache.find(
+          (role) => role.name === "SQUAD"
+        );
+        if (squadRole) {
+          await channel.permissionOverwrites.create(squadRole, {
+            ViewChannel: false,
+          });
+        }
+
+        await channel.permissionOverwrites.create(newState.member, {
+          ViewChannel: true,
+          AddReactions: true,
+          Stream: true,
+          SendMessages: true,
+          AttachFiles: true,
+          Connect: true,
+          Speak: true,
+        });
       } catch (error) {
-        await newChannel.delete();
+        console.error("Error creating channel or setting permissions:", error);
       }
     }
 
-    // Проверяем, если пользователь покидает любой канал в категории
     if (
-      oldUserChannel?.parentId === categoryId &&
-      oldUserChannel?.id !== channelIdToCreate
+      oldState.channelId &&
+      userVoiceChannels.has(oldState.channelId) &&
+      oldState.channel.members.size === 0
     ) {
-      if (oldUserChannel.members.size === 0) {
-        await oldUserChannel.delete();
+      try {
+        const channel = userVoiceChannels.get(oldState.channelId);
+        await channel.delete();
+        userVoiceChannels.delete(oldState.channelId);
+      } catch (error) {
+        console.error("Error deleting channel:", error);
       }
     }
   });
