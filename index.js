@@ -128,7 +128,7 @@ client.on("ready", async () => {
   //кнопка
 
   setInterval(() => {
-    // checkDonateNew(guildId, db, steamApi, donateUrl);
+    checkDonateNew(guildId, db, steamApi, donateUrl);
   }, 60000);
 
   // Обновление двух таблиц лидеров
