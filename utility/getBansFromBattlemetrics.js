@@ -3,7 +3,7 @@ import checkBansFromBattlemetrics from "./checkBansFromBattlemetrics.js";
 import { config } from "dotenv";
 config();
 
-async function searchBanFromBattlemetrics(message) {
+async function getBansFromBattlemetrics(message) {
   const apiKey = process.env.BATTLEMETRICS_API_KEY;
 
   if (!apiKey) {
@@ -30,4 +30,4 @@ async function searchBanFromBattlemetrics(message) {
   }
 }
 
-export default searchBanFromBattlemetrics;
+export default getBansFromBattlemetrics;

@@ -25,6 +25,7 @@ import options from "./config.js";
 import getSaSumModal from "./utility/getSaSumModal.js";
 import getSteamId64 from "./utility/getSteamID64.js";
 import bonusInteraction from "./utility/bonusInteraction.js";
+import getBansFromBattlemetrics from "./utility/getBansFromBattlemetrics.js";
 
 const client = new Client({
   intents: [
@@ -112,7 +113,7 @@ client.on("ready", async () => {
       await getDonate(process.env.DONATE_URL, donateChannelId);
 
     if (bansChannelId.includes(message.channelId))
-      await getBanFromBattlemetrics(message);
+      await getBansFromBattlemetrics(message);
 
     if (memeChannelId.includes(message.channelId)) {
       if (message.attachments.size > 0) {
