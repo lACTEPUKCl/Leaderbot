@@ -1,5 +1,7 @@
 import { MongoClient } from "mongodb";
 import { ButtonBuilder, ActionRowBuilder } from "discord.js";
+import options from "../config.js";
+const { donationLink } = options;
 async function donateInteraction(interaction, db) {
   const clientdb = new MongoClient(db);
   const dbName = "SquadJS";
@@ -28,7 +30,7 @@ async function donateInteraction(interaction, db) {
 
     const steamId = user._id;
     await interaction.reply({
-      content: `Скопируйте ваш SteamID: **${steamId}**\nВставьте его в поле 'Сообщение стримеру' по ссылке https://donatepay.ru/don/rns/`,
+      content: `Скопируйте ваш SteamID: **${steamId}**\nВставьте его в поле 'Комментарий' по ссылке ${donationLink}`,
       ephemeral: true,
     });
   } catch (e) {
