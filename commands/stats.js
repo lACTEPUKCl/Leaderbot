@@ -1,13 +1,11 @@
 import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
 import getStatsOnDiscord from "../utility/getStatsOnDiscord.js";
 import getStatsOnDiscordWithoutSteamID from "../utility/getStatsOnDiscordWithoutSteamID.js";
-import { config } from "dotenv";
-config();
+import options from "../config.js";
+
+const { adminsCfgPath, allowedChannelId, allowedChannelId2 } = options;
 const db = process.env.DATABASE_URL;
-const adminsUrl = process.env.ADMINS_URL;
 const steamApi = process.env.STEAM_API;
-const allowedChannelId = process.env.STATS_CHANNELID;
-const allowedChannelId2 = process.env.STATS_CHANNELID2;
 const statsCommand = new SlashCommandBuilder()
   .setName("stats")
   .setDescription("Получить статистику игрока")
@@ -40,7 +38,7 @@ const execute = async (interaction) => {
     } else {
       await getStatsOnDiscordWithoutSteamID(
         db,
-        adminsUrl,
+        adminsCfgPath,
         interaction,
         steamApi
       );

@@ -1,82 +1,70 @@
-import fetch from "node-fetch";
+import { MongoClient } from "mongodb";
+import creater from "./vip-creater.js";
 import getSteamId64 from "./getSteamID64.js";
-import fetchDonate from "./fetchDonate.js";
+import options from "../config.js";
+import getDonationsListFromDB from "./getDonationsList.js";
 
-async function checkDonate(
-  steamApi,
-  currentSteamId,
-  donateUrl,
-  message,
-  vipRole,
-  user
-) {
-  let retryCount = 0;
-  let matchFound = false;
+async function main(guildId, dbLink, steamApi) {
+  const { dbName, vipRoleName } = options;
+  const clientdb = new MongoClient(dbLink);
 
   try {
-    while (retryCount < 3 && !matchFound) {
-      let response = await fetch(donateUrl);
+    await clientdb.connect();
+    const db = clientdb.db(dbName);
+    const collection = db.collection("vip");
+    const donutsCollection = db.collection("donuts");
 
-      while (!response.ok) {
-        console.log(
-          "Не удалось получить список донатов. Повторная попытка через 30 секунд..."
-        );
-        await new Promise((resolve) => setTimeout(resolve, 30000));
-        response = await fetch(donateUrl);
-      }
+    const donations = await getDonationsListFromDB(dbLink);
+    for (const jsonEl of donations) {
+      const { uid, nickname, message, sum, submit } = jsonEl;
 
-      if (response.ok) {
-        const json = await response.json();
+      if (!message || !nickname) continue;
 
-        for (const jsonEl of json.data) {
-          const steamId64 = await getSteamId64(
-            message,
-            steamApi,
-            jsonEl.comment,
-            (steamId) => {
-              if (steamId) {
-                if (steamId === currentSteamId) {
-                  fetchDonate(steamId, jsonEl, message, vipRole, user);
-                  console.log(`${currentSteamId} найден в списках донатов`);
-                  matchFound = true;
-                  return;
-                }
-              }
-            }
-          );
+      if (!submit) {
+        if (
+          !message ||
+          (!message.includes("steamcommunity") &&
+            !message.match(/\b[0-9]{17}\b/)?.[0])
+        )
+          continue;
+
+        const steamID = await getSteamId64(steamApi, message);
+
+        if (steamID) {
+          const user = await collection.findOne({ steamID: steamID });
+
+          if (!user) continue;
+
+          const discordID = user._id;
+
+          const donutsEl = await donutsCollection.findOne({ _id: uid });
+
+          if (!donutsEl) continue;
+
+          try {
+            const discordUser = await guildId.members.fetch(discordID);
+            const vipRole = guildId.roles.cache.find(
+              (role) => role.name === vipRoleName
+            );
+
+            creater.vipCreater(steamID, nickname, sum, discordID);
+
+            await discordUser.roles.add(vipRole);
+            await donutsCollection.updateOne(
+              { _id: uid },
+              { $set: { submit: true } }
+            );
+          } catch (error) {
+            console.error(error);
+          }
         }
       }
-
-      if (!matchFound) {
-        console.log(
-          `Совпадений не найдено. Повторная попытка через 1 минуту... ${
-            retryCount + 1
-          }/3`
-        );
-        await new Promise((resolve) => setTimeout(resolve, 60000));
-        retryCount++;
-      }
-    }
-
-    if (retryCount === 3 && !matchFound) {
-      console.log("Совпадений не найдено. Поиск закончен.");
-      try {
-        await message.author.send(
-          "Проверьте правильность ввода steamID64 или ссылки на профиль Steam\nSTEAMID64 можно получить на сайте https://steamid.io/\nSteamid должен быть тот же, что был указан в комментарии доната.\nДискорд для связи на случай затупа: ACTEPUKC#9551"
-        );
-      } catch (error) {
-        console.log(
-          "Невозможно отправить сообщение пользователю",
-          message.author.username
-        );
-      }
-      try {
-        await message.delete();
-      } catch (error) {}
     }
   } catch (error) {
-    console.log(error);
+    console.error("Error:", error);
+  } finally {
+    await clientdb.close();
   }
 }
 
-export default checkDonate;
+export default main;

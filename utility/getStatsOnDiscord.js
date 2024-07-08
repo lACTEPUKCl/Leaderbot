@@ -1,6 +1,5 @@
 import { MongoClient } from "mongodb";
 import { AttachmentBuilder } from "discord.js";
-import fetch from "node-fetch";
 import * as fs from "fs";
 import { loadImage, createCanvas, registerFont } from "canvas";
 import calcVehicleTime from "./calcVehicleTime.js";
@@ -41,11 +40,6 @@ async function getStatsOnDiscord(dblink, steamId, interaction, steamApi) {
   const clientdb = new MongoClient(dblink);
   const dbName = "SquadJS";
   const dbCollection = "mainstats";
-  // const responseSteam = await fetch(
-  //   `http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=${steamApi}&steamids=${steamId}`
-  // );
-  // const dataSteam = await responseSteam.json();
-  // const userInfo = dataSteam.response.players;
 
   try {
     await clientdb.connect();

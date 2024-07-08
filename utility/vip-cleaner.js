@@ -1,6 +1,5 @@
 import fs from "fs";
-import { config } from "dotenv";
-config();
+import options from "../config.js";
 const regexp =
   /^Admin=(?<steamID>[0-9]*):Reserved [//]* DiscordID (?<discordId>[0-9]*) do (?<date>[0-9]{2}\.[0-9]{2}\.[0-9]{4})/gm;
 
@@ -9,7 +8,7 @@ const getUserRegExp = (steamID) => {
     `Admin=(?<steamID>${steamID}):Reserved [//]* DiscordID (?<discordId>[0-9]*) do (?<date>[0-9]{2}\\.[0-9]{2}\\.[0-9]{4})`
   );
 };
-const adminsCfgPath = process.env.ADMINS_URL;
+const { adminsCfgPath } = options;
 const vipCleaner = (callback) => {
   setInterval(() => {
     const isPaidDate = (date) => {

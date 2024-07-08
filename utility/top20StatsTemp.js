@@ -1,38 +1,46 @@
 import leaderboard from "./leaderboard.js";
+import options from "../config.js";
 
+const {
+  top20KillsMessageIDTemp,
+  top20DeathMessageIDTemp,
+  top20RevivesMessageIDTemp,
+  top20TKMessageIDTemp,
+  top20KDMessageIDTemp,
+} = options;
 async function top20StatsTemp(channelId, db) {
   const statsConfig = [
     {
       sort: "kills",
-      messageId: "1179119350238691429",
+      messageId: top20KillsMessageIDTemp,
       authorName: "Топ 20 игроков по убийствам",
       seconds: 1000,
       status: "temp",
     },
     {
       sort: "death",
-      messageId: "1179119352155471983",
+      messageId: top20DeathMessageIDTemp,
       authorName: "Топ 20 игроков по смертям",
       seconds: 5000,
       status: "temp",
     },
     {
       sort: "revives",
-      messageId: "1179119354990825584",
+      messageId: top20RevivesMessageIDTemp,
       authorName: "Топ 20 медиков",
       seconds: 9000,
       status: "temp",
     },
     {
       sort: "teamkills",
-      messageId: "1179119357683576885",
+      messageId: top20TKMessageIDTemp,
       authorName: "Топ 20 тимкилеров",
       seconds: 13000,
       status: "temp",
     },
     {
       sort: "kd",
-      messageId: "1179119378013368360",
+      messageId: top20KDMessageIDTemp,
       authorName: "Топ 20 игроков по соотношению убийств к смертям",
       seconds: 17000,
       status: "temp",

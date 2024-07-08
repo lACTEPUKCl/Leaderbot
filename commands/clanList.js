@@ -1,8 +1,7 @@
 import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
 import fs from "fs";
 import getUsernameFromDB from "../utility/getUsernameFromDB.js";
-import { config } from "dotenv";
-config();
+import options from "../config.js";
 
 const extractUsers = (line) => {
   const match = line.match(/Admin=(\d+):ClanVip \/\/ DiscordID (\d+) do (.+)/);
@@ -20,7 +19,7 @@ const clanListCommand = new SlashCommandBuilder()
 const execute = async (interaction) => {
   try {
     await interaction.deferReply({ ephemeral: true });
-    const adminsCfgPath = process.env.ADMINS_URL;
+    const { adminsCfgPath } = options;
     const discordID = interaction.user.id;
 
     fs.readFile(`${adminsCfgPath}Admins.cfg`, "utf8", async (err, data) => {

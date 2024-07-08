@@ -1,10 +1,9 @@
 import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
 import dateDonateExpires from "../utility/dateDonateExpires.js";
-import { config } from "dotenv";
-config();
+import options from "../config.js";
 
-const adminsUrl = process.env.ADMINS_URL;
-const allowedChannelId = process.env.STATS_CHANNELID;
+const { adminsCfgPath, allowedChannelId } = options;
+
 const vipCommand = new SlashCommandBuilder()
   .setName("vip")
   .setDescription("Получить дату окончания VIP статуса")
@@ -20,7 +19,7 @@ const execute = async (interaction) => {
         ephemeral: true,
       });
     }
-    await dateDonateExpires(adminsUrl, interaction);
+    await dateDonateExpires(adminsCfgPath, interaction);
   } catch (error) {
     await interaction.reply({
       content: "Произошла ошибка.",

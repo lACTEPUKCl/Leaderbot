@@ -1,5 +1,6 @@
 import { Client, GatewayIntentBits, Events } from "discord.js";
 import getCommands from "./commands/getCommands.js";
+import options from "./config.js";
 import { config } from "dotenv";
 config();
 
@@ -12,7 +13,7 @@ client.once(Events.ClientReady, async () => {
   for (let command of commands) {
     command = command.data.toJSON();
     await client.guilds.cache
-      .get(process.env.GUILD_ID)
+      .get(options.discordServerId)
       .commands.create(command);
   }
   await client.destroy();

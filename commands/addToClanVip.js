@@ -3,11 +3,11 @@ import fs from "fs";
 import { exec } from "child_process";
 import options from "../config.js";
 
-const addToClanCommand = new SlashCommandBuilder()
-  .setName("addtoclan")
+const addToClanVipCommand = new SlashCommandBuilder()
+  .setName("addtoclanvip")
   .setDescription("Добавить игрока в клан")
   .setDefaultMemberPermissions(PermissionFlagsBits.CreatePrivateThreads);
-addToClanCommand.addStringOption((option) =>
+addToClanVipCommand.addStringOption((option) =>
   option
     .setName("steamid64")
     .setDescription("Введите 17 цифр steamID64 для получения статистики игрока")
@@ -15,17 +15,14 @@ addToClanCommand.addStringOption((option) =>
     .setMaxLength(17)
     .setMinLength(17)
 );
-addToClanCommand.addUserOption((option) =>
+addToClanVipCommand.addUserOption((option) =>
   option.setName("name").setDescription("Напишите имя игрока в дискорде")
 );
-
+const { adminsCfgPath, maxClanVipUsers, syncconfigPath, vipRoleName } = options;
 const execute = async (interaction) => {
   try {
-    const { adminsCfgPath } = options;
     const extractUsers = (line) => {
-      const match = line.match(
-        /Admin=(\d+):ClanVip \/\/ DiscordID (\d+) do (.+)/
-      );
+      const match = line.match(/Admin=(\d+):VIP \/\/ DiscordID (\d+) do (.+)/);
       if (match) {
         return { steamId: match[1], discordID: match[2] };
       }
@@ -88,9 +85,9 @@ const execute = async (interaction) => {
         }
       });
 
-      if (clanUsers[currentClan]?.length + 1 > 30) {
+      if (clanUsers[currentClan]?.length + 1 > maxClanVipUsers) {
         await interaction.reply({
-          content: "Невозможно добавить игрока. Максимум 30 VIPов в клане.",
+          content: `Невозможно добавить игрока. Максимум ${maxClanVipUsers} VIPов в клане.`,
           ephemeral: true,
         });
         return;
@@ -100,7 +97,7 @@ const execute = async (interaction) => {
         updatedLines.splice(
           clanBlockEndIndex,
           0,
-          `Admin=${steamID64}:ClanVip // DiscordID ${discordIDuser} do ${expireDate}`
+          `Admin=${steamID64}:VIP // DiscordID ${discordIDuser} do ${expireDate}`
         );
         console.log(
           `Пользователь:${steamID64} DiscordID:${discordIDuser} добавлен кланменеджером: ${interaction.user.globalName}`
@@ -111,7 +108,7 @@ const execute = async (interaction) => {
             (role) => role.name === `[${currentClan}]`
           );
           const vipRole = interaction.guild.roles.cache.find(
-            (role) => role.name === `VIP`
+            (role) => role.name === vipRoleName
           );
 
           await guildMember.roles.add(clanRole);
@@ -133,31 +130,38 @@ const execute = async (interaction) => {
           }
         );
 
-        fs.writeFile(
-          `${adminsCfgPath}Backups/AdminsBackup${new Date().toLocaleString(
-            "ru-RU",
-            {
-              timeZone: "Europe/Moscow",
-            }
-          )}.cfg`,
-          updatedLines.join("\n").trim(),
+        const currentDate = new Date();
+        const formattedDate = currentDate
+          .toLocaleString("ru-RU", {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour12: false,
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          })
+          .replace(
+            /(\d+)\.(\d+)\.(\d+), (\d+):(\d+):(\d+)/,
+            "$1.$2.$3_$4.$5.$6"
+          );
+        console.log(`User ${nickname} added`, formattedDate);
+        await fs.promises.writeFile(
+          `${adminsCfgPath}Backups/AdminsBackup_${formattedDate}.cfg`,
+          data,
           (err) => {
             if (err) {
               console.error(err);
               return;
             }
 
-            console.log("\x1b[33m", "\r\n Backup created AdminsBackup.cfg\r\n");
-
-            exec("/home/kry/syncconfig.sh", (err, stdout, stderr) => {
-              if (err) {
-                console.error(err);
-                return;
-              }
-              console.log(stdout);
-            });
+            console.log(
+              "\x1b[33m",
+              `\r\n Backup created AdminsBackup_${formattedDate}.cfg\r\n`
+            );
           }
         );
+        exec(`${syncconfigPath}syncconfig.sh`);
       } else {
         await interaction.reply({
           content: "У вас нет прав на добавление в клан.",
@@ -174,4 +178,4 @@ const execute = async (interaction) => {
   }
 };
 
-export default { data: addToClanCommand, execute };
+export default { data: addToClanVipCommand, execute };

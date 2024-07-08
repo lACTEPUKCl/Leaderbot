@@ -17,3 +17,4 @@ yarn.lock
 .vs/
 
 .env
+config.js

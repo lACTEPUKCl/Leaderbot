@@ -1,12 +1,12 @@
 import fs from "fs";
 
-async function checkVipInteraction(interaction, adminUrl) {
+async function checkVipInteraction(interaction, adminsCfgPath) {
   const currentUser = [];
   const date = [];
   const regexp =
     /^Admin=[0-9]*:Reserved [//]* DiscordID [0-9]* do [0-9]{2}\.[0-9]{2}\.[0-9]{4}/gm;
 
-  fs.readFile(`${adminUrl}Admins.cfg`, "utf-8", (err, data) => {
+  fs.readFile(`${adminsCfgPath}Admins.cfg`, "utf-8", (err, data) => {
     if (err) {
       console.error(err);
       return;

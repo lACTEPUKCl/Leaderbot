@@ -1,5 +1,6 @@
 import { Client, GatewayIntentBits, Events } from "discord.js";
 import { config } from "dotenv";
+import options from "./config.js";
 config();
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
@@ -8,7 +9,7 @@ client.once(Events.ClientReady, async () => {
   console.log(`Logged in as ${client.user.tag}`);
 
   await client.guilds.cache
-    .get(process.env.GUILD_ID)
+    .get(options.discordServerId)
     .commands.fetch()
     .then((commands) => {
       commands.forEach((command) => {

@@ -16,23 +16,12 @@ import getCommands from "./commands/getCommands.js";
 import { config } from "dotenv";
 config();
 import cleaner from "./utility/vip-cleaner.js";
-import top20StatsMain from "./utility/top20StatsMain.js";
-import top20StatsTemp from "./utility/top20StatsTemp.js";
-import getDonate from "./utility/getDonate.js";
-import getBanFromBattlemetrics from "./utility/getBansFromBattlemetrics.js";
-//import chartInitialization from "./chartInitialization.js";
-import { exec } from "child_process";
 import getSteamIdModal from "./utility/getSteamIdModal.js";
 import getSteamIdFormSubmit from "./utility/getSteamIdFormSubmit.js";
 import donateInteraction from "./utility/donateInteraction.js";
-import checkDonateNew from "./utility/checkDonateNew.js";
-import bonusInteraction from "./utility/bonusInteraction.js";
+import checkDonate from "./utility/checkDonate.js";
 import checkVipInteraction from "./utility/checkVipInteraction.js";
-// import rulesDiscord from "./utility/rulesDiscord.js";
-// import rulesPalWorld from "./utility/rulesPalWorld.js";
-import rulesSquad from "./utility/rulesSquad.js";
-import getSaSumModal from "./utility/getSaSumModal.js";
-import getSteamId64 from "./utility/getSteamID64.js";
+import options from "./config.js";
 
 const client = new Client({
   intents: [
@@ -48,7 +37,7 @@ const client = new Client({
 
 client.commands = new Collection();
 const commands = await getCommands();
-const interCollections = new Map();
+const userVoiceChannels = new Map();
 
 for (const command of commands) {
   if ("data" in command && "execute" in command)
@@ -58,177 +47,47 @@ for (const command of commands) {
 
 client.on("ready", async () => {
   console.log(`Logged in as ${client.user.tag}!`);
-  // Список каналов
-  const leaderboadChannelMainId = client.channels.cache.get(
-    "1069615679281561600"
-  );
-  const leaderboadChannelTempId = client.channels.cache.get(
-    "1119326545572544562"
-  );
-  const guildId = client.guilds.cache.get("735515208348598292");
-  const donateChannelId = client.channels.cache.get("1073712072220754001");
-  const checkDonateChannelId = client.channels.cache.get("1073712072220754001");
-  // const threadChannelId = client.channels.cache.get("1204124602230374471");
-  const bansChannelId = "1115705521119440937";
-  const memeChannelId = "1151479560047706162";
-  // const saSummary = client.channels.cache.get("1248006142790209616");
-  const saArchive = client.channels.cache.get("1248316669139615776");
-  const activitiAdminsChannelId = process.env.ADMINACTIVITY_CHANNELID;
-  const vipManualChannelId = process.env.VIP_CHANNELID;
-  const statsChannesId1 = process.env.STATS_CHANNELID;
-  const statsChannesId2 = process.env.STATS_CHANNELID2;
+  const {
+    vipRoleID,
+    vipRoleName,
+    vipManualChannelId,
+    idForNotification,
+    discordServerId,
+    vipExpiredMessage,
+    channelIdToCreateChannel,
+    categoryIdForCreateChannel,
+  } = options;
+
+  const guildId = client.guilds.cache.get(discordServerId);
   const db = process.env.DATABASE_URL;
   const steamApi = process.env.STEAM_API;
-  const donateUrl = process.env.DONATE_URL;
-  const adminsUrl = process.env.ADMINS_URL;
-  const targetChannelId = "1184077084495204453";
-  const userVoiceChannels = new Map();
-
-  //кнопка
-  // const imagePath2 = "../image1.png";
-
-  // const attachment2 = new AttachmentBuilder(imagePath2, {
-  //   name: "image1.png",
-  // });
-
-  // saSummary.send({ files: [attachment2] });
-  // setTimeout(async () => {
-  //   const embed1 = new EmbedBuilder().setColor("#275318").setDescription(
-  //     `Приветствуем всех, кто хочет стать частью нашего дружного сообщества! Русский народный сервер создает клан под названием Squad Academy, чтобы улучшить игровой опыт у новых игроков, стремящихся к развитию своих навыков и достижению новых высот в игре.
-
-  //   Что мы предлагаем:
-
-  //   -Обучение и поддержку от опытных игроков.
-
-  //   -Совместные тренировки и игры.
-
-  //   -Обмен опытом и знаниями.
-
-  //   Мы ищем активных и целеустремленных игроков, готовых работать над собой и развиваться вместе с нами. Если вы хотите стать частью нашей команды, отправьте заявку на вступление в клан. Мы будем рады видеть вас в Squad Academy!
-
-  //   Чтобы вступить в клан нажмите на кнопку ниже и заполните маленькую анкету!`
-  //   );
-
-  //   saSummary.send({ embeds: [embed1] });
-
-  //   const saButton = new ButtonBuilder()
-  //     .setCustomId("saSum")
-  //     .setLabel("Вступить в Squad Academy")
-  //     .setStyle("Success");
-  //   const saButtonLeave = new ButtonBuilder()
-  //     .setCustomId("saSumLeave")
-  //     .setLabel("Покинуть Squad Academy")
-  //     .setStyle("Danger");
-
-  //   const row = new ActionRowBuilder().addComponents(saButton, saButtonLeave);
-
-  //   await saSummary.send({
-  //     components: [row],
-  //   });
-  // }, 3000);
-
-  //кнопка
 
   setInterval(() => {
-    checkDonateNew(guildId, db, steamApi, donateUrl);
+    checkDonate(guildId, db, steamApi);
   }, 60000);
-
-  // Обновление двух таблиц лидеров
-  setInterval(() => {
-    top20StatsMain(leaderboadChannelMainId, db);
-    top20StatsTemp(leaderboadChannelTempId, db);
-    //chartInitialization(tickRateChannelId);
-  }, 600000);
 
   // Очистка Vip пользователей, удаление ролей + отправка им уведомлений
   cleaner.vipCleaner((ids) =>
     ids.forEach(async (element) => {
       let role =
-        guildId.roles.cache.find((r) => r.name === "VIP") ||
-        (await guildId.roles.fetch("1072902141666136125"));
+        guildId.roles.cache.find((r) => r.name === vipRoleName) ||
+        (await guildId.roles.fetch(vipRoleID));
       let getUserList = await guildId.members
         .fetch({ cache: true })
         .catch(console.error);
       let findUser = getUserList.find((r) => r.user.id === element);
       if (!findUser) return;
-      findUser
-        .send(
-          "Ваш Vip статус на сервере RNS закончился, для продления вип статуса перейдите по ссылке https://discord.com/channels/735515208348598292/1189653903738949723"
-        )
-        .catch((error) => {
-          console.log("Невозможно отправить сообщение пользователю");
-        });
+      //findUser.send(vipExpiredMessage).catch((error) => {
+      //console.log("Невозможно отправить сообщение пользователю");
+      //});
       findUser.roles.remove(role);
     })
   );
 
   client.on("messageCreate", async (message) => {
     if (message.author.bot) return;
-    // if (message.channelId === "1200212158282207293") rulesDiscord(message);
-    // if (message.channelId === "1200212107271077930") rulesPalWorld(message);
-
-    // serverlist ("galactic", "vanila", "mee", "squadv")
-    // if (message.channelId === "1119060668046389308") {
-    //   rulesSquad("galactic", threadChannelId);
-    //   rulesSquad("mee", threadChannelId);
-    // rulesSquad("squadv", threadChannelId);
-    //   rulesSquad("squad", threadChannelId);
-    // }
-
-    // if (message.channelId === "1189653903738949723") {
-    //   const imagePath1 = "../image1.png";
-    //   const imagePath2 = "../image2.png";
-
-    //   const attachment1 = new AttachmentBuilder(imagePath1, {
-    //     name: "image1.png",
-    //   });
-    //   const attachment2 = new AttachmentBuilder(imagePath2, {
-    //     name: "image2.png",
-    //   });
-
-    //   message.channel.send({ files: [attachment2] });
-
-    //   const embed1 = new EmbedBuilder().setColor("#275318").setDescription(
-    //     `⠀⠀В награду за активность на наших игровых серверах, мы поощряем игроков предоставлением **VIP** статуса. Для этого в игре действует система бонусных баллов.
-    //       ⠀Каждому игроку начисляется 1 бонусный балл за 1 минуту, проведенную на игровом сервере, на обычной карте и 2 бонусных балла за 1 минуту на seed-карте.
-    //       ⠀За каждые __15000 бонусных__ баллов можно активировать **VIP** статус сроком на 1 месяц. Узнать количество начисленных бонусных баллов можно в игре на нашем сервере написав в чат команду \`"!bonus"\`.
-
-    //       ⠀Чтобы активировать **VIP** за бонусные баллы нажмите на кнопку \`"VIP статус за бонусные баллы"\`.
-
-    //       ⠀Пожалуйста, обратите внимание, что **VIP** статус в игре начнет действовать только после смены карты на сервере!`
-    //   );
-
-    //    message.channel.send({ embeds: [embed1] });
-
-    //   const cancel = new ButtonBuilder()
-    //     .setCustomId("donatVip")
-    //     .setLabel("VIP статус за донат")
-    //     .setStyle("Success");
-
-    //   const bonus = new ButtonBuilder()
-    //     .setCustomId("bonusVip")
-    //     .setLabel("VIP статус за бонусные баллы")
-    //     .setStyle("Success");
-
-    //   const checkVip = new ButtonBuilder()
-    //     .setCustomId("checkVip")
-    //     .setLabel("Проверить VIP статус")
-    //     .setStyle("Primary");
-
-    //   const row = new ActionRowBuilder().addComponents(cancel, bonus, checkVip);
-
-    //   await message.channel.send({
-    //     components: [row],
-    //   });
-    // }
-
     // Автоудаление сообщений в каналах в которых можно использовать только команды
-    const allowedCommandChannels = [
-      activitiAdminsChannelId,
-      vipManualChannelId,
-      statsChannesId1,
-      statsChannesId2,
-    ];
+    const allowedCommandChannels = [vipManualChannelId];
 
     if (allowedCommandChannels.includes(message.channel.id)) {
       if (!message.interaction) {
@@ -239,43 +98,16 @@ client.on("ready", async () => {
         }
       }
     }
-
-    // Канал для вывода списка донатов
-    if (message.channelId === checkDonateChannelId.id)
-      await getDonate(process.env.DONATE_URL, donateChannelId);
-
-    if (bansChannelId.includes(message.channelId)) {
-      getBanFromBattlemetrics(message);
-    }
-
-    if (memeChannelId.includes(message.channelId)) {
-      if (message.attachments.size > 0) {
-        const isImage = message.attachments.every(
-          (attachment) =>
-            /\.(jpg|jpeg|png|gif|mp4|mov|avi)$/.test(attachment.url) ||
-            /\.(jpg|jpeg|png|gif|mp4|mov|avi)(\?.*)?$/.test(attachment.url)
-        );
-
-        if (!isImage) {
-          message.delete();
-        }
-      } else if (
-        !/\.(jpg|jpeg|png|gif|mp4|mov|avi)$/.test(message.content) &&
-        !/\.(jpg|jpeg|png|gif|mp4|mov|avi)(\?.*)?$/.test(message.content)
-      ) {
-        message.delete();
-      }
-    }
   });
 
   client.on(Events.InteractionCreate, async (interaction) => {
     if (
-      interaction.commandName === "addtoclan" ||
-      interaction.commandName === "removefromclan"
+      interaction.commandName === "addtoclanvip" ||
+      interaction.commandName === "removefromclanvip"
     ) {
-      client.users.fetch("132225869698564096", false).then((user) => {
-        user.send(`${interaction.user.globalName}`);
-      }); //Отправляет уведомление в лс меламори
+      client.users.fetch(idForNotification, false).then((user) => {
+        user.send(`${interaction.user.globalName}, ${interaction.commandName}`);
+      });
     }
     const command = interaction.client.commands.get(interaction.commandName);
 
@@ -326,17 +158,6 @@ client.on("ready", async () => {
           ? `[SAr]${discordUser.nickname}`
           : `[SAr]${discordUser.user.globalName}`;
         await discordUser.setNickname(nickname);
-      } catch (error) {}
-    }
-
-    async function assignSarRole(discordUser) {
-      try {
-        const sarRole = guildId.roles.cache.find(
-          (role) => role.name === "[SAr]"
-        );
-        if (sarRole) {
-          await discordUser.roles.add(sarRole);
-        }
       } catch (error) {}
     }
 
@@ -504,14 +325,14 @@ client.on("ready", async () => {
 
   client.on("voiceStateUpdate", async (oldState, newState) => {
     if (
-      newState.channelId === targetChannelId &&
+      newState.channelId === channelIdToCreateChannel &&
       !userVoiceChannels.has(newState.channelId)
     ) {
       try {
         const channel = await newState.guild.channels.create({
           name: newState.member.displayName,
           type: 2,
-          parent: "1087301137645981747",
+          parent: categoryIdForCreateChannel,
         });
         userVoiceChannels.set(channel.id, channel);
 

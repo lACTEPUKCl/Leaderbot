@@ -1,22 +1,21 @@
 import { MongoClient } from "mongodb";
 import getSteamId64 from "./getSteamID64.js";
+import options from "../config.js";
 
 async function steamIdFormSubmit(interaction, steamLink, dbLink, steamApi) {
   const clientdb = new MongoClient(dbLink);
-  const dbName = "SquadJS";
-  const dbCollection = "mainstats";
-  const discordId = interaction.user.id;
-
+  const discordID = interaction.user.id;
+  const { donationLink, dbCollection, dbName } = options;
   try {
-    const steamId = await getSteamId64(steamApi, steamLink);
-    if (steamId) {
+    const steamID = await getSteamId64(steamApi, steamLink);
+    if (steamID) {
       await clientdb.connect();
       const db = clientdb.db(dbName);
       const collection = db.collection(dbCollection);
       const existingDiscord = await collection.findOne({
-        discordid: discordId,
+        discordid: discordID,
       });
-      const existingSteam = await collection.findOne({ _id: steamId });
+      const existingSteam = await collection.findOne({ _id: steamID });
 
       if (!existingSteam) {
         return interaction.reply({
@@ -26,7 +25,7 @@ async function steamIdFormSubmit(interaction, steamLink, dbLink, steamApi) {
         });
       }
 
-      if (existingSteam && existingSteam.discordid === discordId) {
+      if (existingSteam && existingSteam.discordid === discordID) {
         return interaction.reply({
           content:
             "Указанный Steam профиль уже привязан к вашему Discord аккаунту!",
@@ -50,12 +49,12 @@ async function steamIdFormSubmit(interaction, steamLink, dbLink, steamApi) {
       }
 
       const filter = {
-        _id: steamId,
+        _id: steamID,
       };
 
       const update = {
         $set: {
-          discordid: discordId,
+          discordid: discordID,
         },
       };
 
@@ -66,7 +65,7 @@ async function steamIdFormSubmit(interaction, steamLink, dbLink, steamApi) {
       await clientdb.close();
 
       return interaction.reply({
-        content: `Steam профиль успешно привязан к аккаунту!\nСкопируйте ваш SteamID: **${steamId}** или свою ссылку на Steam профиль\nВставьте его в поле 'Сообщение стримеру' по ссылке https://donatepay.ru/don/rns/`,
+        content: `Steam профиль успешно привязан к аккаунту!\nСкопируйте ваш SteamID: **${steamID}** или свою ссылку на Steam профиль\nВставьте его в поле 'Комментарий' по ссылке ${donationLink}`,
         ephemeral: true,
       });
     }

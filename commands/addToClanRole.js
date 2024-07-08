@@ -1,7 +1,6 @@
 import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
 import fs from "fs";
-import { config } from "dotenv";
-config();
+import options from "../config.js";
 
 const addToClanRoleCommand = new SlashCommandBuilder()
   .setName("addtoclanrole")
@@ -18,7 +17,7 @@ const execute = async (interaction) => {
   try {
     const user = interaction.user;
     const userID = user.id;
-    const adminsCfgPath = process.env.ADMINS_URL;
+    const { adminsCfgPath } = options;
     const userName = interaction.options.getUser("name");
 
     if (!userName) {

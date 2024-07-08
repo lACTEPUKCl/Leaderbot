@@ -1,8 +1,6 @@
 import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
 import vipCreater from "../utility/vip-creater.js";
-import options from "../config.js";
 
-const { vipManualChannelId } = options;
 const addVipCommand = new SlashCommandBuilder()
   .setName("addvip")
   .setDescription("Команда для добавления VIP вручную")
@@ -34,15 +32,6 @@ addVipCommand.addStringOption((option) =>
 
 const execute = async (interaction) => {
   try {
-    const channelId = interaction.channelId;
-    if (channelId !== vipManualChannelId) {
-      return await interaction.reply({
-        content:
-          "Команда доступна только VIP пользователям в канале 'Статистика'",
-        ephemeral: true,
-      });
-    }
-
     const steamid64 = interaction.options.getString("steamid64");
     const discordid = interaction.options.getString("discordid");
     const sum = interaction.options.getString("сумма");
@@ -51,10 +40,12 @@ const execute = async (interaction) => {
     try {
       const user = await interaction.guild.members.fetch(discordid);
       const vipRole = interaction.guild.roles.cache.find(
-        (role) => role.name === "VIP"
+        (role) => role.name === options.vipRoleName
       );
       await user.roles.add(vipRole);
-    } catch (error) {}
+    } catch (error) {
+      console.log(error);
+    }
 
     vipCreater.vipCreater(steamid64, name, sum, discordid);
     await interaction.reply(
