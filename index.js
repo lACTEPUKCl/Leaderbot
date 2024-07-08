@@ -41,6 +41,7 @@ const client = new Client({
 client.commands = new Collection();
 const commands = await getCommands();
 const userVoiceChannels = new Map();
+const interCollections = new Map();
 
 for (const command of commands) {
   if ("data" in command && "execute" in command)
@@ -215,11 +216,13 @@ client.on("ready", async () => {
         await command.execute(interaction);
       } catch (error) {
         if (interaction.replied || interaction.deferred) {
+          console.log(error);
           await interaction.followUp({
             content: "There was an error while executing this command!",
             ephemeral: true,
           });
         } else {
+          console.log(error);
           await interaction.reply({
             content: "There was an error while executing this command!",
             ephemeral: true,
