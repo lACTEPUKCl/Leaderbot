@@ -61,14 +61,14 @@ client.on("ready", async () => {
     channelIdToCreateChannel,
     categoryIdForCreateChannel,
     adminsCfgPath,
+    bansChannelId,
+    memeChannelId,
   } = options;
 
   const guildId = client.guilds.cache.get(discordServerId);
   const db = process.env.DATABASE_URL;
   const steamApi = process.env.STEAM_API;
   const donateChannelId = client.channels.cache.get("1073712072220754001");
-  const bansChannelId = "1115705521119440937";
-  const memeChannelId = "1151479560047706162";
   const saArchive = client.channels.cache.get("1248316669139615776");
 
   setInterval(() => {
