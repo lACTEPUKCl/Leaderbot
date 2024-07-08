@@ -22,6 +22,9 @@ import donateInteraction from "./utility/donateInteraction.js";
 import checkDonate from "./utility/checkDonate.js";
 import checkVipInteraction from "./utility/checkVipInteraction.js";
 import options from "./config.js";
+import getSaSumModal from "./utility/getSaSumModal.js";
+import getSteamId64 from "./utility/getSteamID64.js";
+import bonusInteraction from "./utility/bonusInteraction.js";
 
 const client = new Client({
   intents: [
@@ -56,11 +59,16 @@ client.on("ready", async () => {
     vipExpiredMessage,
     channelIdToCreateChannel,
     categoryIdForCreateChannel,
+    adminsCfgPath,
   } = options;
 
   const guildId = client.guilds.cache.get(discordServerId);
   const db = process.env.DATABASE_URL;
   const steamApi = process.env.STEAM_API;
+  const donateChannelId = client.channels.cache.get("1073712072220754001");
+  const bansChannelId = "1115705521119440937";
+  const memeChannelId = "1151479560047706162";
+  const saArchive = client.channels.cache.get("1248316669139615776");
 
   setInterval(() => {
     checkDonate(guildId, db, steamApi);
@@ -96,6 +104,31 @@ client.on("ready", async () => {
         } catch (error) {
           console.error("Error deleting message:", error);
         }
+      }
+    }
+
+    if (message.channelId === donateChannelId.id)
+      await getDonate(process.env.DONATE_URL, donateChannelId);
+
+    if (bansChannelId.includes(message.channelId))
+      await getBanFromBattlemetrics(message);
+
+    if (memeChannelId.includes(message.channelId)) {
+      if (message.attachments.size > 0) {
+        const isImage = message.attachments.every(
+          (attachment) =>
+            /\.(jpg|jpeg|png|gif|mp4|mov|avi)$/.test(attachment.url) ||
+            /\.(jpg|jpeg|png|gif|mp4|mov|avi)(\?.*)?$/.test(attachment.url)
+        );
+
+        if (!isImage) {
+          message.delete();
+        }
+      } else if (
+        !/\.(jpg|jpeg|png|gif|mp4|mov|avi)$/.test(message.content) &&
+        !/\.(jpg|jpeg|png|gif|mp4|mov|avi)(\?.*)?$/.test(message.content)
+      ) {
+        message.delete();
       }
     }
   });
@@ -213,7 +246,7 @@ client.on("ready", async () => {
       if (buttonId === "bonusVip") await bonusInteraction(interaction, db);
 
       if (buttonId === "checkVip")
-        await checkVipInteraction(interaction, adminsUrl);
+        await checkVipInteraction(interaction, adminsCfgPath);
     }
 
     async function handleSaSumButton(discordUser, interaction) {
