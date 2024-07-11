@@ -71,9 +71,10 @@ client.on("ready", async () => {
   const steamApi = process.env.STEAM_API;
   const donateChannelId = client.channels.cache.get("1073712072220754001");
   const saArchive = client.channels.cache.get("1248316669139615776");
+  const donateUrl = process.env.DONATE_URL;
 
   setInterval(() => {
-    checkDonate(guildId, db, steamApi);
+    checkDonate(guildId, db, steamApi, donateUrl);
   }, 60000);
 
   // Очистка Vip пользователей, удаление ролей + отправка им уведомлений
