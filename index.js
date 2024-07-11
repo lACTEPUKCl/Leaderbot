@@ -197,6 +197,17 @@ client.on("ready", async () => {
       } catch (error) {}
     }
 
+    async function assignSarRole(discordUser) {
+      try {
+        const sarRole = guildId.roles.cache.find(
+          (role) => role.name === "[SAr]"
+        );
+        if (sarRole) {
+          await discordUser.roles.add(sarRole);
+        }
+      } catch (error) {}
+    }
+
     if (interaction.isChatInputCommand()) {
       try {
         if (interaction.commandName === "duel") {
