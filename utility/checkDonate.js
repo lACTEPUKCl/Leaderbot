@@ -8,7 +8,7 @@ async function main(guildId, db, steamApi, donateUrl) {
   try {
     let response = await fetch(donateUrl);
     const json = await response.json();
-    const data = await fs.readFile(`./transactionId.json`);
+    const data = await fs.readFile(`./transaction/transactionId.json`);
     const transaction = JSON.parse(data);
     const existingIds = transaction.transactions.map((e) => e.id);
     let discordID;
@@ -63,7 +63,7 @@ async function main(guildId, db, steamApi, donateUrl) {
           // });
 
           let newData = JSON.stringify(transaction);
-          fs.writeFile(`./transactionId.json`, newData, (err) => {
+          fs.writeFile(`./transaction/transactionId.json`, newData, (err) => {
             if (err) return;
           });
         }
