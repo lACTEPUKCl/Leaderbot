@@ -9,7 +9,7 @@ const getUserRegExp = (steamID) => {
     `Admin=(?<steamID>${steamID}):Reserved [//]* DiscordID (?<discordId>[0-9]*) do (?<date>[0-9]{2}\\.[0-9]{2}\\.[0-9]{4})`
   );
 };
-const { adminsCfgPath } = options;
+const { adminsCfgPath, adminsCfgBackups, syncconfigPath } = options;
 const vipCreater = async (steamID, nickname, summ, discordId) => {
   const options = {
     year: "numeric",
@@ -68,7 +68,7 @@ const vipCreater = async (steamID, nickname, summ, discordId) => {
         console.log(`User ${nickname} added`);
 
         fs.writeFile(
-          `${adminsCfgPath}Backups/AdminsBackup${new Date().toLocaleString(
+          `${adminsCfgBackups}/AdminsBackup${new Date().toLocaleString(
             "ru-RU",
             {
               timeZone: "Europe/Moscow",
@@ -83,7 +83,7 @@ const vipCreater = async (steamID, nickname, summ, discordId) => {
 
             console.log("\x1b[33m", "\r\n Backup created AdminsBackup.cfg\r\n");
 
-            exec("/home/kry/syncconfig.sh", (err, stdout, stderr) => {
+            exec(`${syncconfigPath}syncconfig.sh`, (err, stdout, stderr) => {
               if (err) {
                 console.error(err);
                 return;

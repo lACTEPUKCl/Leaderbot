@@ -8,7 +8,7 @@ const getUserRegExp = (steamID) => {
     `Admin=(?<steamID>${steamID}):Reserved [//]* DiscordID (?<discordId>[0-9]*) do (?<date>[0-9]{2}\\.[0-9]{2}\\.[0-9]{4})`
   );
 };
-const { adminsCfgPath } = options;
+const { adminsCfgPath, adminsCfgBackups, syncconfigPath } = options;
 const vipCleaner = (callback) => {
   setInterval(() => {
     const isPaidDate = (date) => {
@@ -57,7 +57,7 @@ const vipCleaner = (callback) => {
           });
 
           fs.writeFile(
-            `${adminsCfgPath}Backups/AdminsBackup${new Date().toLocaleString(
+            `${adminsCfgBackups}/AdminsBackup${new Date().toLocaleString(
               "ru-RU",
               {
                 timeZone: "Europe/Moscow",
@@ -73,6 +73,14 @@ const vipCleaner = (callback) => {
               );
             }
           );
+
+          exec(`${syncconfigPath}syncconfig.sh`, (err, stdout, stderr) => {
+            if (err) {
+              console.error(err);
+              return;
+            }
+            console.log(stdout);
+          });
         });
       }
     });
