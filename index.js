@@ -66,6 +66,8 @@ client.on("ready", async () => {
     bansChannelId,
     memeChannelId,
     donateListChannelID,
+    allowedChannelId,
+    allowedChannelId2,
   } = options;
 
   const guildId = client.guilds.cache.get(discordServerId);
@@ -100,7 +102,11 @@ client.on("ready", async () => {
   client.on("messageCreate", async (message) => {
     if (message.author.bot) return;
     // Автоудаление сообщений в каналах в которых можно использовать только команды
-    const allowedCommandChannels = [vipManualChannelId];
+    const allowedCommandChannels = [
+      vipManualChannelId,
+      allowedChannelId,
+      allowedChannelId2,
+    ];
 
     if (allowedCommandChannels.includes(message.channel.id)) {
       if (!message.interaction) {
