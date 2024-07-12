@@ -26,6 +26,7 @@ import getSaSumModal from "./utility/getSaSumModal.js";
 import getSteamId64 from "./utility/getSteamID64.js";
 import bonusInteraction from "./utility/bonusInteraction.js";
 import getBansFromBattlemetrics from "./utility/getBansFromBattlemetrics.js";
+import getDonate from "./utility/getDonate.js";
 
 const client = new Client({
   intents: [
