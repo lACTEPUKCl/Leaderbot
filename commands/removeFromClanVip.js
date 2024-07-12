@@ -20,7 +20,8 @@ const removeFromClanVipCommand = new SlashCommandBuilder()
       .setMinLength(17)
   );
 
-const { vipRoleName, adminsCfgPath, syncconfigPath } = options;
+const { vipRoleName, adminsCfgPath, syncconfigPath, adminsCfgBackups } =
+  options;
 
 const execute = async (interaction) => {
   try {
@@ -153,7 +154,7 @@ const execute = async (interaction) => {
       .replace(/(\d+)\.(\d+)\.(\d+), (\d+):(\d+):(\d+)/, "$1.$2.$3_$4.$5.$6");
     console.log(`User ${nickname} removed`, formattedDate);
     await fs.promises.writeFile(
-      `${adminsCfgPath}Backups/AdminsBackup_${formattedDate}.cfg`,
+      `${adminsCfgBackups}/AdminsBackup_${formattedDate}.cfg`,
       data,
       (err) => {
         if (err) {

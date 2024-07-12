@@ -18,7 +18,13 @@ addToClanVipCommand.addStringOption((option) =>
 addToClanVipCommand.addUserOption((option) =>
   option.setName("name").setDescription("Напишите имя игрока в дискорде")
 );
-const { adminsCfgPath, maxClanVipUsers, syncconfigPath, vipRoleName } = options;
+const {
+  adminsCfgPath,
+  maxClanVipUsers,
+  syncconfigPath,
+  vipRoleName,
+  adminsCfgBackups,
+} = options;
 const execute = async (interaction) => {
   try {
     const extractUsers = (line) => {
@@ -147,7 +153,7 @@ const execute = async (interaction) => {
           );
         console.log(`User ${nickname} added`, formattedDate);
         await fs.promises.writeFile(
-          `${adminsCfgPath}Backups/AdminsBackup_${formattedDate}.cfg`,
+          `${adminsCfgBackups}/AdminsBackup_${formattedDate}.cfg`,
           data,
           (err) => {
             if (err) {
