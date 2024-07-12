@@ -65,12 +65,13 @@ client.on("ready", async () => {
     adminsCfgPath,
     bansChannelId,
     memeChannelId,
+    donateListChannelID,
   } = options;
 
   const guildId = client.guilds.cache.get(discordServerId);
   const db = process.env.DATABASE_URL;
   const steamApi = process.env.STEAM_API;
-  const donateChannelId = client.channels.cache.get("1073712072220754001");
+  const donateChannelId = client.channels.cache.get(donateListChannelID);
   const saArchive = client.channels.cache.get("1248316669139615776");
   const donateUrl = process.env.DONATE_URL;
 
@@ -111,7 +112,7 @@ client.on("ready", async () => {
       }
     }
 
-    if (message.channelId === donateChannelId.id)
+    if (message.channelId === donateListChannelID)
       await getDonate(process.env.DONATE_URL, donateChannelId);
 
     if (bansChannelId.includes(message.channelId))
