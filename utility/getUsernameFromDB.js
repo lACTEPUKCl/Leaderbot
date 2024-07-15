@@ -16,8 +16,10 @@ const getUsernameFromDB = async (steamId) => {
     });
 
     return user ? user.userName : "Unknown";
-  } finally {
-    await client.close();
+  } catch (e) {
+    console.log(e);
+    // } finally {
+    //   await client.close();
   }
 };
 
