@@ -28,7 +28,9 @@ const {
 const execute = async (interaction) => {
   try {
     const extractUsers = (line) => {
-      const match = line.match(/Admin=(\d+):VIP \/\/ DiscordID (\d+) do (.+)/);
+      const match = line.match(
+        /Admin=(\d+):ClanVip \/\/ DiscordID (\d+) do (.+)/
+      );
       if (match) {
         return { steamId: match[1], discordID: match[2] };
       }
@@ -103,7 +105,7 @@ const execute = async (interaction) => {
         updatedLines.splice(
           clanBlockEndIndex,
           0,
-          `Admin=${steamID64}:VIP // DiscordID ${discordIDuser} do ${expireDate}`
+          `Admin=${steamID64}:ClanVip // DiscordID ${discordIDuser} do ${expireDate}`
         );
         console.log(
           `Пользователь:${steamID64} DiscordID:${discordIDuser} добавлен кланменеджером: ${interaction.user.globalName}`
