@@ -26,7 +26,9 @@ const { vipRoleName, adminsCfgPath, syncconfigPath, adminsCfgBackups } =
 const execute = async (interaction) => {
   try {
     const extractUsers = (line) => {
-      const match = line.match(/Admin=(\d+):VIP \/\/ DiscordID (\d+) do (.+)/);
+      const match = line.match(
+        /Admin=(\d+):ClanVip \/\/ DiscordID (\d+) do (.+)/
+      );
       if (match) {
         return { steamId: match[1], discordID: match[2] };
       }
