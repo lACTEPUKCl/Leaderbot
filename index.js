@@ -70,6 +70,8 @@ client.on("ready", async () => {
     donateListChannelID,
     allowedChannelId,
     allowedChannelId2,
+    leaderboadChannelIdMain,
+    leaderboadChannelIdTemp,
   } = options;
 
   const guildId = client.guilds.cache.get(discordServerId);
@@ -78,6 +80,12 @@ client.on("ready", async () => {
   const donateChannelId = client.channels.cache.get(donateListChannelID);
   const saArchive = client.channels.cache.get("1248316669139615776");
   const donateUrl = process.env.DONATE_URL;
+  const leaderboadChannelMainId = client.channels.cache.get(
+    leaderboadChannelIdMain
+  );
+  const leaderboadChannelTempId = client.channels.cache.get(
+    leaderboadChannelIdTemp
+  );
 
   setInterval(() => {
     checkDonate(guildId, db, steamApi, donateUrl);
