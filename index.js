@@ -27,6 +27,8 @@ import getSteamId64 from "./utility/getSteamID64.js";
 import bonusInteraction from "./utility/bonusInteraction.js";
 import getBansFromBattlemetrics from "./utility/getBansFromBattlemetrics.js";
 import getDonate from "./utility/getDonate.js";
+import top20StatsMain from "./utility/top20StatsMain.js";
+import top20StatsTemp from "./utility/top20StatsTemp.js";
 
 const client = new Client({
   intents: [
@@ -80,6 +82,13 @@ client.on("ready", async () => {
   setInterval(() => {
     checkDonate(guildId, db, steamApi, donateUrl);
   }, 60000);
+
+  // Обновление двух таблиц лидеров
+  setInterval(() => {
+    top20StatsMain(leaderboadChannelMainId, db);
+    top20StatsTemp(leaderboadChannelTempId, db);
+    //chartInitialization(tickRateChannelId);
+  }, 600000);
 
   // Очистка Vip пользователей, удаление ролей + отправка им уведомлений
   cleaner.vipCleaner((ids) =>
