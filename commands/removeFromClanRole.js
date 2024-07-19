@@ -1,8 +1,6 @@
 import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
 import fs from "fs";
-import { config } from "dotenv";
 import options from "../config.js";
-config();
 
 const removeFromClanRoleCommand = new SlashCommandBuilder()
   .setName("removefromclanrole")
