@@ -25,6 +25,7 @@ const { vipRoleName, adminsCfgPath, syncconfigPath, adminsCfgBackups } =
 
 const execute = async (interaction) => {
   try {
+    await interaction.deferReply({ ephemeral: true });
     const extractUsers = (line) => {
       const match = line.match(
         /Admin=(\d+):ClanVip \/\/ DiscordID (\d+) do (.+)/
@@ -82,7 +83,7 @@ const execute = async (interaction) => {
         if (user.steamId === steamID64 || user.discordID === discordIDuser) {
           if (guildMember) {
             const clanRole = interaction.guild.roles.cache.find(
-              (role) => role.name === `${currentClan}`
+              (role) => role.name === `[${currentClan}]`
             );
             const vipRole = interaction.guild.roles.cache.find(
               (role) => role.name === vipRoleName
@@ -95,7 +96,7 @@ const execute = async (interaction) => {
                   `Не удалось удалить роль ${currentClan} у пользователя ${nickname}:`,
                   error
                 );
-                await interaction.reply({
+                await interaction.editReply({
                   content: `Не удалось удалить роль ${currentClan} у пользователя ${nickname}.`,
                   ephemeral: true,
                 });
@@ -109,7 +110,7 @@ const execute = async (interaction) => {
                   `Не удалось удалить VIP роль у пользователя ${nickname}:`,
                   error
                 );
-                await interaction.reply({
+                await interaction.editReply({
                   content: `Не удалось удалить VIP роль у пользователя ${nickname}.`,
                   ephemeral: true,
                 });
@@ -125,7 +126,7 @@ const execute = async (interaction) => {
     }
 
     if (!foundUser) {
-      await interaction.reply({
+      await interaction.editReply({
         content: `Пользователь ${nickname} не найден в клане.`,
         ephemeral: true,
       });
@@ -137,7 +138,7 @@ const execute = async (interaction) => {
       updatedLines.join("\n").trim()
     );
 
-    await interaction.reply({
+    await interaction.editReply({
       content: `Пользователь ${nickname} успешно удален из клана.`,
       ephemeral: true,
     });
@@ -173,7 +174,7 @@ const execute = async (interaction) => {
     exec(`${syncconfigPath}syncconfig.sh`);
   } catch (error) {
     console.error(error);
-    await interaction.reply({
+    await interaction.editReply({
       content: "Произошла ошибка.",
       ephemeral: true,
     });
