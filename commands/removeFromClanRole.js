@@ -1,6 +1,7 @@
 import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
 import fs from "fs";
 import { config } from "dotenv";
+import options from "../config.js";
 config();
 
 const removeFromClanRoleCommand = new SlashCommandBuilder()
@@ -18,8 +19,8 @@ const execute = async (interaction) => {
   try {
     const user = interaction.user;
     const userID = user.id;
-    const adminsCfgPath = process.env.ADMINS_URL;
     const userName = interaction.options.getUser("name");
+    const { adminsCfgPath } = options;
 
     if (!userName) {
       interaction.reply({
