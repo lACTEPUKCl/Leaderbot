@@ -13,12 +13,13 @@ const removeFromClanRoleCommand = new SlashCommandBuilder()
       .setRequired(true)
   );
 
+const { adminsCfgPath } = options;
+
 const execute = async (interaction) => {
   try {
     const user = interaction.user;
     const userID = user.id;
     const userName = interaction.options.getUser("name");
-    const { adminsCfgPath } = options;
 
     if (!userName) {
       interaction.reply({
@@ -27,7 +28,7 @@ const execute = async (interaction) => {
       });
       return;
     }
-
+    console.log(adminsCfgPath);
     fs.readFile(`${adminsCfgPath}Admins.cfg`, "utf8", async (err, data) => {
       if (err) {
         console.error(err);
