@@ -7,6 +7,7 @@ const {
   top20RevivesMessageID,
   top20TKMessageID,
   top20KDMessageID,
+  top20SeedMessageID,
 } = options;
 
 async function top20StatsMain(leaderboardChannelId, db) {
@@ -15,21 +16,21 @@ async function top20StatsMain(leaderboardChannelId, db) {
       sort: "kills",
       messageId: top20KillsMessageID,
       authorName: "Топ 20 игроков по убийствам",
-      seconds: 3000,
+      seconds: 1000,
       status: "main",
     },
     {
       sort: "death",
       messageId: top20DeathMessageID,
       authorName: "Топ 20 игроков по смертям",
-      seconds: 7000,
+      seconds: 5000,
       status: "main",
     },
     {
       sort: "revives",
       messageId: top20RevivesMessageID,
       authorName: "Топ 20 медиков",
-      seconds: 11000,
+      seconds: 10000,
       status: "main",
     },
     {
@@ -44,6 +45,13 @@ async function top20StatsMain(leaderboardChannelId, db) {
       messageId: top20KDMessageID,
       authorName: "Топ 20 игроков по соотношению убийств к смертям",
       seconds: 20000,
+      status: "main",
+    },
+    {
+      sort: "seed",
+      messageId: top20SeedMessageID,
+      authorName: "Топ 20 сидеров",
+      seconds: 25000,
       status: "main",
     },
   ];
