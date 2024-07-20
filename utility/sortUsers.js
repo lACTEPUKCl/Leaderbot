@@ -27,7 +27,8 @@ async function sortUsers(db, sort, status) {
     const players = result.map((player) => {
       const { name, kills, death, revives, teamkills, kd, matches } = player;
       const matchesMatches = matches.matches;
-      return `${name.trim()} ${kills} ${death} ${revives} ${teamkills} ${kd} ${matchesMatches}`;
+      const seed = squad.seed;
+      return `${name.trim()} ${kills} ${death} ${revives} ${teamkills} ${kd} ${matchesMatches} ${seed}`;
     });
     return players;
   } catch (e) {
