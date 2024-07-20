@@ -13,7 +13,15 @@ async function getNickname(player) {
 async function getStats(player, sort) {
   if (!player) return "";
   const numbers = player.split(/\s+/).filter((num) => !isNaN(num));
-  const stats = ["kills", "death", "revives", "teamkills", "kd", "matches"];
+  const stats = [
+    "kills",
+    "death",
+    "revives",
+    "teamkills",
+    "kd",
+    "matches",
+    "seed",
+  ];
 
   if (stats.includes(sort)) {
     const statIndex = stats.indexOf(sort);
@@ -30,6 +38,7 @@ async function getColumnName(sort) {
     revives: "Помощь",
     teamkills: "ТК",
     kd: "У/С",
+    seed: "Seed",
   };
 
   const matchedStat = Object.keys(stats).find((stat) => sort.includes(stat));
