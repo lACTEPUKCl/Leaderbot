@@ -20,7 +20,7 @@ async function getStats(player, sort) {
     "teamkills",
     "kd",
     "matches",
-    "seed",
+    "squad.seed",
   ];
 
   if (stats.includes(sort)) {
@@ -38,7 +38,7 @@ async function getColumnName(sort) {
     revives: "Помощь",
     teamkills: "ТК",
     kd: "У/С",
-    seed: "Seed",
+    seed: "Время",
   };
 
   const matchedStat = Object.keys(stats).find((stat) => sort.includes(stat));
