@@ -6,7 +6,7 @@ import { loadImage, createCanvas, registerFont } from "canvas";
 async function getNickname(player) {
   if (!player) return "";
   const splitName = player.split(" ");
-  const filteredNickname = splitName.slice(0, -6).join(" ");
+  const filteredNickname = splitName.slice(0, -7).join(" ");
   return filteredNickname;
 }
 
