@@ -59,7 +59,6 @@ async function leaderboard({
   seconds,
   status,
 }) {
-  console.log(channel);
   setTimeout(async () => {
     const players = await sortUsers(db, sort, status);
     const message = await channel.messages.fetch(messageId);
