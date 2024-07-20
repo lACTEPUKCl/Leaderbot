@@ -11,6 +11,10 @@ async function sortUsers(db, sort, status) {
     dbCollection = "tempstats";
   }
 
+  if (sort === "squad.seed") {
+    count = 1;
+  }
+
   try {
     await clientdb.connect();
     const db = clientdb.db(dbName);

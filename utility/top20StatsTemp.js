@@ -47,7 +47,7 @@ async function top20StatsTemp(channelId, db) {
       status: "temp",
     },
     {
-      sort: "seed",
+      sort: "squad.seed",
       messageId: top20SeedMessageIDTemp,
       authorName: "Топ 20 сидеров",
       seconds: 22000,

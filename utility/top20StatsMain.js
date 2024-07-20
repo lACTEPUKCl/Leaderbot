@@ -48,7 +48,7 @@ async function top20StatsMain(leaderboardChannelId, db) {
       status: "main",
     },
     {
-      sort: "seed",
+      sort: "squad.seed",
       messageId: top20SeedMessageID,
       authorName: "Топ 20 сидеров",
       seconds: 25000,
