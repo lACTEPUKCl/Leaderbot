@@ -24,8 +24,10 @@ async function sortUsers(db, sort, status) {
       .sort({ [sort]: -1 })
       .limit(20)
       .toArray();
+
     const players = result.map((player) => {
-      const { name, kills, death, revives, teamkills, kd, matches } = player;
+      const { name, kills, death, revives, teamkills, kd, matches, squad } =
+        player;
       const matchesMatches = matches.matches;
       const seed = squad.seed;
       return `${name.trim()} ${kills} ${death} ${revives} ${teamkills} ${kd} ${matchesMatches} ${seed}`;
