@@ -22,7 +22,6 @@ import donateInteraction from "./utility/donateInteraction.js";
 import checkDonate from "./utility/checkDonate.js";
 import checkVipInteraction from "./utility/checkVipInteraction.js";
 import options from "./config.js";
-import getSaSumModal from "./utility/getSaSumModal.js";
 import getSteamId64 from "./utility/getSteamID64.js";
 import bonusInteraction from "./utility/bonusInteraction.js";
 import getBansFromBattlemetrics from "./utility/getBansFromBattlemetrics.js";
@@ -61,7 +60,7 @@ client.on("ready", async () => {
     vipManualChannelId,
     idForNotification,
     discordServerId,
-    vipExpiredMessage,
+
     channelIdToCreateChannel,
     categoryIdForCreateChannel,
     adminsCfgPath,
@@ -78,7 +77,6 @@ client.on("ready", async () => {
   const db = process.env.DATABASE_URL;
   const steamApi = process.env.STEAM_API;
   const donateChannelId = client.channels.cache.get(donateListChannelID);
-  const saArchive = client.channels.cache.get("1248316669139615776");
   const donateUrl = process.env.DONATE_URL;
   const leaderboadChannelMainId = client.channels.cache.get(
     leaderboadChannelIdMain
@@ -172,67 +170,6 @@ client.on("ready", async () => {
     }
     const command = interaction.client.commands.get(interaction.commandName);
 
-    if (interaction.isModalSubmit()) {
-      const steamIdField = interaction.fields.fields.get("steamid64input");
-      const steamLink = steamIdField?.value;
-
-      if (steamLink) {
-        if (interaction.customId === "saModal") {
-          handleSaModalSubmit(interaction, steamLink);
-        } else if (interaction.customId === "steamidModal") {
-          getSteamIdFormSubmit(interaction, steamLink, db, steamApi);
-        }
-      }
-    }
-
-    async function handleSaModalSubmit(interaction, steamLink) {
-      const squadTime = interaction.fields.fields.get("squadTime")?.value;
-      const squadRules = interaction.fields.fields.get("squadRules")?.value;
-      const steamID64 = await getSteamId64(steamApi, steamLink);
-
-      const embed = new EmbedBuilder()
-        .setColor("#275318")
-        .setTitle("Ссылка на профиль Steam")
-        .setURL(steamLink)
-        .setDescription(
-          `Пользователь: <@${interaction.user.id}>
-          Наигранное время в Squad: ${squadTime}
-          Ознакомлены с правилами сервера РНС? ${squadRules}
-          SteamID64: ${steamID64}`
-        );
-
-      await saArchive.send({ embeds: [embed] });
-
-      const discordUser = await guildId.members.fetch(interaction.user.id);
-      await updateUserNickname(discordUser);
-      await assignSarRole(discordUser);
-
-      await interaction.reply({
-        content: "Добро пожаловать в Squad Academy",
-        ephemeral: true,
-      });
-    }
-
-    async function updateUserNickname(discordUser) {
-      try {
-        const nickname = discordUser.nickname
-          ? `[SAr]${discordUser.nickname}`
-          : `[SAr]${discordUser.user.globalName}`;
-        await discordUser.setNickname(nickname);
-      } catch (error) {}
-    }
-
-    async function assignSarRole(discordUser) {
-      try {
-        const sarRole = guildId.roles.cache.find(
-          (role) => role.name === "[SAr]"
-        );
-        if (sarRole) {
-          await discordUser.roles.add(sarRole);
-        }
-      } catch (error) {}
-    }
-
     if (interaction.isChatInputCommand()) {
       try {
         if (interaction.commandName === "duel") {
@@ -270,15 +207,7 @@ client.on("ready", async () => {
     } else if (interaction.isButton()) {
       const buttonId = interaction?.customId;
 
-      const discordUser = await guildId.members.fetch(interaction.user.id);
-
-      if (buttonId === "saSum")
-        await handleSaSumButton(discordUser, interaction);
-
       if (buttonId.includes("duel")) await handleDuelButton(interaction);
-
-      if (buttonId === "saSumLeave")
-        await handleSaSumLeaveButton(discordUser, interaction);
 
       if (buttonId === "SteamID") await getSteamIdModal(interaction);
 
@@ -288,53 +217,6 @@ client.on("ready", async () => {
 
       if (buttonId === "checkVip")
         await checkVipInteraction(interaction, adminsCfgPath);
-    }
-
-    async function handleSaSumButton(discordUser, interaction) {
-      const sarRole = guildId.roles.cache.find((role) => role.name === "[SAr]");
-      const userRole = discordUser.roles.cache.some(
-        (role) => role.id === sarRole.id
-      );
-
-      if (userRole) {
-        await interaction.reply({
-          content: "Вы уже состоите в Squad Academy :c",
-          ephemeral: true,
-        });
-        return;
-      }
-      await getSaSumModal(interaction);
-    }
-
-    async function handleSaSumLeaveButton(discordUser, interaction) {
-      const sarRole = guildId.roles.cache.find((role) => role.name === "[SAr]");
-      const userRole = discordUser.roles.cache.some(
-        (role) => role.id === sarRole.id
-      );
-
-      if (!userRole) {
-        await interaction.reply({
-          content: "Вы не состоите в Squad Academy :c",
-          ephemeral: true,
-        });
-        return;
-      }
-
-      try {
-        if (discordUser.nickname.includes("[SAr]")) {
-          const newNickName = discordUser.nickname.replace("[SAr]", "").trim();
-          await discordUser.setNickname(newNickName);
-        }
-      } catch (error) {}
-
-      try {
-        await discordUser.roles.remove(sarRole);
-      } catch (error) {}
-
-      await interaction.reply({
-        content: "Как жаль, что вы покинули Squad Academy :c",
-        ephemeral: true,
-      });
     }
   });
 
