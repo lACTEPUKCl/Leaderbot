@@ -92,10 +92,8 @@ async function seedingServers(guild) {
         continue;
       } else if (players >= 60 && i === servers.length - 1) {
         if (!alreadyNotified) {
-          await notifyUsers(
-            guild,
-            `Сервер ${name} уже засижен (${players} игроков), все сервера успешно подняты! Огромное спасибо за помощь!`
-          );
+          const message = `Все сервера успешно подняты! Огромное спасибо за вашу помощь!`;
+          await notifyUsers(guild, message, name, server.id);
           alreadyNotified = true;
         }
         await updateSeedingStatus(collection, i, false);
