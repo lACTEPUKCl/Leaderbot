@@ -79,7 +79,22 @@ client.on("ready", async () => {
     );
   }, 600000);
 
-  cleaner.vipCleaner(guildId, options.vipRoleID, options.vipRoleName);
+  cleaner.vipCleaner((ids) =>
+    ids.forEach(async (element) => {
+      let role =
+        guildId.roles.cache.find((r) => r.name === vipRoleName) ||
+        (await guildId.roles.fetch(vipRoleID));
+      let getUserList = await guildId.members
+        .fetch({ cache: true })
+        .catch(console.error);
+      let findUser = getUserList.find((r) => r.user.id === element);
+      if (!findUser) return;
+      //findUser.send(vipExpiredMessage).catch((error) => {
+      //console.log("Невозможно отправить сообщение пользователю");
+      //});
+      findUser.roles.remove(role);
+    })
+  );
 
   client.on("messageReactionAdd", (reaction, user) =>
     handleReactionAdd(reaction, user)
