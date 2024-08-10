@@ -3,12 +3,15 @@ import donateInteraction from "../utility/donateInteraction.js";
 import bonusInteraction from "../utility/bonusInteraction.js";
 import checkVipInteraction from "../utility/checkVipInteraction.js";
 import { handleDuelButton } from "../utility/duelGame.js";
+import steamIdFormSubmit from "../utility/getSteamIdFormSubmit.js";
 
 export async function handleInteractionCreate(
   interaction,
   client,
   interCollections,
-  options
+  options,
+  db,
+  steamApi
 ) {
   if (
     interaction.commandName === "addtoclanvip" ||
@@ -52,7 +55,9 @@ export async function handleInteractionCreate(
         });
       }
     }
-  } else if (interaction.isButton()) {
+  }
+
+  if (interaction.isButton()) {
     const buttonId = interaction.customId;
 
     if (buttonId.includes("duel"))
@@ -68,5 +73,16 @@ export async function handleInteractionCreate(
 
     if (buttonId === "checkVip")
       await checkVipInteraction(interaction, options.adminsCfgPath);
+  }
+
+  if (interaction.isModalSubmit()) {
+    const steamIdField = interaction.fields.fields.get("steamid64input");
+    const steamLink = steamIdField?.value;
+
+    if (steamLink) {
+      if (interaction.customId === "steamidModal") {
+        steamIdFormSubmit(interaction, steamLink, db, steamApi);
+      }
+    }
   }
 }
