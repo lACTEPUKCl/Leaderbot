@@ -56,8 +56,14 @@ for (const command of commands) {
 client.on("ready", async () => {
   console.log(`Logged in as ${client.user.tag}!`);
 
-  const { discordServerId, donateListChannelID, seedChannelId, seedMessageId } =
-    options;
+  const {
+    discordServerId,
+    donateListChannelID,
+    seedChannelId,
+    seedMessageId,
+    vipRoleName,
+    vipRoleID,
+  } = options;
   const guildId = client.guilds.cache.get(discordServerId);
   const db = process.env.DATABASE_URL;
   const steamApi = process.env.STEAM_API;
