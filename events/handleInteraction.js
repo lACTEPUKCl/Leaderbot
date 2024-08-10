@@ -11,7 +11,10 @@ export async function handleInteractionCreate(
   interCollections,
   options,
   db,
-  steamApi
+  steamApi,
+  dbName,
+  dbCollection,
+  seedChannelId
 ) {
   if (
     interaction.commandName === "addtoclanvip" ||
@@ -63,7 +66,8 @@ export async function handleInteractionCreate(
     if (buttonId.includes("duel"))
       await handleDuelButton(interaction, interCollections);
 
-    if (buttonId === "SteamID") await getSteamIdModal(interaction);
+    if (buttonId === "SteamID")
+      await getSteamIdModal(interaction, db, dbName, dbCollection);
 
     if (buttonId === "donatVip")
       await donateInteraction(interaction, process.env.DATABASE_URL);
@@ -81,7 +85,7 @@ export async function handleInteractionCreate(
 
     if (steamLink) {
       if (interaction.customId === "steamidModal") {
-        steamIdFormSubmit(interaction, steamLink, db, steamApi);
+        steamIdFormSubmit(interaction, steamLink, db, steamApi, seedChannelId);
       }
     }
   }

@@ -63,6 +63,8 @@ client.on("ready", async () => {
     seedMessageId,
     vipRoleName,
     vipRoleID,
+    dbName,
+    dbCollection,
   } = options;
   const guildId = client.guilds.cache.get(discordServerId);
   const db = process.env.DATABASE_URL;
@@ -121,7 +123,10 @@ client.on("ready", async () => {
       interCollections,
       options,
       db,
-      steamApi
+      steamApi,
+      dbName,
+      dbCollection,
+      seedChannelId
     )
   );
 
