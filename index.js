@@ -115,7 +115,14 @@ client.on("ready", async () => {
   );
 
   client.on(Events.InteractionCreate, (interaction) =>
-    handleInteractionCreate(interaction, client, interCollections, options)
+    handleInteractionCreate(
+      interaction,
+      client,
+      interCollections,
+      options,
+      db,
+      steamApi
+    )
   );
 
   client.on("messageCreate", (message) =>
