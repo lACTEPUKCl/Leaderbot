@@ -2,7 +2,13 @@ import { MongoClient } from "mongodb";
 import getSteamId64 from "./getSteamID64.js";
 import options from "../config.js";
 
-async function steamIdFormSubmit(interaction, steamLink, dbLink, steamApi) {
+async function steamIdFormSubmit(
+  interaction,
+  steamLink,
+  dbLink,
+  steamApi,
+  seedChannelId
+) {
   const clientdb = new MongoClient(dbLink);
   const discordID = interaction.user.id;
   const { donationLink, dbCollection, dbName } = options;
@@ -64,10 +70,18 @@ async function steamIdFormSubmit(interaction, steamLink, dbLink, steamApi) {
 
       await clientdb.close();
 
-      return interaction.reply({
-        content: `Steam профиль успешно привязан к аккаунту!\nСкопируйте ваш SteamID: **${steamID}** или свою ссылку на Steam профиль\nВставьте его в поле 'Комментарий' по ссылке ${donationLink}`,
-        ephemeral: true,
-      });
+      if (interaction.channelId === seedChannelId) {
+        return interaction.reply({
+          content:
+            "Steam профиль успешно привязан к аккаунту! Время ивентового сида с 10:00 до 22:00",
+          ephemeral: true,
+        });
+      } else {
+        return interaction.reply({
+          content: `Steam профиль успешно привязан к аккаунту!\nСкопируйте ваш SteamID: **${steamID}** или свою ссылку на Steam профиль\nВставьте его в поле 'Комментарий' по ссылке ${donationLink}`,
+          ephemeral: true,
+        });
+      }
     }
   } catch (e) {
     console.error("Error in steamIdFormSubmit:", e);
