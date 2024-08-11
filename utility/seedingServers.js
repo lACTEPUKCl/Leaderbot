@@ -8,7 +8,8 @@ config();
 const client = new MongoClient(process.env.DATABASE_URL);
 const { seedRoleId, dbName, dbCollectionServers } = options;
 const servers = options.serversSeedID;
-let alreadyNotified = false;
+let alreadyNotified = {};
+let seedingInterval;
 
 async function connectToDatabase() {
   await client.connect();
@@ -72,37 +73,45 @@ async function seedingServers(guild) {
   const collection = await connectToDatabase();
 
   try {
-    for (let i = 0; i < servers.length; i++) {
-      const server = servers[i];
-      const serverInfo = await getServerInfo(server.id);
+    seedingInterval = setInterval(async () => {
+      let seedingActive = false;
 
-      if (!serverInfo) continue;
+      for (let i = 0; i < servers.length; i++) {
+        const server = servers[i];
+        const serverInfo = await getServerInfo(server.id);
 
-      const { name, players } = serverInfo;
+        if (!serverInfo) continue;
 
-      if (players < 60) {
-        const message = `Мы начинаем сидить сервер ${name}`;
-        await notifyUsers(guild, message, name, server.id);
+        const { name, players } = serverInfo;
 
-        await updateSeedingStatus(collection, i, true);
-        alreadyNotified = false;
-        break;
-      } else if (players >= 60 && i < servers.length - 1) {
-        await updateSeedingStatus(collection, i, false);
-        continue;
-      } else if (players >= 60 && i === servers.length - 1) {
-        if (!alreadyNotified) {
-          const message = `Все сервера успешно подняты! Огромное спасибо за вашу помощь!`;
+        if (players < 60 && !alreadyNotified[server.id]) {
+          const message = `Мы начинаем сидить сервер ${name}`;
           await notifyUsers(guild, message, name, server.id);
-          alreadyNotified = true;
+          await updateSeedingStatus(collection, i, true);
+          alreadyNotified[server.id] = true;
+          seedingActive = true;
+          break;
+        } else if (players >= 60 && i < servers.length - 1) {
+          await updateSeedingStatus(collection, i, false);
+          continue;
+        } else if (players >= 60 && i === servers.length - 1) {
+          if (!alreadyNotified[server.id]) {
+            const message = `Все сервера успешно подняты! Огромное спасибо за вашу помощь!`;
+            await notifyUsers(guild, message, name, server.id);
+            alreadyNotified[server.id] = true;
+          }
+          await updateSeedingStatus(collection, i, false);
         }
-        await updateSeedingStatus(collection, i, false);
       }
-    }
+
+      if (!seedingActive) {
+        console.log("Сидинг завершен на всех серверах.");
+        clearInterval(seedingInterval);
+        await endSeeding(guild);
+      }
+    }, 5 * 60 * 1000);
   } catch (error) {
     console.error("Ошибка при выполнении команды seedingServers:", error);
-  } finally {
-    await closeConnection();
   }
 }
 
@@ -112,7 +121,7 @@ async function endSeeding(guild) {
   try {
     await collection.updateMany({}, { $set: { seeding: false } });
 
-    if (!alreadyNotified) {
+    if (!alreadyNotified.global) {
       const role = await guild.roles.cache.get(seedRoleId);
 
       if (role) {
@@ -128,12 +137,14 @@ async function endSeeding(guild) {
           member.send({ embeds: [embed] }).catch(() => {});
         });
       }
+
+      alreadyNotified.global = true;
     }
   } catch (error) {
     console.error("Ошибка при завершении сидинга:", error);
   } finally {
     await closeConnection();
-    alreadyNotified = false;
+    alreadyNotified = {};
   }
 }
 
