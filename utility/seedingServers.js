@@ -12,7 +12,9 @@ let alreadyNotified = {};
 let seedingInterval;
 
 async function connectToDatabase() {
-  await client.connect();
+  if (!client.isConnected()) {
+    await client.connect();
+  }
   return client.db(dbName).collection(dbCollectionServers);
 }
 
@@ -75,7 +77,7 @@ async function seedingServers(guild) {
   async function seedNextServer(serverIndex) {
     if (serverIndex >= servers.length) {
       console.log("Все сервера успешно подняты! Сидинг завершен.");
-      clearInterval(seedingInterval);
+      clearTimeout(seedingInterval);
       await endSeeding(guild);
       return;
     }
@@ -100,7 +102,6 @@ async function seedingServers(guild) {
         await updateSeedingStatus(collection, serverIndex, true);
         alreadyNotified[server.id] = true;
       }
-
       seedingInterval = setTimeout(
         () => seedNextServer(serverIndex),
         60 * 1000
