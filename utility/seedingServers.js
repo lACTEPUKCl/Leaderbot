@@ -71,34 +71,53 @@ async function notifyUsers(guild, message, serverName, serverId) {
 async function seedingServers(guild) {
   const collection = await connectToDatabase();
 
-  try {
-    for (let i = 0; i < servers.length; i++) {
-      const server = servers[i];
-      const serverInfo = await getServerInfo(server.id);
+  async function seedNextServer(serverIndex) {
+    if (serverIndex >= servers.length) {
+      console.log("Все сервера успешно подняты! Сидинг завершен.");
+      clearInterval(seedingInterval);
+      await endSeeding(guild);
+      return;
+    }
 
-      if (!serverInfo) continue;
+    const server = servers[serverIndex];
+    const serverInfo = await getServerInfo(server.id);
 
-      const { name, players } = serverInfo;
+    if (!serverInfo) {
+      console.log(
+        `Не удалось получить информацию о сервере ${server.id}, пропускаем его.`
+      );
+      seedNextServer(serverIndex + 1);
+      return;
+    }
 
-      if (players < 60) {
+    const { name, players } = serverInfo;
+
+    if (players < 60) {
+      if (!alreadyNotified[server.id]) {
         const message = `Мы начинаем сидить сервер ${name}`;
         await notifyUsers(guild, message, name, server.id);
-
-        await updateSeedingStatus(collection, i, true);
-        alreadyNotified = false;
-        break;
-      } else if (players >= 60 && i < servers.length - 1) {
-        await updateSeedingStatus(collection, i, false);
-        continue;
-      } else if (players >= 60 && i === servers.length - 1) {
-        if (!alreadyNotified) {
-          const message = `Все сервера успешно подняты! Огромное спасибо за вашу помощь!`;
-          await notifyUsers(guild, message, name, server.id);
-          alreadyNotified = true;
-        }
-        await updateSeedingStatus(collection, i, false);
+        await updateSeedingStatus(collection, serverIndex, true);
+        alreadyNotified[server.id] = true;
       }
+
+      console.log(
+        `Сервер ${name} имеет ${players} игроков. Проверка продолжается...`
+      );
+      seedingInterval = setTimeout(
+        () => seedNextServer(serverIndex),
+        60 * 1000
+      );
+    } else {
+      console.log(
+        `Сервер ${name} достиг 60+ игроков. Переходим к следующему серверу.`
+      );
+      await updateSeedingStatus(collection, serverIndex, false);
+      seedNextServer(serverIndex + 1);
     }
+  }
+
+  try {
+    seedNextServer(0);
   } catch (error) {
     console.error("Ошибка при выполнении команды seedingServers:", error);
   } finally {
