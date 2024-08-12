@@ -8,8 +8,7 @@ config();
 const client = new MongoClient(process.env.DATABASE_URL);
 const { seedRoleId, dbName, dbCollectionServers } = options;
 const servers = options.serversSeedID;
-let alreadyNotified = {};
-let seedingInterval;
+let alreadyNotified = false;
 
 async function connectToDatabase() {
   await client.connect();
@@ -121,6 +120,8 @@ async function seedingServers(guild) {
     seedNextServer(0);
   } catch (error) {
     console.error("Ошибка при выполнении команды seedingServers:", error);
+  } finally {
+    await closeConnection();
   }
 }
 
@@ -130,7 +131,7 @@ async function endSeeding(guild) {
   try {
     await collection.updateMany({}, { $set: { seeding: false } });
 
-    if (!alreadyNotified.global) {
+    if (!alreadyNotified) {
       const role = await guild.roles.cache.get(seedRoleId);
 
       if (role) {
@@ -146,14 +147,12 @@ async function endSeeding(guild) {
           member.send({ embeds: [embed] }).catch(() => {});
         });
       }
-
-      alreadyNotified.global = true;
     }
   } catch (error) {
     console.error("Ошибка при завершении сидинга:", error);
   } finally {
     await closeConnection();
-    alreadyNotified = {};
+    alreadyNotified = false;
   }
 }
 
