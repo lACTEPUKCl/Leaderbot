@@ -100,17 +100,11 @@ async function seedingServers(guild) {
         alreadyNotified[server.id] = true;
       }
 
-      console.log(
-        `Сервер ${name} имеет ${players} игроков. Проверка продолжается...`
-      );
       seedingInterval = setTimeout(
         () => seedNextServer(serverIndex),
         60 * 1000
       );
     } else {
-      console.log(
-        `Сервер ${name} достиг 60+ игроков. Переходим к следующему серверу.`
-      );
       await updateSeedingStatus(collection, serverIndex, false);
       seedNextServer(serverIndex + 1);
     }
