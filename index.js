@@ -137,7 +137,7 @@ client.on("ready", async () => {
   schedule.scheduleJob("0 7 * * *", async () => {
     await seedingServers(guildId);
   });
-  await seedingServers(guildId);
+
   schedule.scheduleJob("0 19 * * *", async () => {
     await endSeeding(guildId);
   });
