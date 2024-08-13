@@ -73,31 +73,31 @@ async function seedingServers(guild) {
 
   try {
     for (let i = 0; i < servers.length; i++) {
-      const server = servers[i];
-      const serverInfo = await getServerInfo(server.id);
+      let server = servers[i];
+      let serverInfo = await getServerInfo(server.id);
+      let notified = false;
 
-      if (!serverInfo) continue;
+      while (serverInfo && serverInfo.players < 60) {
+        const { name } = serverInfo;
 
-      const { name, players } = serverInfo;
-
-      if (players < 60) {
-        const message = `Мы начинаем сидить сервер ${name}`;
-        await notifyUsers(guild, message, name, server.id);
-
-        await updateSeedingStatus(collection, i, true);
-        alreadyNotified = false;
-        break;
-      } else if (players >= 60 && i < servers.length - 1) {
-        await updateSeedingStatus(collection, i, false);
-        continue;
-      } else if (players >= 60 && i === servers.length - 1) {
-        if (!alreadyNotified) {
-          const message = `Все сервера успешно подняты! Огромное спасибо за вашу помощь!`;
+        if (!notified) {
+          const message = `Мы начинаем сидить сервер ${name}`;
           await notifyUsers(guild, message, name, server.id);
-          alreadyNotified = true;
+          await updateSeedingStatus(collection, i, true);
+          notified = true;
         }
-        await updateSeedingStatus(collection, i, false);
+
+        await new Promise((resolve) => setTimeout(resolve, 5 * 60 * 1000));
+        serverInfo = await getServerInfo(server.id);
       }
+
+      await updateSeedingStatus(collection, i, false);
+    }
+
+    if (!alreadyNotified) {
+      const message = `Огромное спасибо за вашу помощь!`;
+      await notifyUsers(guild, message, "Все сервера успешно подняты!", "");
+      alreadyNotified = true;
     }
   } catch (error) {
     console.error("Ошибка при выполнении команды seedingServers:", error);
