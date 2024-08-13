@@ -11,9 +11,7 @@ const servers = options.serversSeedID;
 let alreadyNotified = false;
 
 async function connectToDatabase() {
-  if (!client.isConnected()) {
-    await client.connect();
-  }
+  await client.connect();
   return client.db(dbName).collection(dbCollectionServers);
 }
 
@@ -73,46 +71,34 @@ async function notifyUsers(guild, message, serverName, serverId) {
 async function seedingServers(guild) {
   const collection = await connectToDatabase();
 
-  async function seedNextServer(serverIndex) {
-    if (serverIndex >= servers.length) {
-      console.log("Все сервера успешно подняты! Сидинг завершен.");
-      clearTimeout(seedingInterval);
-      await endSeeding(guild);
-      return;
-    }
+  try {
+    for (let i = 0; i < servers.length; i++) {
+      const server = servers[i];
+      const serverInfo = await getServerInfo(server.id);
 
-    const server = servers[serverIndex];
-    const serverInfo = await getServerInfo(server.id);
+      if (!serverInfo) continue;
 
-    if (!serverInfo) {
-      console.log(
-        `Не удалось получить информацию о сервере ${server.id}, пропускаем его.`
-      );
-      seedNextServer(serverIndex + 1);
-      return;
-    }
+      const { name, players } = serverInfo;
 
-    const { name, players } = serverInfo;
-
-    if (players < 60) {
-      if (!alreadyNotified[server.id]) {
+      if (players < 60) {
         const message = `Мы начинаем сидить сервер ${name}`;
         await notifyUsers(guild, message, name, server.id);
-        await updateSeedingStatus(collection, serverIndex, true);
-        alreadyNotified[server.id] = true;
-      }
-      seedingInterval = setTimeout(
-        () => seedNextServer(serverIndex),
-        60 * 1000
-      );
-    } else {
-      await updateSeedingStatus(collection, serverIndex, false);
-      seedNextServer(serverIndex + 1);
-    }
-  }
 
-  try {
-    seedNextServer(0);
+        await updateSeedingStatus(collection, i, true);
+        alreadyNotified = false;
+        break;
+      } else if (players >= 60 && i < servers.length - 1) {
+        await updateSeedingStatus(collection, i, false);
+        continue;
+      } else if (players >= 60 && i === servers.length - 1) {
+        if (!alreadyNotified) {
+          const message = `Все сервера успешно подняты! Огромное спасибо за вашу помощь!`;
+          await notifyUsers(guild, message, name, server.id);
+          alreadyNotified = true;
+        }
+        await updateSeedingStatus(collection, i, false);
+      }
+    }
   } catch (error) {
     console.error("Ошибка при выполнении команды seedingServers:", error);
   } finally {
