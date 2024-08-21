@@ -134,7 +134,7 @@ client.on("ready", async () => {
     handleMessageCreate(message, options, client)
   );
 
-  schedule.scheduleJob("0 7 * * *", async () => {
+  schedule.scheduleJob("0 4 * * *", async () => {
     await seedingServers(guildId);
   });
 
