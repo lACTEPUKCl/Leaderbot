@@ -9,6 +9,7 @@ const client = new MongoClient(process.env.DATABASE_URL);
 const { seedRoleId, dbName, dbCollectionServers } = options;
 const servers = options.serversSeedID;
 let alreadyNotified = false;
+const inProgress = {};
 
 async function connectToDatabase() {
   await client.connect();
@@ -20,17 +21,28 @@ async function closeConnection() {
 }
 
 async function getServerInfo(serverId) {
-  try {
-    const response = await axios.get(
-      `https://api.battlemetrics.com/servers/${serverId}`
-    );
-    return {
-      name: response.data.data.attributes.name,
-      players: response.data.data.attributes.players,
-    };
-  } catch (error) {
-    console.error(`Ошибка при получении данных с сервера ${serverId}:`, error);
-    return null;
+  let attempt = 0;
+  let delay = 10000;
+
+  while (true) {
+    try {
+      const response = await axios.get(
+        `https://api.battlemetrics.com/servers/${serverId}`
+      );
+      return {
+        name: response.data.data.attributes.name,
+        players: response.data.data.attributes.players,
+      };
+    } catch (error) {
+      attempt++;
+      console.error(
+        `Ошибка при получении данных с сервера ${serverId} (попытка ${attempt}):`,
+        error
+      );
+
+      console.log(`Повторная попытка через ${delay / 1000} секунд...`);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
   }
 }
 
@@ -74,6 +86,15 @@ async function seedingServers(guild) {
   try {
     for (let i = 0; i < servers.length; i++) {
       let server = servers[i];
+
+      if (inProgress[server.id]) {
+        console.log(
+          `Запрос к серверу ${server.id} уже выполняется, пропускаем.`
+        );
+        continue;
+      }
+
+      inProgress[server.id] = true;
       let serverInfo = await getServerInfo(server.id);
       let notified = false;
 
@@ -92,6 +113,7 @@ async function seedingServers(guild) {
       }
 
       await updateSeedingStatus(collection, i, false);
+      inProgress[server.id] = false;
     }
 
     if (!alreadyNotified) {
