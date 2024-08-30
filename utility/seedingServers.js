@@ -133,7 +133,7 @@ async function endSeeding(guild) {
 
   try {
     await collection.updateMany({}, { $set: { seeding: false } });
-
+    inProgress = {};
     if (!alreadyNotified) {
       const role = await guild.roles.cache.get(seedRoleId);
 
