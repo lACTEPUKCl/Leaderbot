@@ -9,7 +9,7 @@ const client = new MongoClient(process.env.DATABASE_URL);
 const { seedRoleId, dbName, dbCollectionServers } = options;
 const servers = options.serversSeedID;
 let alreadyNotified = false;
-const inProgress = {};
+let inProgress = {};
 
 async function connectToDatabase() {
   await client.connect();
