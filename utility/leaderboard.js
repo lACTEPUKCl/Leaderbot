@@ -12,7 +12,15 @@ async function getNickname(player) {
 
 async function getStats(player, sort) {
   if (!player) return "";
-  const numbers = player.split(/\s+/).filter((num) => !isNaN(num));
+
+  const splitData = player.trim().split(/\s+/);
+  const statsNumbers = [];
+  for (let i = splitData.length - 1; i >= 0 && statsNumbers.length < 7; i--) {
+    if (!isNaN(splitData[i])) {
+      statsNumbers.unshift(splitData[i]);
+    }
+  }
+
   const stats = [
     "kills",
     "death",
@@ -25,7 +33,7 @@ async function getStats(player, sort) {
 
   if (stats.includes(sort)) {
     const statIndex = stats.indexOf(sort);
-    return numbers[statIndex];
+    return statsNumbers[statIndex];
   }
 
   return null;

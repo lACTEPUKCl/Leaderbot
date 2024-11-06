@@ -1,7 +1,4 @@
 import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
-import fs from "fs";
-import path from "path";
-import options from "../config.js";
 
 const removeFromClanRoleCommand = new SlashCommandBuilder()
   .setName("removefromclanrole")
@@ -18,88 +15,58 @@ const execute = async (interaction) => {
   await interaction.deferReply({ ephemeral: true });
   try {
     const userName = interaction.options.getUser("name");
-    const { adminsCfgPath } = options;
+    const user = interaction.user;
+    const guild = interaction.guild;
 
-    if (!userName) {
+    if (!guild) {
       interaction.editReply({
-        content: "Не удалось найти указанного пользователя.",
+        content: "Ошибка: команда не выполнима вне сервера.",
         ephemeral: true,
       });
       return;
     }
 
-    const filePath = path.join(adminsCfgPath, "Admins.cfg");
+    const member = guild.members.cache.get(user.id);
+    if (!member) {
+      interaction.editReply({
+        content: "Ошибка: не удалось найти отправителя команды на сервере.",
+        ephemeral: true,
+      });
+      return;
+    }
 
-    fs.readFile(filePath, "utf8", async (err, data) => {
-      if (err) {
-        console.error(err);
-        interaction.editReply({
-          content: "Ошибка при чтении файла конфигурации.",
-          ephemeral: true,
-        });
-        return;
-      }
+    const clanRole = member.roles.cache.find((role) =>
+      role.name.match(/^\[.*\]$/)
+    );
+    if (!clanRole) {
+      interaction.editReply({
+        content: "Не удалось найти клановую роль у отправителя команды.",
+        ephemeral: true,
+      });
+      return;
+    }
 
-      const lines = data.split("\n");
-      const clanRegex = /^\/\/CLAN \[(.+)] (\d+) do (.+)/;
+    const targetMember = guild.members.cache.get(userName.id);
+    if (!targetMember) {
+      interaction.editReply({
+        content: "Ошибка: указанный пользователь не найден на сервере.",
+        ephemeral: true,
+      });
+      return;
+    }
 
-      let roleFound = false;
-
-      for (const line of lines) {
-        const clanMatch = line.match(clanRegex);
-
-        if (clanMatch) {
-          const clanName = clanMatch[1];
-          const discordID = clanMatch[2];
-
-          // Сравниваем ID пользователя из команды с ID в файле
-          if (discordID === userName.id) {
-            roleFound = true;
-            const guild = interaction.guild;
-            if (!guild) {
-              interaction.editReply({
-                content: "Ошибка: команда не выполнима вне сервера.",
-                ephemeral: true,
-              });
-              return;
-            }
-
-            const member = guild.members.cache.get(userName.id);
-            if (!member) {
-              interaction.editReply({
-                content: "Ошибка: указанный пользователь не найден на сервере.",
-                ephemeral: true,
-              });
-              return;
-            }
-
-            const role = guild.roles.cache.find(
-              (role) => role.name === `[${clanName}]`
-            );
-            if (role) {
-              await member.roles.remove(role);
-              interaction.editReply({
-                content: `Роль клана "${clanName}" успешно удалена у пользователя ${userName}.`,
-                ephemeral: true,
-              });
-            } else {
-              interaction.editReply({
-                content: `Не удалось найти роль для клана "${clanName}".`,
-                ephemeral: true,
-              });
-            }
-            break;
-          }
-        }
-      }
-
-      if (!roleFound) {
-        interaction.editReply({
-          content: "Указанный пользователь не состоит ни в одном клане.",
-          ephemeral: true,
-        });
-      }
-    });
+    if (targetMember.roles.cache.has(clanRole.id)) {
+      await targetMember.roles.remove(clanRole);
+      interaction.editReply({
+        content: `Роль клана "${clanRole.name}" успешно удалена у пользователя ${userName}.`,
+        ephemeral: true,
+      });
+    } else {
+      interaction.editReply({
+        content: `Указанный пользователь не имеет роли клана "${clanRole.name}".`,
+        ephemeral: true,
+      });
+    }
   } catch (error) {
     console.error(error);
     await interaction.editReply({
