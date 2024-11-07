@@ -93,7 +93,6 @@ async function getStatsOnDiscord(dblink, steamId, interaction, steamApi) {
       (a, b) => b[1] - a[1]
     );
     const time = (await getTimePlayedFromBM(steamId)) || 0;
-    const player = user.matches.history.matches;
     const roleTime1 = await gettime(sortRoles[0][1].toString());
     const roleTime2 = await gettime(sortRoles[1][1].toString());
     const role1Img = sortRoles[0][0].split("_").join("");
@@ -104,9 +103,6 @@ async function getStatsOnDiscord(dblink, steamId, interaction, steamApi) {
     const vehicleKills = await calcVehicleKills(user.weapons);
     const heliTime = (await gettime(vehicle[1])) || 0;
     const heavyTime = (await gettime(vehicle[0])) || 0;
-    const historyTime1 = (await gettime(player[0]?.timeplayed, "sec")) || `0m`;
-    const historyTime2 = (await gettime(player[1]?.timeplayed, "sec")) || `0m`;
-    const historyTime3 = (await gettime(player[2]?.timeplayed, "sec")) || `0m`;
     const killPerMatch = user.kills / user.matches.matches;
     const exp = getExp(user);
     registerFont("./img/Tektur-Bold.ttf", {
