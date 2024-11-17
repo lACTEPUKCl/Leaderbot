@@ -29,6 +29,7 @@ import { handleInteractionCreate } from "./events/handleInteraction.js";
 import { handleMessageCreate } from "./events/handleMessage.js";
 import { seedingServers, endSeeding } from "./utility/seedingServers.js";
 import schedule from "node-schedule";
+import adminsactivity from "./utility/adminsactivity.js";
 
 const client = new Client({
   intents: [
@@ -70,6 +71,7 @@ client.on("ready", async () => {
   const db = process.env.DATABASE_URL;
   const steamApi = process.env.STEAM_API;
   const seedChannel = await client.channels.fetch(seedChannelId);
+
   await seedChannel.messages.fetch(seedMessageId);
 
   setInterval(() => {
@@ -140,6 +142,10 @@ client.on("ready", async () => {
 
   schedule.scheduleJob("0 19 * * *", async () => {
     await endSeeding(guildId);
+  });
+
+  schedule.scheduleJob("0 1 * * *", async () => {
+    await adminsactivity(guildId);
   });
 });
 
