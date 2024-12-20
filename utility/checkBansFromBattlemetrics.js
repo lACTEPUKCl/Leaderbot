@@ -35,10 +35,10 @@ async function checkBansFromBattlemetrics(bans, message) {
     playerName = bans[0].meta.player;
   }
 
-  const adminName = bans[0].attributes.reason.split("by ")[1];
   let reason = bans[0].attributes.reason;
+
   if (bans[0].attributes.reason.includes("{{duration}}")) {
-    reason = bans[0].attributes.reason.split("{{duration}},")[0];
+    reason = reason.split("{{duration}}")[0].trim();
   }
 
   const confirm = new ButtonBuilder()
@@ -54,10 +54,7 @@ async function checkBansFromBattlemetrics(bans, message) {
     .setColor(0xff001a)
     .setTitle(playerName)
     .setDescription(reason)
-    .addFields(
-      { name: "Дата окончания бана:", value: timeExpires },
-      { name: "Админ выдавший наказание:", value: adminName }
-    );
+    .addFields({ name: "Дата окончания бана:", value: timeExpires });
 
   message.reply({ embeds: [exampleEmbed], components: [row] });
 }
