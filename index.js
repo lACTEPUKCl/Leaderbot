@@ -31,6 +31,7 @@ import { seedingServers, endSeeding } from "./utility/seedingServers.js";
 import schedule from "node-schedule";
 import adminsactivity from "./utility/adminsactivity.js";
 import rulesSquad from "./utility/rulesSquad.js";
+import "./fonts.js";
 
 const client = new Client({
   intents: [

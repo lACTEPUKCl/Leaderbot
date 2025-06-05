@@ -6,7 +6,6 @@ import calcVehicleTime from "./calcVehicleTime.js";
 import calcVehicleKills from "./calcVehicleKills.js";
 import getTimePlayed from "./getTimePlayed.js";
 import getExp from "./getExp.js";
-import "./fonts.js";
 
 async function loadImageAndDraw(ctx, imgPath, x, y, width, height) {
   try {
