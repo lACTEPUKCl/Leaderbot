@@ -78,13 +78,9 @@ async function leaderboard({
     const height = 1250;
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext("2d");
-    registerFont("./img/Tektur-Regular.ttf", {
-      family: "MyFont1",
-    });
-
     const img = await loadImage("./img/leaderboard.png");
-    ctx.drawImage(img, 0, 0, width, height);
 
+    ctx.drawImage(img, 0, 0, width, height);
     ctx.fillStyle = "#efefef";
     ctx.font = "20pt MyFont1";
     ctx.textAlign = "left";

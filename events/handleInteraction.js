@@ -2,7 +2,6 @@ import getSteamIdModal from "../utility/getSteamIdModal.js";
 import donateInteraction from "../utility/donateInteraction.js";
 import bonusInteraction from "../utility/bonusInteraction.js";
 import checkVipInteraction from "../utility/checkVipInteraction.js";
-import { handleDuelButton } from "../utility/duelGame.js";
 import steamIdFormSubmit from "../utility/getSteamIdFormSubmit.js";
 
 export async function handleInteractionCreate(
@@ -62,9 +61,6 @@ export async function handleInteractionCreate(
 
   if (interaction.isButton()) {
     const buttonId = interaction.customId;
-
-    if (buttonId.includes("duel"))
-      await handleDuelButton(interaction, interCollections);
 
     if (buttonId === "SteamID")
       await getSteamIdModal(interaction, db, dbName, dbCollection);

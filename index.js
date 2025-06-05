@@ -30,6 +30,7 @@ import { handleMessageCreate } from "./events/handleMessage.js";
 import { seedingServers, endSeeding } from "./utility/seedingServers.js";
 import schedule from "node-schedule";
 import adminsactivity from "./utility/adminsactivity.js";
+import rulesSquad from "./utility/rulesSquad.js";
 
 const client = new Client({
   intents: [
@@ -56,7 +57,8 @@ for (const command of commands) {
 
 client.on("ready", async () => {
   console.log(`Logged in as ${client.user.tag}!`);
-
+  const threadChannelId = client.channels.cache.get("1204124602230374471");
+  const vipChannelId = client.channels.cache.get("1189653903738949723");
   const {
     discordServerId,
     donateListChannelID,
@@ -99,9 +101,9 @@ client.on("ready", async () => {
         .catch(console.error);
       let findUser = getUserList.find((r) => r.user.id === element);
       if (!findUser) return;
-      //findUser.send(vipExpiredMessage).catch((error) => {
-      //console.log("Невозможно отправить сообщение пользователю");
-      //});
+      findUser.send(vipExpiredMessage).catch((error) => {
+        console.log("Невозможно отправить сообщение пользователю");
+      });
       findUser.roles.remove(role);
     })
   );
@@ -132,9 +134,12 @@ client.on("ready", async () => {
     )
   );
 
-  client.on("messageCreate", (message) =>
-    handleMessageCreate(message, options, client)
-  );
+  client.on("messageCreate", (message) => {
+    // if (message.channelId === "1119060668046389308") {
+    //   rulesSquad("vip", vipChannelId);
+    // }
+    handleMessageCreate(message, options, client);
+  });
 
   schedule.scheduleJob("0 4 * * *", async () => {
     await seedingServers(guildId);
