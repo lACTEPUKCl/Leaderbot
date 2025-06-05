@@ -105,14 +105,11 @@ async function getStatsOnDiscord(dblink, steamId, interaction, steamApi) {
     const heavyTime = (await gettime(vehicle[0])) || 0;
     const killPerMatch = user.kills / user.matches.matches;
     const exp = getExp(user);
-    registerFont("./img/Tektur-Bold.ttf", {
-      family: "MyFont",
-    });
-
     const width = 1405;
     const height = 729;
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext("2d");
+    const rank = exp.img;
 
     await loadImageAndDraw(ctx, "./img/stats.png", 0, 0, 1405, 729);
     await loadImageAndDraw(
@@ -131,6 +128,7 @@ async function getStatsOnDiscord(dblink, steamId, interaction, steamApi) {
       40,
       40
     );
+    await loadImageAndDraw(ctx, `./img/ranks/${rank}.png`, 69, 85, 170, 51);
 
     ctx.fillStyle = "#efefef";
     ctx.font = "18pt MyFont";
