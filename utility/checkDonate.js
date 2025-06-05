@@ -3,6 +3,7 @@ import fs from "fs/promises";
 import { MongoClient } from "mongodb";
 import creater from "./vip-creater.js";
 import getSteamId64 from "./getSteamID64.js";
+import clanVipManager from "./clanVipManager.js";
 
 async function main(guildId, db, steamApi, donateUrl) {
   try {
@@ -11,62 +12,88 @@ async function main(guildId, db, steamApi, donateUrl) {
     const data = await fs.readFile(`./transaction/transactionId.json`);
     const transaction = JSON.parse(data);
     const existingIds = transaction.transactions.map((e) => e.id);
-    let discordID;
+    const allClans = await clanVipManager.parseClansFile();
+    const clanTags = allClans.clans.map((c) => c.tag.toLowerCase());
 
     for (const jsonEl of json.data) {
       const { id, what, comment, sum } = jsonEl;
-      if (!existingIds.includes(id.toString())) {
-        if (
-          !comment.includes("steamcommunity") &&
-          !comment.match(/\b[0-9]{17}\b/)?.[0]
-        )
-          continue;
-        const steamId = await getSteamId64(steamApi, comment);
-        if (steamId) {
-          const clientdb = new MongoClient(db);
-          const dbName = "SquadJS";
-          const dbCollection = "mainstats";
 
+      if (existingIds.includes(id.toString())) continue;
+
+      const commentTag = comment.trim().toLowerCase();
+      if (clanTags.includes(commentTag)) {
+        const discordIds = await clanVipManager.updateClan(comment.trim(), 30);
+        if (!discordIds.length) {
+          console.log(`Клан "${comment.trim()}" не найден или пуст!`);
+        }
+
+        for (const discordId of discordIds) {
           try {
-            await clientdb.connect();
-            const db = clientdb.db(dbName);
-            const collection = db.collection(dbCollection);
-            const user = await collection.findOne({ _id: steamId });
-            if (!user) return;
-            discordID = user.discordid;
-          } catch (e) {
-            console.error(e);
-          } finally {
-            await clientdb.close();
-          }
-
-          transaction.transactions.push({
-            id: `${id}`,
-            username: what,
-            steamID: steamId,
-          });
-          if (!discordID) return;
-
-          try {
-            const discordUser = await guildId.members.fetch(discordID);
+            const discordUser = await guildId.members.fetch(discordId);
             const vipRole = guildId.roles.cache.find(
               (role) => role.name === "VIP"
             );
-            creater.vipCreater(steamId, what, sum, discordID);
-            await discordUser.roles.add(vipRole);
+            if (vipRole && discordUser) await discordUser.roles.add(vipRole);
           } catch (error) {
-            console.log(error);
+            console.log("Ошибка при выдаче роли клану:", error);
           }
-
-          // message.channel.send({
-          //   content: `Игроку <@${message.author.id}> - выдан VIP статус, спасибо за поддержку!`,
-          // });
-
-          let newData = JSON.stringify(transaction);
-          fs.writeFile(`./transaction/transactionId.json`, newData, (err) => {
-            if (err) return;
-          });
         }
+        transaction.transactions.push({
+          id: `${id}`,
+          username: what,
+          clan: commentTag,
+        });
+        let newData = JSON.stringify(transaction);
+        await fs.writeFile(`./transaction/transactionId.json`, newData);
+        continue;
+      }
+
+      if (
+        !comment.includes("steamcommunity") &&
+        !comment.match(/\b[0-9]{17}\b/)?.[0]
+      )
+        continue;
+      const steamId = await getSteamId64(steamApi, comment);
+      if (steamId) {
+        const clientdb = new MongoClient(db);
+        const dbName = "SquadJS";
+        const dbCollection = "mainstats";
+        let discordID;
+
+        try {
+          await clientdb.connect();
+          const db = clientdb.db(dbName);
+          const collection = db.collection(dbCollection);
+          const user = await collection.findOne({ _id: steamId });
+          if (!user) continue;
+          discordID = user.discordid;
+        } catch (e) {
+          console.error(e);
+        } finally {
+          await clientdb.close();
+        }
+
+        transaction.transactions.push({
+          id: `${id}`,
+          username: what,
+          steamID: steamId,
+        });
+
+        if (!discordID) continue;
+
+        try {
+          const discordUser = await guildId.members.fetch(discordID);
+          const vipRole = guildId.roles.cache.find(
+            (role) => role.name === "VIP"
+          );
+          creater.vipCreater(steamId, what, sum, discordID);
+          await discordUser.roles.add(vipRole);
+        } catch (error) {
+          console.log(error);
+        }
+
+        let newData = JSON.stringify(transaction);
+        await fs.writeFile(`./transaction/transactionId.json`, newData);
       }
     }
   } catch (error) {

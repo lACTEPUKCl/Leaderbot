@@ -31,7 +31,8 @@ import { seedingServers, endSeeding } from "./utility/seedingServers.js";
 import schedule from "node-schedule";
 import adminsactivity from "./utility/adminsactivity.js";
 import rulesSquad from "./utility/rulesSquad.js";
-import "./fonts.js";
+import clanVipCleaner from "./utility/clanVipCleaner.js";
+import "./utility/fonts.js";
 
 const client = new Client({
   intents: [
@@ -152,6 +153,10 @@ client.on("ready", async () => {
 
   schedule.scheduleJob("0 1 * * *", async () => {
     await adminsactivity(guildId);
+  });
+
+  schedule.scheduleJob("0 4 * * *", async () => {
+    await clanVipCleaner(client.guilds.cache.get(discordServerId));
   });
 });
 
