@@ -50,8 +50,8 @@ const vipCreater = async (steamID, nickname, summ, discordId) => {
       }
       return e;
     });
-    const kostil = data.includes(steamID);
-    if (!kostil) {
+    const hasReserved = data.includes(`Admin=${steamID}:Reserved`);
+    if (!hasReserved) {
       const newData = getDate(summPerDay);
       nData.push(
         `Admin=${steamID}:Reserved // DiscordID ${discordId} do ${newData}`
