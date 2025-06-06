@@ -5,6 +5,36 @@ import creater from "./vip-creater.js";
 import getSteamId64 from "./getSteamID64.js";
 import clanVipManager from "./clanVipManager.js";
 
+function toLatin(str) {
+  const map = {
+    а: "a",
+    А: "A",
+    в: "b",
+    В: "B",
+    е: "e",
+    Е: "E",
+    к: "k",
+    К: "K",
+    м: "m",
+    М: "M",
+    н: "h",
+    Н: "H",
+    о: "o",
+    О: "O",
+    р: "p",
+    Р: "P",
+    с: "c",
+    С: "C",
+    т: "t",
+    Т: "T",
+    у: "y",
+    У: "Y",
+    х: "x",
+    Х: "X",
+  };
+  return str.replace(/[авекмнорстухАВЕКМНОРСТУХ]/g, (ch) => map[ch] || ch);
+}
+
 async function main(guildId, db, steamApi, donateUrl) {
   try {
     let response = await fetch(donateUrl);
@@ -20,9 +50,12 @@ async function main(guildId, db, steamApi, donateUrl) {
 
       if (existingIds.includes(id.toString())) continue;
 
-      const commentTag = comment.trim().toLowerCase();
+      const commentTag = toLatin(comment.trim().toLowerCase());
+
       if (clanTags.includes(commentTag)) {
-        const discordIds = await clanVipManager.updateClan(comment.trim(), 30);
+        const discordIds = await clanVipManager.updateClan(commentTag, 30);
+        console.log(discordIds);
+
         if (!discordIds.length) {
           console.log(`Клан "${comment.trim()}" не найден или пуст!`);
         }
@@ -35,7 +68,7 @@ async function main(guildId, db, steamApi, donateUrl) {
             );
             if (vipRole && discordUser) await discordUser.roles.add(vipRole);
           } catch (error) {
-            console.log("Ошибка при выдаче роли клану:", error);
+            console.log("Ошибка при выдаче роли узеру:", discordId);
           }
         }
         transaction.transactions.push({

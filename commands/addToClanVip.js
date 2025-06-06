@@ -7,6 +7,7 @@ const addToClanVipCommand = new SlashCommandBuilder()
   .setName("addtoclanvip")
   .setDescription("Добавить игрока в клан")
   .setDefaultMemberPermissions(PermissionFlagsBits.CreatePrivateThreads);
+
 addToClanVipCommand.addStringOption((option) =>
   option
     .setName("steamid64")
@@ -15,9 +16,11 @@ addToClanVipCommand.addStringOption((option) =>
     .setMaxLength(17)
     .setMinLength(17)
 );
+
 addToClanVipCommand.addUserOption((option) =>
   option.setName("name").setDescription("Напишите имя игрока в дискорде")
 );
+
 const {
   adminsCfgPath,
   maxClanVipUsers,
@@ -25,30 +28,43 @@ const {
   vipRoleName,
   adminsCfgBackups,
 } = options;
+
+function extractUsers(line) {
+  const match = line.match(/Admin=(\d+):ClanVip \/\/ DiscordID (\d+) do (.+)/);
+  if (match) {
+    return { steamId: match[1], discordID: match[2] };
+  }
+  return null;
+}
+
 const execute = async (interaction) => {
   try {
-    const extractUsers = (line) => {
-      const match = line.match(
-        /Admin=(\d+):ClanVip \/\/ DiscordID (\d+) do (.+)/
-      );
-      if (match) {
-        return { steamId: match[1], discordID: match[2] };
-      }
-      return null;
-    };
     const user = interaction.options.getUser("name");
     const steamID64 = interaction.options.getString("steamid64");
     const discordID = interaction.user.id;
     const discordIDuser = user ? user.id : "666";
+    const member = await interaction.guild.members.fetch(discordID);
+    const clanRole = member.roles.cache.find((role) =>
+      /^\[.+\]$/.test(role.name)
+    );
+    if (!clanRole) {
+      await interaction.reply({
+        content:
+          "У вас нет клановой роли! Название роли должно быть вида [CLAN].",
+        ephemeral: true,
+      });
+      return;
+    }
 
-    // Проверяем существует ли пользователь с ID 666
-    const guildMember =
-      discordIDuser !== "666"
-        ? await interaction.guild.members.fetch(discordIDuser)
-        : null;
-    const nickname = guildMember
-      ? guildMember.nickname || guildMember.user.username
-      : "Никнейм не установлен";
+    const clanNameMatch = clanRole.name.match(/^\[(.+)\]$/);
+    if (!clanNameMatch) {
+      await interaction.reply({
+        content: "Ошибка: не удалось определить название клана из вашей роли!",
+        ephemeral: true,
+      });
+      return;
+    }
+    const userClan = clanNameMatch[1];
 
     fs.readFile(`${adminsCfgPath}Admins.cfg`, "utf8", async (err, data) => {
       if (err) {
@@ -60,20 +76,18 @@ const execute = async (interaction) => {
       let clanUsers = {};
       let currentClanTemp = null;
       let currentClan = null;
-      let clanOwnerTemp = null;
-      let clanOwner = null;
       let updatedLines = [];
       let isInClanBlock = false;
       let clanBlockEndIndex = null;
       let expireDate;
+
       lines.forEach((line, index) => {
         const clanMatch = line.match(/\/\/CLAN \[(.+)] (\d+) do (.+)/);
         if (clanMatch) {
-          clanOwnerTemp = clanMatch[2];
-          if (clanOwnerTemp === discordID) {
-            currentClanTemp = clanMatch[1];
-            currentClan = currentClanTemp;
-            clanOwner = clanOwnerTemp;
+          const fileClan = clanMatch[1];
+          if (fileClan === userClan) {
+            currentClanTemp = fileClan;
+            currentClan = fileClan;
             clanUsers[currentClanTemp] = [];
             isInClanBlock = true;
             expireDate = clanMatch[3];
@@ -93,89 +107,92 @@ const execute = async (interaction) => {
         }
       });
 
-      if (clanUsers[currentClan]?.length + 1 > maxClanVipUsers) {
+      if (!currentClan) {
         await interaction.reply({
-          content: `Невозможно добавить игрока. Максимум ${maxClanVipUsers} VIPов в клане.`,
+          content: `Не найден блок для вашего клана [${userClan}] в конфиге.`,
           ephemeral: true,
         });
         return;
       }
 
-      if (clanOwner === discordID) {
-        updatedLines.splice(
-          clanBlockEndIndex,
-          0,
-          `Admin=${steamID64}:ClanVip // DiscordID ${discordIDuser} do ${expireDate}`
-        );
-        console.log(
-          `Пользователь:${steamID64} DiscordID:${discordIDuser} добавлен кланменеджером: ${interaction.user.globalName}`
-        );
-
-        if (guildMember) {
-          const clanRole = interaction.guild.roles.cache.find(
-            (role) => role.name === `[${currentClan}]`
-          );
-          const vipRole = interaction.guild.roles.cache.find(
-            (role) => role.name === vipRoleName
-          );
-
-          await guildMember.roles.add(clanRole);
-          await guildMember.roles.add(vipRole);
-        }
-
-        fs.writeFile(
-          `${adminsCfgPath}Admins.cfg`,
-          updatedLines.join("\n").trim(),
-          (err) => {
-            if (err) {
-              console.error("Ошибка записи файла:", err);
-              return;
-            }
-            interaction.reply({
-              content: `Пользователь ${nickname} успешно добавлен в клан.`,
-              ephemeral: true,
-            });
-          }
-        );
-
-        const currentDate = new Date();
-        const formattedDate = currentDate
-          .toLocaleString("ru-RU", {
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-            hour12: false,
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-          })
-          .replace(
-            /(\d+)\.(\d+)\.(\d+), (\d+):(\d+):(\d+)/,
-            "$1.$2.$3_$4.$5.$6"
-          );
-        console.log(`User ${nickname} added`, formattedDate);
-        await fs.promises.writeFile(
-          `${adminsCfgBackups}/AdminsBackup_${formattedDate}.cfg`,
-          data,
-          (err) => {
-            if (err) {
-              console.error(err);
-              return;
-            }
-
-            console.log(
-              "\x1b[33m",
-              `\r\n Backup created AdminsBackup_${formattedDate}.cfg\r\n`
-            );
-          }
-        );
-        exec(`${syncconfigPath}syncconfig.sh`);
-      } else {
+      if (clanUsers[currentClan]?.length + 1 > maxClanVipUsers) {
         await interaction.reply({
-          content: "У вас нет прав на добавление в клан.",
+          content: `Невозможно добавить игрока. Максимум ${maxClanVipUsers} VIP-ов в клане.`,
           ephemeral: true,
         });
+        return;
       }
+
+      updatedLines.splice(
+        clanBlockEndIndex,
+        0,
+        `Admin=${steamID64}:ClanVip // DiscordID ${discordIDuser} do ${expireDate}`
+      );
+      console.log(
+        `Пользователь:${steamID64} DiscordID:${discordIDuser} добавлен кланменеджером: ${interaction.user.globalName}`
+      );
+
+      const targetGuildMember =
+        discordIDuser !== "666"
+          ? await interaction.guild.members.fetch(discordIDuser)
+          : null;
+      const nickname = targetGuildMember
+        ? targetGuildMember.nickname || targetGuildMember.user.username
+        : "Никнейм не установлен";
+
+      if (targetGuildMember) {
+        const clanRoleDiscord = interaction.guild.roles.cache.find(
+          (role) => role.name === `[${currentClan}]`
+        );
+        const vipRole = interaction.guild.roles.cache.find(
+          (role) => role.name === vipRoleName
+        );
+        if (clanRoleDiscord) await targetGuildMember.roles.add(clanRoleDiscord);
+        if (vipRole) await targetGuildMember.roles.add(vipRole);
+      }
+
+      fs.writeFile(
+        `${adminsCfgPath}Admins.cfg`,
+        updatedLines.join("\n").trim(),
+        (err) => {
+          if (err) {
+            console.error("Ошибка записи файла:", err);
+            return;
+          }
+          interaction.reply({
+            content: `Пользователь ${nickname} успешно добавлен в клан.`,
+            ephemeral: true,
+          });
+        }
+      );
+
+      const currentDate = new Date();
+      const formattedDate = currentDate
+        .toLocaleString("ru-RU", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour12: false,
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        })
+        .replace(/(\d+)\.(\d+)\.(\d+), (\d+):(\d+):(\d+)/, "$1.$2.$3_$4.$5.$6");
+      await fs.promises.writeFile(
+        `${adminsCfgBackups}/AdminsBackup_${formattedDate}.cfg`,
+        data,
+        (err) => {
+          if (err) {
+            console.error(err);
+            return;
+          }
+          console.log(
+            "\x1b[33m",
+            `\r\n Backup created AdminsBackup_${formattedDate}.cfg\r\n`
+          );
+        }
+      );
+      exec(`${syncconfigPath}syncconfig.sh`);
     });
   } catch (error) {
     console.error(error);
