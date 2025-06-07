@@ -30,7 +30,20 @@ async function donateInteraction(interaction, db) {
 
     const steamId = user._id;
     await interaction.reply({
-      content: `Скопируйте ваш SteamID: **${steamId}**\nВставьте его в поле 'Комментарий' по ссылке ${donationLink}`,
+      content: `Скопируйте ваш SteamID: **${steamId}**\nИли просто нажмите кнопку ниже и вставьте его в поле "Комментарий" при оформлении доната.`,
+      components: [
+        {
+          type: 1,
+          components: [
+            {
+              type: 2,
+              style: 5,
+              label: "Оформить донат",
+              url: `${donationLink}?message=${steamId}`,
+            },
+          ],
+        },
+      ],
       ephemeral: true,
     });
   } catch (e) {
