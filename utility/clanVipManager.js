@@ -65,12 +65,15 @@ export async function parseClansFile(path = adminsCfgPath + "Admins.cfg") {
 
 export async function updateClan(tag, addDays = 30) {
   const { lines, clans } = await parseClansFile();
-  const now = new Date();
-  const newDate = formatDate(addDaysFromNow(now, addDays));
   let clan = clans.find(
     (c) => c.tag.trim().toLowerCase() === tag.trim().toLowerCase()
   );
   if (!clan) return [];
+
+  const now = new Date();
+  const clanUntil = clan.until ? parseDate(clan.until) : now;
+  const baseDate = clanUntil > now ? clanUntil : now;
+  const newDate = formatDate(addDaysFromNow(baseDate, addDays));
 
   let headerLine = clan.header.replace(/\[([^\]\*]+)\*\]/, "[$1]");
   headerLine = headerLine.replace(/do\s+\d{2}\.\d{2}\.\d{4}/, `do ${newDate}`);
@@ -83,6 +86,11 @@ export async function updateClan(tag, addDays = 30) {
   }
   await fs.writeFile(adminsCfgPath + "Admins.cfg", lines.join("\r\n"), "utf-8");
   return clan.members.map((m) => m.discordId);
+}
+
+function parseDate(str) {
+  const [day, month, year] = str.split(".").map(Number);
+  return new Date(year, month - 1, day);
 }
 
 export async function freezeClan(tag) {
