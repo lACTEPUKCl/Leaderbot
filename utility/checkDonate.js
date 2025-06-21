@@ -98,13 +98,16 @@ async function main(guildId, db, steamApi, donateUrl) {
           const db = clientdb.db(dbName);
           const collection = db.collection(dbCollection);
           const user = await collection.findOne({ _id: steamId });
-          if (!user) continue;
-          discordID = user.discordid;
+          if (user) {
+            discordID = user.discordid;
+          }
         } catch (e) {
           console.error(e);
         } finally {
           await clientdb.close();
         }
+
+        creater.vipCreater(steamId, what, sum, discordID);
 
         transaction.transactions.push({
           id: `${id}`,
@@ -112,21 +115,22 @@ async function main(guildId, db, steamApi, donateUrl) {
           steamID: steamId,
         });
 
-        if (!discordID) continue;
-
-        try {
-          const discordUser = await guildId.members.fetch(discordID);
-          const vipRole = guildId.roles.cache.find(
-            (role) => role.name === "VIP"
-          );
-          creater.vipCreater(steamId, what, sum, discordID);
-          await discordUser.roles.add(vipRole);
-        } catch (error) {
-          console.log(error);
-        }
-
         let newData = JSON.stringify(transaction);
         await fs.writeFile(`./transaction/transactionId.json`, newData);
+
+        if (discordID) {
+          try {
+            const discordUser = await guildId.members.fetch(discordID);
+            const vipRole = guildId.roles.cache.find(
+              (role) => role.name === "VIP"
+            );
+            if (vipRole && discordUser) {
+              await discordUser.roles.add(vipRole);
+            }
+          } catch (error) {
+            console.log("Ошибка при выдаче роли пользователю:", discordID);
+          }
+        }
       }
     }
   } catch (error) {
