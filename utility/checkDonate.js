@@ -99,7 +99,7 @@ async function main(guildId, db, steamApi, donateUrl) {
           const collection = db.collection(dbCollection);
           const user = await collection.findOne({ _id: steamId });
           if (user) {
-            discordID = user.discordid;
+            discordID = user.discordid || user.telegramid;
           }
         } catch (e) {
           console.error(e);
