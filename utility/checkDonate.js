@@ -47,28 +47,28 @@ async function main(guildId, db, steamApi, donateUrl) {
 
     for (const jsonEl of json.data) {
       const { id, what, comment, sum } = jsonEl;
-
       if (existingIds.includes(id.toString())) continue;
 
-      const commentTag = toLatin(comment.trim().toLowerCase());
+      const rawComment = comment.trim().toLowerCase();
+      const transl = toLatin(rawComment);
+      const tokens = transl.split(/\s+/);
+      const commentTag = tokens.find((tok) => clanTags.includes(tok));
 
-      if (clanTags.includes(commentTag)) {
+      if (commentTag) {
         const discordIds = await clanVipManager.updateClan(commentTag, 30);
         console.log(discordIds);
-
         if (!discordIds.length) {
           console.log(`Клан "${comment.trim()}" не найден или пуст!`);
         }
-
         for (const discordId of discordIds) {
           try {
             const discordUser = await guildId.members.fetch(discordId);
-            const vipRole = guildId.roles.cache.find(
-              (role) => role.name === "VIP"
-            );
-            if (vipRole && discordUser) await discordUser.roles.add(vipRole);
+            const vipRole = guildId.roles.cache.find((r) => r.name === "VIP");
+            if (vipRole && discordUser) {
+              await discordUser.roles.add(vipRole);
+            }
           } catch (error) {
-            console.log("Ошибка при выдаче роли узеру:", discordId);
+            console.log("Ошибка при выдаче роли юзеру:", discordId);
           }
         }
         transaction.transactions.push({
@@ -76,8 +76,11 @@ async function main(guildId, db, steamApi, donateUrl) {
           username: what,
           clan: commentTag,
         });
-        let newData = JSON.stringify(transaction);
-        await fs.writeFile(`./transaction/transactionId.json`, newData);
+        await fs.writeFile(
+          `./transaction/transactionId.json`,
+          JSON.stringify(transaction, null, 2),
+          "utf-8"
+        );
         continue;
       }
 
