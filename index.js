@@ -71,6 +71,7 @@ client.on("ready", async () => {
     vipRoleID,
     dbName,
     dbCollection,
+    vipExpiredMessage,
   } = options;
   const guildId = client.guilds.cache.get(discordServerId);
   const db = process.env.DATABASE_URL;
