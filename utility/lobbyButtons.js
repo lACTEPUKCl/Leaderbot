@@ -1,94 +1,113 @@
+// utility/lobbyButtons.js
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
 import { Rcon } from "rcon-client";
 import fetch from "node-fetch";
 
-const APP_ID = "393380";
+const APP_ID = "393380"; // Squad AppID
+let SERVERS = []; // инициализируется из ENV
 
-const SERVERS = JSON.parse(process.env.SERVERS_CONFIG || "[]");
-if (!SERVERS.length) {
-  console.error("SERVERS_CONFIG не задан или пуст");
-  process.exit(1);
+export async function initLobbyButtons(client, channelId, steamApiKey, domain) {
+  try {
+    SERVERS = JSON.parse(process.env.SERVERS_CONFIG);
+  } catch (err) {
+    console.error("ERROR: SERVERS_CONFIG must be valid JSON", err);
+    process.exit(1);
+  }
+
+  const channel = await client.channels.fetch(channelId);
+  let controlMsg = await findOrCreateMessage(channel);
+
+  // сразу обновляем и рисуем
+  await updateServerData(steamApiKey);
+  await controlMsg.edit({ components: [buildRow(domain)] });
+
+  // и по таймеру
+  setInterval(async () => {
+    await updateServerData(steamApiKey);
+    await controlMsg.edit({ components: [buildRow(domain)] });
+  }, 30_000);
 }
 
-async function getFirstPlayer(srv) {
-  const rcon = new Rcon({
-    host: srv.host,
-    port: srv.rconPort,
-    password: srv.password,
+async function findOrCreateMessage(channel) {
+  const fetched = await channel.messages.fetch({ limit: 50 });
+  const existing = fetched.find(
+    (m) => m.author.id === channel.client.user.id && m.components.length
+  );
+  if (existing) return existing;
+  return channel.send({
+    content: "Сервера с первым доступным лобби:",
+    components: [new ActionRowBuilder()],
   });
-  try {
-    await rcon.connect();
-    const raw = await rcon.send("ListPlayers");
-    const line = raw.split("\n").find((l) => l.includes("steam:"));
-    if (!line) return null;
-    const m = line.match(/steam:\s*(\d{17})/);
-    return m ? { steamID: m[1] } : null;
-  } finally {
-    rcon.end();
+}
+
+async function updateServerData(steamApiKey) {
+  for (const srv of SERVERS) {
+    let raw;
+    try {
+      const rcon = new Rcon({
+        host: srv.host,
+        port: srv.rconPort,
+        password: srv.password,
+      });
+      await rcon.connect();
+      raw = await rcon.send("ListPlayers");
+      rcon.end();
+    } catch {
+      srv.playerCount = 0;
+      srv.firstSteamId = srv.lobbyId = null;
+      continue;
+    }
+
+    // собираем все SteamID из строк
+    const steamIds = raw
+      .split("\n")
+      .filter((l) => l.includes("steam:"))
+      .map((l) => {
+        const m = l.match(/steam:\s*(\d{17})/);
+        return m ? m[1] : null;
+      })
+      .filter(Boolean);
+
+    srv.playerCount = steamIds.length;
+    srv.firstSteamId = null;
+    srv.lobbyId = null;
+
+    // пробегаем по каждому SteamID, пока не найдём lobby
+    for (const steamId of steamIds) {
+      const lobbyId = await fetchLobbyId(steamApiKey, steamId);
+      if (lobbyId) {
+        srv.firstSteamId = steamId;
+        srv.lobbyId = lobbyId;
+        break;
+      }
+    }
   }
 }
 
-async function fetchLobbyId(steamID, apiKey) {
+async function fetchLobbyId(apiKey, steamId) {
   const url = new URL(
     "https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/"
   );
   url.searchParams.set("key", apiKey);
-  url.searchParams.set("steamids", steamID);
+  url.searchParams.set("steamids", steamId);
+
   const res = await fetch(url);
   const json = await res.json();
-  return json.response.players[0]?.lobbysteamid || null;
-}
-
-async function updateServerData(steamKey) {
-  for (const srv of SERVERS) {
-    const first = await getFirstPlayer(srv);
-    if (first) {
-      srv.steamId = first.steamID;
-      srv.lobbyId = await fetchLobbyId(first.steamID, steamKey);
-    } else {
-      srv.steamId = srv.lobbyId = null;
-    }
-  }
+  return json.response.players?.[0]?.lobbysteamid ?? null;
 }
 
 function buildRow(domain) {
   const row = new ActionRowBuilder();
   for (const srv of SERVERS) {
-    const url =
-      srv.lobbyId && srv.steamId
-        ? `https://${domain}/joinlobby/${APP_ID}/${srv.lobbyId}/${srv.steamId}`
-        : "https://example.com";
-    row.addComponents(
-      new ButtonBuilder()
-        .setLabel(srv.label)
-        .setStyle(ButtonStyle.Link)
-        .setURL(url)
-    );
+    if (srv.playerCount > 0 && srv.lobbyId && srv.firstSteamId) {
+      const url = `https://${domain}/joinlobby/${APP_ID}/${srv.lobbyId}/${srv.firstSteamId}`;
+      row.addComponents(
+        new ButtonBuilder()
+          .setLabel(srv.label)
+          .setStyle(ButtonStyle.Link)
+          .setURL(url)
+      );
+    }
   }
   return row;
-}
-
-export async function initLobbyButtons(client, channelId, steamKey, domain) {
-  const channel = await client.channels.fetch(channelId);
-  const messages = await channel.messages.fetch({ limit: 50 });
-  let msg = messages.find(
-    (m) =>
-      m.author.id === client.user.id &&
-      m.components.length > 0 &&
-      m.components[0].components[0].label === SERVERS[0].label
-  );
-
-  if (!msg) {
-    msg = await channel.send({
-      content: "Нажмите кнопку для подключения к лобби первого игрока:",
-      components: [buildRow(domain)],
-    });
-  }
-
-  await updateServerData(steamKey);
-  await msg.edit({ components: [buildRow(domain)] });
-  setInterval(async () => {
-    await updateServerData(steamKey);
-    await msg.edit({ components: [buildRow(domain)] });
-  }, 30_000);
 }
