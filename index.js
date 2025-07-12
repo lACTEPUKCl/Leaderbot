@@ -33,6 +33,7 @@ import adminsactivity from "./utility/adminsactivity.js";
 import rulesSquad from "./utility/rulesSquad.js";
 import clanVipCleaner from "./utility/clanVipCleaner.js";
 import "./utility/fonts.js";
+import { initLobbyButtons } from "./utility/lobbyButtons.js";
 
 const client = new Client({
   intents: [
@@ -77,6 +78,13 @@ client.on("ready", async () => {
   const seedChannel = await client.channels.fetch(seedChannelId);
 
   await seedChannel.messages.fetch(seedMessageId);
+
+  await initLobbyButtons(
+    client,
+    process.env.CHANNEL_ID,
+    process.env.STEAM_API,
+    "rnserver.ru"
+  );
 
   setInterval(() => {
     checkDonate(guildId, db, steamApi, process.env.DONATE_URL);
