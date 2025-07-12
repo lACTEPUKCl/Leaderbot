@@ -1,10 +1,9 @@
-// utility/lobbyButtons.js
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
 import { Rcon } from "rcon-client";
 import fetch from "node-fetch";
 
-const APP_ID = "393380"; // Squad AppID
-let SERVERS = []; // инициализируется из ENV
+const APP_ID = "393380";
+let SERVERS = [];
 
 export async function initLobbyButtons(client, channelId, steamApiKey, domain) {
   try {
@@ -17,14 +16,12 @@ export async function initLobbyButtons(client, channelId, steamApiKey, domain) {
   const channel = await client.channels.fetch(channelId);
   let controlMsg = await findOrCreateMessage(channel);
 
-  // сразу обновляем и рисуем
   await updateServerData(steamApiKey);
-  await controlMsg.edit({ components: [buildRow(domain)] });
+  await editMessage(controlMsg, domain);
 
-  // и по таймеру
   setInterval(async () => {
     await updateServerData(steamApiKey);
-    await controlMsg.edit({ components: [buildRow(domain)] });
+    await editMessage(controlMsg, domain);
   }, 30_000);
 }
 
@@ -34,10 +31,26 @@ async function findOrCreateMessage(channel) {
     (m) => m.author.id === channel.client.user.id && m.components.length
   );
   if (existing) return existing;
+
   return channel.send({
-    content: "Сервера с первым доступным лобби:",
-    components: [new ActionRowBuilder()],
+    content: [
+      "**Как подключиться к серверу Squad:**",
+      "1. Запустите игру **Squad** и дождитесь загрузки главное меню.",
+      "2. После того как вы окажетесь в главном меню, нажмите на кнопку сервера ниже:",
+    ].join("\n"),
   });
+}
+
+async function editMessage(msg, domain) {
+  const row = buildRow(domain);
+  const rowData = row.toJSON();
+  if (rowData.components.length) {
+    await msg.edit({
+      components: [row],
+    });
+  } else {
+    await msg.edit({ components: [] });
+  }
 }
 
 async function updateServerData(steamApiKey) {
@@ -58,7 +71,6 @@ async function updateServerData(steamApiKey) {
       continue;
     }
 
-    // собираем все SteamID из строк
     const steamIds = raw
       .split("\n")
       .filter((l) => l.includes("steam:"))
@@ -69,10 +81,8 @@ async function updateServerData(steamApiKey) {
       .filter(Boolean);
 
     srv.playerCount = steamIds.length;
-    srv.firstSteamId = null;
-    srv.lobbyId = null;
+    srv.firstSteamId = srv.lobbyId = null;
 
-    // пробегаем по каждому SteamID, пока не найдём lobby
     for (const steamId of steamIds) {
       const lobbyId = await fetchLobbyId(steamApiKey, steamId);
       if (lobbyId) {
