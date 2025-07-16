@@ -21,29 +21,6 @@ const execute = async (interaction) => {
     await interaction.deferReply({ ephemeral: true });
     const { adminsCfgPath } = options;
     const discordID = interaction.user.id;
-    const member = await interaction.guild.members.fetch(discordID);
-    const clanRole = member.roles.cache.find((role) =>
-      /^\[.+\]$/.test(role.name)
-    );
-
-    if (!clanRole) {
-      await interaction.editReply({
-        content:
-          "У вас нет клановой роли! Название роли должно быть вида [CLAN].",
-        ephemeral: true,
-      });
-      return;
-    }
-
-    const clanNameMatch = clanRole.name.match(/^\[(.+)\]$/);
-    if (!clanNameMatch) {
-      await interaction.editReply({
-        content: "Ошибка: не удалось определить название клана из вашей роли!",
-        ephemeral: true,
-      });
-      return;
-    }
-    const userClan = clanNameMatch[1];
 
     fs.readFile(`${adminsCfgPath}Admins.cfg`, "utf8", async (err, data) => {
       if (err) {
@@ -56,10 +33,10 @@ const execute = async (interaction) => {
       }
 
       const lines = data.split("\n");
-      let collecting = false;
+      const clanUsers = {};
+      let currentClan = null;
+      let clanOwner = null;
       let date = null;
-      let users = [];
-
       for (const line of lines) {
         const clanMatch = line.match(
           /\/\/CLAN \[(.+)]\s+(\d+)\s+(\d+)\s+do\s+(.+)/
@@ -73,57 +50,47 @@ const execute = async (interaction) => {
             clanOwner = clanOwnerTemp;
             date = clanMatch[4];
           }
+        } else if (line.trim() === "//END") {
+          currentClan = null;
         }
-        if (line.trim() === "//END" && collecting) {
-          collecting = false;
-        }
-        if (collecting) {
-          const user = extractUsers(line);
-          if (user) users.push(user);
+
+        const user = extractUsers(line);
+        if (user && currentClan) {
+          clanUsers[currentClan].push(user);
         }
       }
 
-      if (!date) {
+      if (clanOwner === discordID) {
+        let response = "";
+        let messageChunks = [];
+
+        for (const [clanName, users] of Object.entries(clanUsers)) {
+          response += `**${clanName} дата окончания VIP: ${date}**:\n`;
+          for (const user of users) {
+            const userName = await getUsernameFromDB(user.steamId);
+            const userInfo = `SteamID: **${user.steamId}**, DiscordID: **${user.discordID}**, Имя: **${userName}**\n`;
+            if (
+              (response + userInfo).length > 2000 ||
+              response.split("\n").length >= 16
+            ) {
+              messageChunks.push(response);
+              response = "";
+            }
+            response += userInfo;
+          }
+        }
+
+        if (response) messageChunks.push(response);
+
+        for (const chunk of messageChunks) {
+          await interaction.followUp({
+            content: chunk || "Нет доступных данных о клане.",
+            ephemeral: true,
+          });
+        }
+      } else {
         await interaction.editReply({
-          content: `Не найден блок для вашего клана [${userClan}] в конфиге.`,
-          ephemeral: true,
-        });
-        return;
-      }
-
-      if (!users.length) {
-        await interaction.editReply({
-          content: "В вашем клане нет VIP-ов.",
-          ephemeral: true,
-        });
-        return;
-      }
-
-      let response = `**${userClan} — дата окончания VIP: ${date}**\n`;
-      let messageChunks = [];
-
-      for (const user of users) {
-        const userName = await getUsernameFromDB(user.steamId);
-        const userInfo = `SteamID: **${user.steamId}**, DiscordID: **${user.discordID}**, Имя: **${userName}**\n`;
-        if (
-          (response + userInfo).length > 2000 ||
-          response.split("\n").length >= 16
-        ) {
-          messageChunks.push(response);
-          response = "";
-        }
-        response += userInfo;
-      }
-
-      if (response) messageChunks.push(response);
-
-      await interaction.editReply({
-        content: messageChunks.shift(),
-        ephemeral: true,
-      });
-      for (const chunk of messageChunks) {
-        await interaction.followUp({
-          content: chunk,
+          content: "У вас нет прав на просмотр этого списка клана.",
           ephemeral: true,
         });
       }
