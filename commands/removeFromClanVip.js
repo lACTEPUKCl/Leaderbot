@@ -61,13 +61,15 @@ const execute = async (interaction) => {
     let expireDate;
 
     for (const line of lines) {
-      const clanMatch = line.match(/\/\/CLAN \[(.+)] (\d+) do (.+)/);
+      const clanMatch = line.match(
+        /\/\/CLAN \[(.+)]\s+(\d+)\s+(\d+)\s+do\s+(.+)/
+      );
       if (clanMatch) {
-        clanOwner = clanMatch[2];
+        clanOwner = clanMatch[3];
         if (clanOwner === discordID) {
           currentClan = clanMatch[1];
           isInClanBlock = true;
-          expireDate = clanMatch[3];
+          expireDate = clanMatch[4];
         } else {
           isInClanBlock = false;
         }

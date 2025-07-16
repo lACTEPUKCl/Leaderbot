@@ -29,7 +29,7 @@ export async function parseClansFile(path = adminsCfgPath + "Admins.cfg") {
         tag,
         star: !!star,
         allowedCount: parseInt(allowedCountStr, 10),
-        managerDiscordId,
+        managerDiscordID,
         until: untilStr,
         lines: [],
         endIdx: null,

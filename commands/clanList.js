@@ -61,14 +61,17 @@ const execute = async (interaction) => {
       let users = [];
 
       for (const line of lines) {
-        const clanMatch = line.match(/\/\/CLAN \[(.+)] (\d+) do (.+)/);
+        const clanMatch = line.match(
+          /\/\/CLAN \[(.+)]\s+(\d+)\s+(\d+)\s+do\s+(.+)/
+        );
         if (clanMatch) {
-          if (clanMatch[1] === userClan) {
-            collecting = true;
-            date = clanMatch[3];
-            continue;
-          } else {
-            collecting = false;
+          const clanName = clanMatch[1];
+          const clanOwnerTemp = clanMatch[3];
+          if (clanOwnerTemp === discordID) {
+            clanUsers[clanName] = [];
+            currentClan = clanName;
+            clanOwner = clanOwnerTemp;
+            date = clanMatch[4];
           }
         }
         if (line.trim() === "//END" && collecting) {
