@@ -67,7 +67,7 @@ const execute = async (interaction) => {
         if (clanMatch) {
           if (clanMatch[1] === userClan) {
             collecting = true;
-            date = clanMatch[3];
+            date = clanMatch[4];
             continue;
           } else {
             collecting = false;
