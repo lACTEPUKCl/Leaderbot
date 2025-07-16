@@ -3,24 +3,6 @@ import fs from "fs";
 import { exec } from "child_process";
 import options from "../config.js";
 
-const addToClanVipCommand = new SlashCommandBuilder()
-  .setName("addtoclanvip")
-  .setDescription("Добавить игрока в клан")
-  .setDefaultMemberPermissions(PermissionFlagsBits.CreatePrivateThreads);
-
-addToClanVipCommand.addStringOption((option) =>
-  option
-    .setName("steamid64")
-    .setDescription("Введите 17 цифр steamID64 для получения статистики игрока")
-    .setRequired(true)
-    .setMaxLength(17)
-    .setMinLength(17)
-);
-
-addToClanVipCommand.addUserOption((option) =>
-  option.setName("name").setDescription("Напишите имя игрока в дискорде")
-);
-
 const {
   adminsCfgPath,
   maxClanVipUsers,
@@ -36,6 +18,24 @@ function extractUsers(line) {
   }
   return null;
 }
+
+const addToClanVipCommand = new SlashCommandBuilder()
+  .setName("addtoclanvip")
+  .setDescription("Добавить игрока в клан")
+  .setDefaultMemberPermissions(PermissionFlagsBits.CreatePrivateThreads)
+  .addStringOption((opt) =>
+    opt
+      .setName("steamid64")
+      .setDescription(
+        "Введите 17 цифр steamID64 для получения статистики игрока"
+      )
+      .setRequired(true)
+      .setMinLength(17)
+      .setMaxLength(17)
+  )
+  .addUserOption((opt) =>
+    opt.setName("name").setDescription("Напишите имя игрока в дискорде")
+  );
 
 const execute = async (interaction) => {
   try {
@@ -55,25 +55,22 @@ const execute = async (interaction) => {
       });
       return;
     }
-
     const clanNameMatch = clanRole.name.match(/^\[(.+)\]$/);
-    if (!clanNameMatch) {
-      await interaction.reply({
-        content: "Ошибка: не удалось определить название клана из вашей роли!",
-        ephemeral: true,
-      });
-      return;
-    }
     const userClan = clanNameMatch[1];
 
     fs.readFile(`${adminsCfgPath}Admins.cfg`, "utf8", async (err, data) => {
       if (err) {
         console.error("Ошибка чтения файла:", err);
+        await interaction.reply({
+          content: "Ошибка чтения конфига.",
+          ephemeral: true,
+        });
         return;
       }
 
       const lines = data.split("\n");
       let clanUsers = {};
+      let allowedCountByClan = {};
       let currentClanTemp = null;
       let currentClan = null;
       let updatedLines = [];
@@ -82,15 +79,21 @@ const execute = async (interaction) => {
       let expireDate;
 
       lines.forEach((line, index) => {
-        const clanMatch = line.match(/\/\/CLAN \[(.+)] (\d+) do (.+)/);
+        const clanMatch = line.match(
+          /\/\/CLAN \[(.+)]\s+(\d+)\s+(\d+)\s+do\s+(.+)/
+        );
         if (clanMatch) {
-          const fileClan = clanMatch[1];
+          const [, fileClan, allowedCountStr, managerDiscordID, expireDateStr] =
+            clanMatch;
+
+          allowedCountByClan[fileClan] = parseInt(allowedCountStr, 10);
+
           if (fileClan === userClan) {
             currentClanTemp = fileClan;
             currentClan = fileClan;
             clanUsers[currentClanTemp] = [];
             isInClanBlock = true;
-            expireDate = clanMatch[3];
+            expireDate = expireDateStr;
           } else {
             isInClanBlock = false;
           }
@@ -101,9 +104,10 @@ const execute = async (interaction) => {
         }
 
         updatedLines.push(line);
-        const user = extractUsers(line);
-        if (user && currentClanTemp) {
-          clanUsers[currentClanTemp].push(user);
+
+        const u = extractUsers(line);
+        if (u && currentClanTemp) {
+          clanUsers[currentClanTemp].push(u);
         }
       });
 
@@ -115,9 +119,10 @@ const execute = async (interaction) => {
         return;
       }
 
-      if (clanUsers[currentClan]?.length + 1 > maxClanVipUsers) {
+      const limit = allowedCountByClan[currentClan] ?? maxClanVipUsers;
+      if (clanUsers[currentClan].length + 1 > limit) {
         await interaction.reply({
-          content: `Невозможно добавить игрока. Максимум ${maxClanVipUsers} VIP-ов в клане.`,
+          content: `Невозможно добавить игрока. Максимум ${limit} VIP-ов в клане.`,
           ephemeral: true,
         });
         return;
@@ -128,9 +133,6 @@ const execute = async (interaction) => {
         0,
         `Admin=${steamID64}:ClanVip // DiscordID ${discordIDuser} do ${expireDate}`
       );
-      console.log(
-        `Пользователь:${steamID64} DiscordID:${discordIDuser} добавлен кланменеджером: ${interaction.user.globalName}`
-      );
 
       const targetGuildMember =
         discordIDuser !== "666"
@@ -139,13 +141,12 @@ const execute = async (interaction) => {
       const nickname = targetGuildMember
         ? targetGuildMember.nickname || targetGuildMember.user.username
         : "Никнейм не установлен";
-
       if (targetGuildMember) {
         const clanRoleDiscord = interaction.guild.roles.cache.find(
-          (role) => role.name === `[${currentClan}]`
+          (r) => r.name === `[${currentClan}]`
         );
         const vipRole = interaction.guild.roles.cache.find(
-          (role) => role.name === vipRoleName
+          (r) => r.name === vipRoleName
         );
         if (clanRoleDiscord) await targetGuildMember.roles.add(clanRoleDiscord);
         if (vipRole) await targetGuildMember.roles.add(vipRole);
@@ -180,17 +181,7 @@ const execute = async (interaction) => {
         .replace(/(\d+)\.(\d+)\.(\d+), (\d+):(\d+):(\d+)/, "$1.$2.$3_$4.$5.$6");
       await fs.promises.writeFile(
         `${adminsCfgBackups}/AdminsBackup_${formattedDate}.cfg`,
-        data,
-        (err) => {
-          if (err) {
-            console.error(err);
-            return;
-          }
-          console.log(
-            "\x1b[33m",
-            `\r\n Backup created AdminsBackup_${formattedDate}.cfg\r\n`
-          );
-        }
+        data
       );
       exec(`${syncconfigPath}syncconfig.sh`);
     });
