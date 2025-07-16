@@ -3,10 +3,8 @@ import options from "../config.js";
 
 const adminsCfgPath = options.adminsCfgPath || "./";
 const CLAN_BLOCK_START =
-  /^\/\/CLAN\s+\[([^\]\*]+)(\*?)]\s+(\d+)\s+do\s+(\d{2}\.\d{2}\.\d{4})/;
-const CLAN_BLOCK_START_ANY = /^\/\/CLAN\s+\[([^\]]+)]/;
+  /^\/\/CLAN \[([^\]\*]+)(\*?)]\s+(\d+)\s+(\d+)\s+do\s+(\d{2}\.\d{2}\.\d{4})$/;
 const CLAN_BLOCK_END = /^\/\/END/;
-0;
 const MEMBER_LINE =
   /^\/?\/?Admin=(\d+):ClanVip\s*\/\/ DiscordID (\d+).*do\s+(\d{2}\.\d{2}\.\d{4})/;
 
@@ -19,25 +17,34 @@ export async function parseClansFile(path = adminsCfgPath + "Admins.cfg") {
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    const m = line.match(CLAN_BLOCK_START);
-    if (m) {
-      const [, tag, star, allowedCountStr, managerDiscordID, untilStr] = m;
+    let m = line.match(CLAN_BLOCK_START);
 
+    if (m) {
+      if (current) clans.push(current);
+      const [, tag, star, allowedCount, clanDiscordId, until] = m;
       current = {
         header: line,
         headerIdx: i,
-        tag,
-        star: !!star,
-        allowedCount: parseInt(allowedCountStr, 10),
-        managerDiscordID,
-        until: untilStr,
         lines: [],
         endIdx: null,
+        active: star === "",
+        tag,
+        star: star === "*",
+        allowedCount: Number(allowedCount),
+        clanDiscordId,
+        until,
         members: [],
       };
       continue;
     }
-
+    if (CLAN_BLOCK_END.test(line)) {
+      if (current) {
+        current.endIdx = i;
+        clans.push(current);
+        current = null;
+      }
+      continue;
+    }
     if (current) {
       current.lines.push({ value: line, idx: i });
       const mem = line.match(MEMBER_LINE);
