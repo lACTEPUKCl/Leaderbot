@@ -19,32 +19,25 @@ export async function parseClansFile(path = adminsCfgPath + "Admins.cfg") {
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    let m = line.match(CLAN_BLOCK_START);
-
+    const m = line.match(CLAN_BLOCK_START);
     if (m) {
-      if (current) clans.push(current);
+      const [, tag, star, allowedCountStr, managerDiscordID, untilStr] = m;
+
       current = {
         header: line,
         headerIdx: i,
+        tag,
+        star: !!star,
+        allowedCount: parseInt(allowedCountStr, 10),
+        managerDiscordId,
+        until: untilStr,
         lines: [],
         endIdx: null,
-        active: !m[2],
-        tag: m[1],
-        star: !!m[2],
-        clanDiscordId: m[3],
-        until: m[4],
         members: [],
       };
       continue;
     }
-    if (CLAN_BLOCK_END.test(line)) {
-      if (current) {
-        current.endIdx = i;
-        clans.push(current);
-        current = null;
-      }
-      continue;
-    }
+
     if (current) {
       current.lines.push({ value: line, idx: i });
       const mem = line.match(MEMBER_LINE);
