@@ -108,7 +108,7 @@ function buildRow(domain) {
     })();
     if (!tsOk) continue;
 
-    const url = `https://${domain}/join?u=${encodeURIComponent(lobbyUri)}`;
+    const url = `https://${domain}/${encodeURIComponent(lobbyUri)}`;
 
     row.addComponents(
       new ButtonBuilder()
