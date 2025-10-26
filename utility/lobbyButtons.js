@@ -95,8 +95,8 @@ function buildRow(domain) {
     const rec = LOBBY_CACHE.servers[srv.key];
     if (!rec) continue;
 
-    const lobbyUri = rec.lobbyUri;
-    if (!lobbyUri) continue;
+    const lobbyId = rec.lobbyId;
+    if (!lobbyId) continue;
 
     const tsOk = (() => {
       try {
@@ -108,7 +108,7 @@ function buildRow(domain) {
     })();
     if (!tsOk) continue;
 
-    const url = `https://${domain}/${encodeURIComponent(lobbyUri)}`;
+    const url = `https://${domain}/joinlobby/393380/${lobbyId}`;
 
     row.addComponents(
       new ButtonBuilder()
@@ -117,6 +117,5 @@ function buildRow(domain) {
         .setURL(url)
     );
   }
-
   return row;
 }
