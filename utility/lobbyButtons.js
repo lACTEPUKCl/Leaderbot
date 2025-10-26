@@ -1,28 +1,47 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
-import { Rcon } from "rcon-client";
-import fetch from "node-fetch";
+import fs from "node:fs/promises";
 
-const APP_ID = "393380";
+const LOBBY_FILE = process.env.LOBBY_FILE || "/app/lobby-map.json";
+const REFRESH_MS = +(process.env.REFRESH_MS || 30000);
+const FRESH_MAX_AGE_MS = +(process.env.FRESH_MAX_AGE_MS || 10 * 60 * 1000);
+
 let SERVERS = [];
+let LOBBY_CACHE = null;
 
-export async function initLobbyButtons(client, channelId, steamApiKey, domain) {
+export async function initLobbyButtons(
+  client,
+  channelId,
+  _steamApiKeyNotUsed,
+  domain
+) {
   try {
-    SERVERS = JSON.parse(process.env.SERVERS_CONFIG);
+    SERVERS = JSON.parse(process.env.SERVERS_CONFIG || "[]");
+    if (!Array.isArray(SERVERS) || !SERVERS.length)
+      throw new Error("SERVERS_CONFIG empty");
   } catch (err) {
-    console.error("ERROR: SERVERS_CONFIG must be valid JSON", err);
+    console.error(
+      "ERROR: SERVERS_CONFIG must be valid JSON array of {key,label}",
+      err
+    );
+    process.exit(1);
+  }
+  if (!domain) {
+    console.error(
+      "ERROR: domain is required (used to build https redirect links)"
+    );
     process.exit(1);
   }
 
   const channel = await client.channels.fetch(channelId);
-  let controlMsg = await findOrCreateMessage(channel);
+  const controlMsg = await findOrCreateMessage(channel);
 
-  await updateServerData(steamApiKey);
+  await updateFromLobbyMap();
   await editMessage(controlMsg, domain);
 
   setInterval(async () => {
-    await updateServerData(steamApiKey);
+    await updateFromLobbyMap();
     await editMessage(controlMsg, domain);
-  }, 30_000);
+  }, REFRESH_MS);
 }
 
 async function findOrCreateMessage(channel) {
@@ -35,89 +54,69 @@ async function findOrCreateMessage(channel) {
   return channel.send({
     content: [
       "**Как подключиться к серверу Squad:**",
-      "1. Запустите игру **Squad** и дождитесь загрузки главное меню.",
-      "2. После того как вы окажетесь в главном меню, нажмите на кнопку сервера ниже:",
+      "1) Запустите игру **Squad**.",
+      "2) Нажмите на кнопку нужного сервера ниже.",
     ].join("\n"),
   });
+}
+
+async function readLobbyMapSafe() {
+  try {
+    const raw = await fs.readFile(LOBBY_FILE, "utf-8");
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+async function updateFromLobbyMap() {
+  const data = await readLobbyMapSafe();
+  if (!data || !data.servers) return;
+  LOBBY_CACHE = data;
 }
 
 async function editMessage(msg, domain) {
   const row = buildRow(domain);
   const rowData = row.toJSON();
   if (rowData.components.length) {
-    await msg.edit({
-      components: [row],
-    });
+    await msg.edit({ components: [row] });
   } else {
     await msg.edit({ components: [] });
   }
 }
 
-async function updateServerData(steamApiKey) {
-  for (const srv of SERVERS) {
-    let raw;
-    try {
-      const rcon = new Rcon({
-        host: srv.host,
-        port: srv.rconPort,
-        password: srv.password,
-      });
-      await rcon.connect();
-      raw = await rcon.send("ListPlayers");
-      rcon.end();
-    } catch {
-      srv.playerCount = 0;
-      srv.firstSteamId = srv.lobbyId = null;
-      continue;
-    }
-
-    const steamIds = raw
-      .split("\n")
-      .filter((l) => l.includes("steam:"))
-      .map((l) => {
-        const m = l.match(/steam:\s*(\d{17})/);
-        return m ? m[1] : null;
-      })
-      .filter(Boolean);
-
-    srv.playerCount = steamIds.length;
-    srv.firstSteamId = srv.lobbyId = null;
-
-    for (const steamId of steamIds) {
-      const lobbyId = await fetchLobbyId(steamApiKey, steamId);
-      if (lobbyId) {
-        srv.firstSteamId = steamId;
-        srv.lobbyId = lobbyId;
-        break;
-      }
-    }
-  }
-}
-
-async function fetchLobbyId(apiKey, steamId) {
-  const url = new URL(
-    "https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/"
-  );
-  url.searchParams.set("key", apiKey);
-  url.searchParams.set("steamids", steamId);
-
-  const res = await fetch(url);
-  const json = await res.json();
-  return json.response.players?.[0]?.lobbysteamid ?? null;
-}
-
 function buildRow(domain) {
   const row = new ActionRowBuilder();
+  if (!LOBBY_CACHE || !LOBBY_CACHE.servers) return row;
+
+  const now = Date.now();
+
   for (const srv of SERVERS) {
-    if (srv.playerCount > 0 && srv.lobbyId && srv.firstSteamId) {
-      const url = `https://${domain}/joinlobby/${APP_ID}/${srv.lobbyId}/${srv.firstSteamId}`;
-      row.addComponents(
-        new ButtonBuilder()
-          .setLabel(srv.label)
-          .setStyle(ButtonStyle.Link)
-          .setURL(url)
-      );
-    }
+    const rec = LOBBY_CACHE.servers[srv.key];
+    if (!rec) continue;
+
+    const lobbyUri = rec.lobbyUri;
+    if (!lobbyUri) continue;
+
+    const tsOk = (() => {
+      try {
+        const age = now - Date.parse(rec.ts || 0);
+        return Number.isFinite(age) && age >= 0 && age <= FRESH_MAX_AGE_MS;
+      } catch {
+        return false;
+      }
+    })();
+    if (!tsOk) continue;
+
+    const url = `https://${domain}/join?u=${encodeURIComponent(lobbyUri)}`;
+
+    row.addComponents(
+      new ButtonBuilder()
+        .setLabel(srv.label || rec.name || srv.key)
+        .setStyle(ButtonStyle.Link)
+        .setURL(url)
+    );
   }
+
   return row;
 }
