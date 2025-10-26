@@ -108,7 +108,6 @@ function buildRow(domain) {
     })();
     if (!tsOk) continue;
 
-    // нужный формат:
     const url = `https://${domain}/joinlobby/393380/${lobbyId}`;
 
     row.addComponents(
