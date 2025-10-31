@@ -34,6 +34,7 @@ import rulesSquad from "./utility/rulesSquad.js";
 import clanVipCleaner from "./utility/clanVipCleaner.js";
 import "./utility/fonts.js";
 import { initLobbyButtons } from "./utility/lobbyButtons.js";
+import { registerAntiSpamTimeout } from "./utility/antiSpamTimeout.js";
 
 const client = new Client({
   intents: [
@@ -51,6 +52,14 @@ client.commands = new Collection();
 const commands = await getCommands();
 const userVoiceChannels = new Map();
 const interCollections = new Map();
+registerAntiSpamTimeout(
+  client,
+  "1214887967060004875",
+  "132225869698564096",
+  3,
+  90 * 1000,
+  24 * 60 * 60 * 1000
+);
 
 for (const command of commands) {
   if ("data" in command && "execute" in command)
