@@ -93,7 +93,7 @@ client.on("ready", async () => {
     client,
     process.env.CHANNEL_ID,
     process.env.STEAM_API,
-    "rnserver.ru"
+    process.env.DOMAIN
   );
 
   setInterval(() => {

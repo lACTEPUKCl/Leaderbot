@@ -1,12 +1,8 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
-import fs from "node:fs/promises";
 
-const LOBBY_FILE = process.env.LOBBY_FILE || "/app/lobby-map.json";
-const REFRESH_MS = +(process.env.REFRESH_MS || 30000);
-const FRESH_MAX_AGE_MS = +(process.env.FRESH_MAX_AGE_MS || 10 * 60 * 1000);
+const JOIN_PATH = "/api/join-link";
 
 let SERVERS = [];
-let LOBBY_CACHE = null;
 
 export async function initLobbyButtons(
   client,
@@ -16,8 +12,9 @@ export async function initLobbyButtons(
 ) {
   try {
     SERVERS = JSON.parse(process.env.SERVERS_CONFIG || "[]");
-    if (!Array.isArray(SERVERS) || !SERVERS.length)
+    if (!Array.isArray(SERVERS) || !SERVERS.length) {
       throw new Error("SERVERS_CONFIG empty");
+    }
   } catch (err) {
     console.error(
       "ERROR: SERVERS_CONFIG must be valid JSON array of {key,label}",
@@ -25,6 +22,7 @@ export async function initLobbyButtons(
     );
     process.exit(1);
   }
+
   if (!domain) {
     console.error(
       "ERROR: domain is required (used to build https redirect links)"
@@ -35,13 +33,7 @@ export async function initLobbyButtons(
   const channel = await client.channels.fetch(channelId);
   const controlMsg = await findOrCreateMessage(channel);
 
-  await updateFromLobbyMap();
   await editMessage(controlMsg, domain);
-
-  setInterval(async () => {
-    await updateFromLobbyMap();
-    await editMessage(controlMsg, domain);
-  }, REFRESH_MS);
 }
 
 async function findOrCreateMessage(channel) {
@@ -60,21 +52,6 @@ async function findOrCreateMessage(channel) {
   });
 }
 
-async function readLobbyMapSafe() {
-  try {
-    const raw = await fs.readFile(LOBBY_FILE, "utf-8");
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
-}
-
-async function updateFromLobbyMap() {
-  const data = await readLobbyMapSafe();
-  if (!data || !data.servers) return;
-  LOBBY_CACHE = data;
-}
-
 async function editMessage(msg, domain) {
   const row = buildRow(domain);
   const rowData = row.toJSON();
@@ -87,35 +64,21 @@ async function editMessage(msg, domain) {
 
 function buildRow(domain) {
   const row = new ActionRowBuilder();
-  if (!LOBBY_CACHE || !LOBBY_CACHE.servers) return row;
 
-  const now = Date.now();
+  if (!SERVERS || !SERVERS.length) return row;
 
   for (const srv of SERVERS) {
-    const rec = LOBBY_CACHE.servers[srv.key];
-    if (!rec) continue;
+    const label = (srv.label || srv.name || srv.key || "").trim();
+    if (!label) continue;
 
-    const lobbyId = rec.lobbyId;
-    if (!lobbyId) continue;
+    const encodedName = encodeURIComponent(label);
 
-    const tsOk = (() => {
-      try {
-        const age = now - Date.parse(rec.ts || 0);
-        return Number.isFinite(age) && age >= 0 && age <= FRESH_MAX_AGE_MS;
-      } catch {
-        return false;
-      }
-    })();
-    if (!tsOk) continue;
-
-    const url = `https://${domain}/joinlobby/393380/${lobbyId}`;
+    const url = `https://${domain}${JOIN_PATH}?name=${encodedName}`;
 
     row.addComponents(
-      new ButtonBuilder()
-        .setLabel(srv.label || rec.name || srv.key)
-        .setStyle(ButtonStyle.Link)
-        .setURL(url)
+      new ButtonBuilder().setLabel(label).setStyle(ButtonStyle.Link).setURL(url)
     );
   }
+
   return row;
 }
