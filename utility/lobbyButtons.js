@@ -109,7 +109,7 @@ function buildRow(domain) {
     const searchName = fullName;
 
     const encodedName = encodeURIComponent(searchName);
-    const url = `https://${domain}${JOIN_PATH}?name=${encodedName}`;
+    const url = `http://${domain}${JOIN_PATH}?name=${encodedName}`;
 
     row.addComponents(
       new ButtonBuilder().setLabel(label).setStyle(ButtonStyle.Link).setURL(url)
