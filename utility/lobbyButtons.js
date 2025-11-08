@@ -1,8 +1,13 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
+import fs from "node:fs/promises";
 
+const LOBBY_FILE = process.env.LOBBY_FILE || "/app/lobby-map.json";
 const JOIN_PATH = "/api/join-link";
 
+const REFRESH_MS = +(process.env.REFRESH_MS || 30000);
+
 let SERVERS = [];
+let LOBBY_CACHE = null;
 
 export async function initLobbyButtons(
   client,
@@ -33,7 +38,13 @@ export async function initLobbyButtons(
   const channel = await client.channels.fetch(channelId);
   const controlMsg = await findOrCreateMessage(channel);
 
+  await updateFromLobbyMap();
   await editMessage(controlMsg, domain);
+
+  setInterval(async () => {
+    await updateFromLobbyMap();
+    await editMessage(controlMsg, domain);
+  }, REFRESH_MS);
 }
 
 async function findOrCreateMessage(channel) {
@@ -52,6 +63,21 @@ async function findOrCreateMessage(channel) {
   });
 }
 
+async function readLobbyMapSafe() {
+  try {
+    const raw = await fs.readFile(LOBBY_FILE, "utf-8");
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+async function updateFromLobbyMap() {
+  const data = await readLobbyMapSafe();
+  if (!data || !data.servers) return;
+  LOBBY_CACHE = data;
+}
+
 async function editMessage(msg, domain) {
   const row = buildRow(domain);
   const rowData = row.toJSON();
@@ -66,13 +92,23 @@ function buildRow(domain) {
   const row = new ActionRowBuilder();
 
   if (!SERVERS || !SERVERS.length) return row;
+  if (!LOBBY_CACHE || !LOBBY_CACHE.servers) return row;
+
+  const serversMap = LOBBY_CACHE.servers;
 
   for (const srv of SERVERS) {
-    const label = (srv.label || srv.name || srv.key || "").trim();
+    const rec = serversMap[srv.key];
+    if (!rec) continue;
+
+    const fullName = (rec.name || "").trim();
+    if (!fullName) continue;
+
+    const label = (srv.label || fullName || srv.key || "").trim();
     if (!label) continue;
 
-    const encodedName = encodeURIComponent(label);
+    const searchName = fullName;
 
+    const encodedName = encodeURIComponent(searchName);
     const url = `https://${domain}${JOIN_PATH}?name=${encodedName}`;
 
     row.addComponents(
