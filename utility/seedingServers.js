@@ -22,7 +22,7 @@ async function closeConnection() {
 
 async function getServerInfo(serverId) {
   let attempt = 0;
-  let delay = 10000;
+  let delay = 30000;
 
   while (true) {
     try {
