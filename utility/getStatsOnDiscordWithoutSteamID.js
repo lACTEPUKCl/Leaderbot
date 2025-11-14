@@ -2,6 +2,8 @@ import { ButtonBuilder, ActionRowBuilder, ButtonStyle } from "discord.js";
 import { MongoClient } from "mongodb";
 import jwt from "jsonwebtoken";
 import getStatsOnDiscord from "./getStatsOnDiscord.js";
+import { config } from "dotenv";
+config();
 
 const DB_NAME = "SquadJS";
 const DB_COLLECTION = "mainstats";
