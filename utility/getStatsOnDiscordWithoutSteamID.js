@@ -1,9 +1,5 @@
-import {
-  ButtonBuilder,
-  ActionRowBuilder,
-  ButtonStyle,
-  MessageFlags,
-} from "discord.js";
+// getStatsOnDiscordWithoutSteamID.js
+import { ButtonBuilder, ActionRowBuilder, ButtonStyle } from "discord.js";
 import { MongoClient } from "mongodb";
 import jwt from "jsonwebtoken";
 import getStatsOnDiscord from "./getStatsOnDiscord.js";
@@ -14,8 +10,15 @@ const DB_COLLECTION = "mainstats";
 async function getStatsOnDiscordWithoutSteamID(db, interaction, steamApi) {
   const clientdb = new MongoClient(db);
   const discordId = interaction.user.id;
+
   const LINK_STEAM_URL = process.env.LINK_STEAM_URL;
   const LINK_SIGN_SECRET = process.env.LINK_SIGN_SECRET;
+
+  console.log("[getStatsOnDiscordWithoutSteamID ENV]", {
+    discordId,
+    LINK_STEAM_URL,
+    hasSecret: !!LINK_SIGN_SECRET,
+  });
 
   try {
     await clientdb.connect();
@@ -31,7 +34,7 @@ async function getStatsOnDiscordWithoutSteamID(db, interaction, steamApi) {
         await interaction.editReply({
           content:
             "Система привязки Steam через сайт сейчас недоступна. Сообщите администратору.",
-          flags: MessageFlags.Ephemeral,
+          ephemeral: true,
         });
         return;
       }
@@ -56,7 +59,7 @@ async function getStatsOnDiscordWithoutSteamID(db, interaction, steamApi) {
         content:
           "Ваш Discord ещё не привязан к Steam.\n" +
           "Нажмите кнопку ниже — откроется сайт, где нужно войти через Steam для привязки.",
-        flags: MessageFlags.Ephemeral,
+        ephemeral: true,
         components: [row],
       });
       return;
@@ -68,7 +71,7 @@ async function getStatsOnDiscordWithoutSteamID(db, interaction, steamApi) {
       await interaction.editReply({
         content:
           "В базе найден пользователь с вашим Discord, но без SteamID. Обратитесь к администратору.",
-        flags: MessageFlags.Ephemeral,
+        ephemeral: true,
       });
       return;
     }
@@ -83,13 +86,13 @@ async function getStatsOnDiscordWithoutSteamID(db, interaction, steamApi) {
       await interaction.editReply({
         content:
           "Произошла ошибка при получении статистики. Пожалуйста, попробуйте позже.",
-        flags: MessageFlags.Ephemeral,
+        ephemeral: true,
       });
     } catch {
       await interaction.reply({
         content:
           "Произошла ошибка при получении статистики. Пожалуйста, попробуйте позже.",
-        flags: MessageFlags.Ephemeral,
+        ephemeral: true,
       });
     }
   } finally {

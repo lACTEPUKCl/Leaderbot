@@ -1,4 +1,8 @@
-import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
+import {
+  SlashCommandBuilder,
+  PermissionFlagsBits,
+  MessageFlags,
+} from "discord.js";
 import getStatsOnDiscord from "../utility/getStatsOnDiscord.js";
 import getStatsOnDiscordWithoutSteamID from "../utility/getStatsOnDiscordWithoutSteamID.js";
 import options from "../config.js";
@@ -31,7 +35,7 @@ const execute = async (interaction) => {
         ephemeral: true,
       });
     }
-    await interaction.deferReply();
+    await interaction.deferReply({ ephemeral: true });
     const userParam = interaction.options.getString("steamid64");
     if (userParam) {
       await getStatsOnDiscord(db, userParam, interaction, steamApi);
