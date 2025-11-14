@@ -35,11 +35,7 @@ import clanVipCleaner from "./utility/clanVipCleaner.js";
 import "./utility/fonts.js";
 import { initLobbyButtons } from "./utility/lobbyButtons.js";
 import { registerAntiSpamTimeout } from "./utility/antiSpamTimeout.js";
-console.log("[LEADERBOT ENV DEBUG]", {
-  LINK_STEAM_URL: process.env.LINK_STEAM_URL,
-  LINK_SIGN_SECRET_LEN:
-    process.env.LINK_SIGN_SECRET && process.env.LINK_SIGN_SECRET.length,
-});
+
 const client = new Client({
   intents: [
     GatewayIntentBits.DirectMessages,
