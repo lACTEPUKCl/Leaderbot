@@ -1,48 +1,67 @@
-import fs from "fs";
+import { MongoClient } from "mongodb";
+import { ButtonBuilder, ActionRowBuilder } from "discord.js";
 import getStatsOnDiscord from "./getStatsOnDiscord.js";
 
-async function getStatsOnDiscordWithoutSteamID(
-  db,
-  adminUrl,
-  interaction,
-  steamApi
-) {
-  let steamId = [];
-  const regexpAdmin =
-    /^Admin=[0-9]*:Reserved [//]* DiscordID [0-9]* do [0-9]{2}\.[0-9]{2}\.[0-9]{4}/gm;
-  const regexpClanVip =
-    /^Admin=[0-9]*:ClanVip [//]* DiscordID [0-9]* do [0-9]{2}\.[0-9]{2}\.[0-9]{4}/gm;
+async function getStatsOnDiscordWithoutSteamID(db, interaction, steamApi) {
+  const clientdb = new MongoClient(db);
+  const dbName = "SquadJS";
+  const dbCollection = "mainstats";
+  const discordId = interaction.user.id;
+  const confirm = new ButtonBuilder()
+    .setCustomId("SteamID")
+    .setLabel("Привязать SteamID")
+    .setStyle("Success");
+  const row = new ActionRowBuilder().addComponents(confirm);
 
-  fs.readFile(`${adminUrl}Admins.cfg`, "utf-8", (err, data) => {
-    if (err) {
-      console.error(err);
+  try {
+    await clientdb.connect();
+    const database = clientdb.db(dbName);
+    const collection = database.collection(dbCollection);
+    const dbUser = await collection.findOne({ discordid: discordId });
+
+    if (!dbUser) {
+      await interaction.editReply({
+        content:
+          "Привяжите ваш Steam профиль к дискорд аккаунту при помощи кнопки ниже!",
+        ephemeral: true,
+        components: [row],
+      });
       return;
     }
 
-    data.split("\r\n").some((e) => {
-      const userReserved = e.match(regexpAdmin);
-      const userClanVip = e.match(regexpClanVip);
+    const { _id: steamId } = dbUser;
 
-      if (userReserved || userClanVip) {
-        const getUserReserved = userReserved
-          ? userReserved.filter((el) => el.includes(interaction.user.id))
-          : [];
-        const getUserClanVip = userClanVip
-          ? userClanVip.filter((el) => el.includes(interaction.user.id))
-          : [];
+    if (!steamId) {
+      await interaction.editReply({
+        content:
+          "В базе найден пользователь с вашим Discord, но без SteamID. Обратитесь к администратору.",
+        ephemeral: true,
+      });
+      return;
+    }
 
-        if (getUserReserved.length > 0 || getUserClanVip.length > 0) {
-          steamId.push(
-            getUserReserved.toString().match(/[0-9]{17}/) ||
-              getUserClanVip.toString().match(/[0-9]{17}/)
-          );
-          return true;
-        }
-      }
-    });
-
-    getStatsOnDiscord(db, steamId.toString(), interaction, steamApi);
-  });
+    await getStatsOnDiscord(db, steamId.toString(), interaction, steamApi);
+  } catch (error) {
+    console.error(
+      "Ошибка при получении статистики без SteamID из базы данных:",
+      error
+    );
+    try {
+      await interaction.editReply({
+        content:
+          "Произошла ошибка при получении статистики. Пожалуйста, попробуйте позже.",
+        ephemeral: true,
+      });
+    } catch (_) {
+      await interaction.reply({
+        content:
+          "Произошла ошибка при получении статистики. Пожалуйста, попробуйте позже.",
+        ephemeral: true,
+      });
+    }
+  } finally {
+    await clientdb.close();
+  }
 }
 
 export default getStatsOnDiscordWithoutSteamID;
