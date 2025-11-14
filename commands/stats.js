@@ -36,12 +36,7 @@ const execute = async (interaction) => {
     if (userParam) {
       await getStatsOnDiscord(db, userParam, interaction, steamApi);
     } else {
-      await getStatsOnDiscordWithoutSteamID(
-        db,
-        adminsCfgPath,
-        interaction,
-        steamApi
-      );
+      await getStatsOnDiscordWithoutSteamID(db, interaction, steamApi);
     }
   } catch (error) {
     await interaction.reply({

@@ -1,92 +1,174 @@
+// Leaderbot/utility/vip-cleaner.js
 import fs from "fs";
 import { exec } from "child_process";
+import { MongoClient } from "mongodb";
+import { config as loadEnv } from "dotenv";
 import options from "../config.js";
-const regexp =
-  /^Admin=(?<steamID>[0-9]*):Reserved [//]* DiscordID (?<discordId>[0-9]*) do (?<date>[0-9]{2}\.[0-9]{2}\.[0-9]{4})/gm;
 
-const getUserRegExp = (steamID) => {
-  return new RegExp(
-    `Admin=(?<steamID>${steamID}):Reserved [//]* DiscordID (?<discordId>[0-9]*) do (?<date>[0-9]{2}\\.[0-9]{2}\\.[0-9]{4})`
-  );
-};
+loadEnv();
+
 const { adminsCfgPath, adminsCfgBackups, syncconfigPath } = options;
+
+const DB_URL = process.env.DATABASE_URL;
+const DB_NAME = "SquadJS";
+const DB_COLLECTION = "mainstats";
 const vipCleaner = (callback) => {
-  setInterval(() => {
-    const isPaidDate = (date) => {
-      const lastVipDate = new Date(Date.parse(`${date} GMT`));
-      const currentDate = new Date();
-      return lastVipDate > currentDate;
-    };
+  const INTERVAL_MS = 36000000;
 
-    fs.readFile(`${adminsCfgPath}Admins.cfg`, "utf-8", (err, data) => {
-      if (err) return;
+  if (!DB_URL) {
+    console.error("[vipCleaner] Не задан DATABASE_URL в окружении");
+    return;
+  }
 
-      let newData = "";
-      let steamIDForRemove = [];
-      let usersRemove = [];
-      let usersRemoveId = [];
-      const vips = data.matchAll(regexp);
-      for (let result of vips) {
-        const { steamID, date } = result.groups;
-        const reverseDate = date.split(".").reverse().join(".");
+  setInterval(async () => {
+    const clientdb = new MongoClient(DB_URL);
 
-        if (!isPaidDate(reverseDate)) {
-          steamIDForRemove.push(steamID);
-        }
+    try {
+      await clientdb.connect();
+      const db = clientdb.db(DB_NAME);
+      const collection = db.collection(DB_COLLECTION);
+      const now = new Date();
+      const expiredUsers = await collection
+        .find(
+          { vipEndDate: { $lte: now } },
+          { projection: { _id: 1, discordid: 1 } }
+        )
+        .toArray();
+
+      if (!expiredUsers.length) {
+        return;
       }
 
-      if (steamIDForRemove.length) {
+      const steamIDsForRemove = expiredUsers
+        .map((u) => u._id)
+        .filter((id) => typeof id === "string" && id.length > 0);
+
+      const discordIdsForRemove = expiredUsers
+        .map((u) => u.discordid)
+        .filter((id) => typeof id === "string" && id.length > 0);
+
+      if (!steamIDsForRemove.length) {
+        return;
+      }
+
+      await collection.updateMany(
+        { _id: { $in: steamIDsForRemove } },
+        { $unset: { vipEndDate: "" } }
+      );
+
+      if (discordIdsForRemove.length) {
+        callback(discordIdsForRemove);
+      }
+
+      fs.readFile(`${adminsCfgPath}Admins.cfg`, "utf-8", (err, data) => {
+        if (err) {
+          console.error("[vipCleaner] Ошибка чтения Admins.cfg:", err);
+          return;
+        }
+
         if (!data.match(/\r\n/gm)) {
           data = data.replace(/\n/gm, "\r\n");
         }
-        let users = data.split("\r\n");
-        steamIDForRemove.forEach((e) => {
-          const userString = data.match(getUserRegExp(e));
-          usersRemove.push(userString[0]);
-          users = users.filter((e) => userString[0] !== e);
-          usersRemoveId.push(userString.groups.discordId);
-        });
-        callback(usersRemoveId);
-        newData = users.join("\r\n");
-      }
-      if (newData.length) {
-        fs.writeFile(`${adminsCfgPath}Admins.cfg`, newData, (err) => {
-          if (err) return;
-          console.log("\x1b[33m", "\r\n Removed users:\r\n");
-          usersRemove.forEach((e) => {
+
+        const lines = data.split("\r\n");
+        let lastEndIndex = -1;
+
+        for (let i = 0; i < lines.length; i++) {
+          if (lines[i].startsWith("//END")) {
+            lastEndIndex = i;
+          }
+        }
+        const playerStartIndex = lastEndIndex >= 0 ? lastEndIndex + 1 : 0;
+
+        const filteredLines = [];
+        const removedLines = [];
+
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+
+          if (i >= playerStartIndex) {
+            const match = line.match(/^Admin=(\d+):Reserved/);
+            if (match) {
+              const steamIdInFile = match[1];
+              if (steamIDsForRemove.includes(steamIdInFile)) {
+                removedLines.push(line);
+                continue;
+              }
+            }
+          }
+
+          filteredLines.push(line);
+        }
+
+        if (!removedLines.length) {
+          return;
+        }
+
+        const newData = filteredLines.join("\r\n");
+
+        fs.writeFile(`${adminsCfgPath}Admins.cfg`, newData, (writeErr) => {
+          if (writeErr) {
+            console.error("[vipCleaner] Ошибка записи Admins.cfg:", writeErr);
+            return;
+          }
+
+          console.log(
+            "\x1b[33m",
+            "\r\n Removed VIP users from Admins.cfg:\r\n"
+          );
+          removedLines.forEach((e) => {
             console.log("\x1b[36m", e);
           });
 
+          const backupName = `AdminsBackup${new Date().toLocaleString("ru-RU", {
+            timeZone: "Europe/Moscow",
+          })}.cfg`;
+
           fs.writeFile(
-            `${adminsCfgBackups}/AdminsBackup${new Date().toLocaleString(
-              "ru-RU",
-              {
-                timeZone: "Europe/Moscow",
-              }
-            )}.cfg`,
+            `${adminsCfgBackups}/${backupName}`,
             data,
-            (err) => {
-              if (err) return;
+            (backupErr) => {
+              if (backupErr) {
+                console.error(
+                  "[vipCleaner] Ошибка создания бэкапа Admins.cfg:",
+                  backupErr
+                );
+                return;
+              }
 
               console.log(
                 "\x1b[33m",
-                "\r\n Backup created AdminsBackup.cfg\r\n"
+                "\r\n Backup created",
+                backupName,
+                "\r\n"
+              );
+
+              exec(
+                `${syncconfigPath}syncconfig.sh`,
+                (execErr, stdout, stderr) => {
+                  if (execErr) {
+                    console.error(
+                      "[vipCleaner] Ошибка запуска syncconfig.sh:",
+                      execErr
+                    );
+                    return;
+                  }
+                  if (stdout) console.log(stdout);
+                  if (stderr) console.error(stderr);
+                }
               );
             }
           );
-
-          exec(`${syncconfigPath}syncconfig.sh`, (err, stdout, stderr) => {
-            if (err) {
-              console.error(err);
-              return;
-            }
-            console.log(stdout);
-          });
         });
-      }
-    });
-  }, 36000000);
+      });
+    } catch (err) {
+      console.error("[vipCleaner] Ошибка работы с базой:", err);
+    } finally {
+      await clientdb.close().catch(() => {});
+    }
+  }, INTERVAL_MS);
 };
+
 export default {
   vipCleaner,
 };
