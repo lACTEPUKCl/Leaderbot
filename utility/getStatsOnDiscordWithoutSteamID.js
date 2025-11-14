@@ -1,28 +1,56 @@
+import { ButtonBuilder, ActionRowBuilder, ButtonStyle } from "discord.js";
 import { MongoClient } from "mongodb";
-import { ButtonBuilder, ActionRowBuilder } from "discord.js";
+import jwt from "jsonwebtoken";
 import getStatsOnDiscord from "./getStatsOnDiscord.js";
+
+const DB_NAME = "SquadJS";
+const DB_COLLECTION = "mainstats";
+const LINK_STEAM_URL = process.env.LINK_STEAM_URL;
+const LINK_SIGN_SECRET = process.env.LINK_SIGN_SECRET;
 
 async function getStatsOnDiscordWithoutSteamID(db, interaction, steamApi) {
   const clientdb = new MongoClient(db);
-  const dbName = "SquadJS";
-  const dbCollection = "mainstats";
   const discordId = interaction.user.id;
-  const confirm = new ButtonBuilder()
-    .setCustomId("SteamID")
-    .setLabel("Привязать SteamID")
-    .setStyle("Success");
-  const row = new ActionRowBuilder().addComponents(confirm);
 
   try {
     await clientdb.connect();
-    const database = clientdb.db(dbName);
-    const collection = database.collection(dbCollection);
+    const database = clientdb.db(DB_NAME);
+    const collection = database.collection(DB_COLLECTION);
     const dbUser = await collection.findOne({ discordid: discordId });
 
     if (!dbUser) {
+      if (!LINK_STEAM_URL || !LINK_SIGN_SECRET) {
+        console.error(
+          "[getStatsOnDiscordWithoutSteamID] Нет LINK_STEAM_URL или LINK_SIGN_SECRET в окружении"
+        );
+        await interaction.editReply({
+          content:
+            "Система привязки Steam через сайт сейчас недоступна. Сообщите администратору.",
+          ephemeral: true,
+        });
+        return;
+      }
+
+      const token = jwt.sign({ discordId }, LINK_SIGN_SECRET, {
+        algorithm: "HS256",
+        expiresIn: "30m",
+      });
+
+      let url = LINK_STEAM_URL;
+      const sep = url.includes("?") ? "&" : "?";
+      url = `${url}${sep}token=${encodeURIComponent(token)}`;
+
+      const confirm = new ButtonBuilder()
+        .setLabel("Привязать Steam через сайт")
+        .setStyle(ButtonStyle.Link)
+        .setURL(url);
+
+      const row = new ActionRowBuilder().addComponents(confirm);
+
       await interaction.editReply({
         content:
-          "Привяжите ваш Steam профиль к дискорд аккаунту при помощи кнопки ниже!",
+          "Ваш Discord ещё не привязан к Steam.\n" +
+          "Нажмите кнопку ниже — откроется сайт, где нужно войти через Steam для привязки.",
         ephemeral: true,
         components: [row],
       });
@@ -52,7 +80,7 @@ async function getStatsOnDiscordWithoutSteamID(db, interaction, steamApi) {
           "Произошла ошибка при получении статистики. Пожалуйста, попробуйте позже.",
         ephemeral: true,
       });
-    } catch (_) {
+    } catch {
       await interaction.reply({
         content:
           "Произошла ошибка при получении статистики. Пожалуйста, попробуйте позже.",
