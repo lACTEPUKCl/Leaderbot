@@ -1,4 +1,9 @@
-import { ButtonBuilder, ActionRowBuilder, ButtonStyle } from "discord.js";
+import {
+  ButtonBuilder,
+  ActionRowBuilder,
+  ButtonStyle,
+  MessageFlags,
+} from "discord.js";
 import { MongoClient } from "mongodb";
 import jwt from "jsonwebtoken";
 import getStatsOnDiscord from "./getStatsOnDiscord.js";
@@ -28,7 +33,7 @@ async function getStatsOnDiscordWithoutSteamID(db, interaction, steamApi) {
         await interaction.editReply({
           content:
             "Система привязки Steam через сайт сейчас недоступна. Сообщите администратору.",
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
         return;
       }
@@ -53,7 +58,7 @@ async function getStatsOnDiscordWithoutSteamID(db, interaction, steamApi) {
         content:
           "Ваш Discord ещё не привязан к Steam.\n" +
           "Нажмите кнопку ниже — откроется сайт, где нужно войти через Steam для привязки.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
         components: [row],
       });
       return;
@@ -65,7 +70,7 @@ async function getStatsOnDiscordWithoutSteamID(db, interaction, steamApi) {
       await interaction.editReply({
         content:
           "В базе найден пользователь с вашим Discord, но без SteamID. Обратитесь к администратору.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
@@ -80,13 +85,13 @@ async function getStatsOnDiscordWithoutSteamID(db, interaction, steamApi) {
       await interaction.editReply({
         content:
           "Произошла ошибка при получении статистики. Пожалуйста, попробуйте позже.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     } catch {
       await interaction.reply({
         content:
           "Произошла ошибка при получении статистики. Пожалуйста, попробуйте позже.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
   } finally {
