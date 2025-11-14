@@ -7,17 +7,15 @@ import {
 import { MongoClient } from "mongodb";
 import jwt from "jsonwebtoken";
 import getStatsOnDiscord from "./getStatsOnDiscord.js";
-import { config } from "dotenv";
-config();
 
 const DB_NAME = "SquadJS";
 const DB_COLLECTION = "mainstats";
-const LINK_STEAM_URL = process.env.LINK_STEAM_URL;
-const LINK_SIGN_SECRET = process.env.LINK_SIGN_SECRET;
 
 async function getStatsOnDiscordWithoutSteamID(db, interaction, steamApi) {
   const clientdb = new MongoClient(db);
   const discordId = interaction.user.id;
+  const LINK_STEAM_URL = process.env.LINK_STEAM_URL;
+  const LINK_SIGN_SECRET = process.env.LINK_SIGN_SECRET;
 
   try {
     await clientdb.connect();
