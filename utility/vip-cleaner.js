@@ -236,20 +236,20 @@ async function runCycle(client) {
       );
     }
 
-    // if (expiredDiscordIds.length && vipExpiredMessage) {
-    //   for (const discordId of expiredDiscordIds) {
-    //     const member = members.get(discordId);
-    //     if (!member) continue;
+    if (expiredDiscordIds.length && vipExpiredMessage) {
+      for (const discordId of expiredDiscordIds) {
+        const member = members.get(discordId);
+        if (!member) continue;
 
-    //     member
-    //       .send(vipExpiredMessage)
-    //       .catch(() =>
-    //         console.log(
-    //           `[vipCleaner] Невозможно отправить сообщение пользователю ${discordId}`
-    //         )
-    //       );
-    //   }
-    // }
+        member
+          .send(vipExpiredMessage)
+          .catch(() =>
+            console.log(
+              `[vipCleaner] Невозможно отправить сообщение пользователю ${discordId}`
+            )
+          );
+      }
+    }
 
     if (expiredDiscordIds.length) {
       console.log(
