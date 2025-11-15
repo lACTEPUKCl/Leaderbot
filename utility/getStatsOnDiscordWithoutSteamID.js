@@ -1,4 +1,3 @@
-// getStatsOnDiscordWithoutSteamID.js
 import { ButtonBuilder, ActionRowBuilder, ButtonStyle } from "discord.js";
 import { MongoClient } from "mongodb";
 import jwt from "jsonwebtoken";
@@ -10,15 +9,8 @@ const DB_COLLECTION = "mainstats";
 async function getStatsOnDiscordWithoutSteamID(db, interaction, steamApi) {
   const clientdb = new MongoClient(db);
   const discordId = interaction.user.id;
-
   const LINK_STEAM_URL = process.env.LINK_STEAM_URL;
   const LINK_SIGN_SECRET = process.env.LINK_SIGN_SECRET;
-
-  console.log("[getStatsOnDiscordWithoutSteamID ENV]", {
-    discordId,
-    LINK_STEAM_URL,
-    hasSecret: !!LINK_SIGN_SECRET,
-  });
 
   try {
     await clientdb.connect();
