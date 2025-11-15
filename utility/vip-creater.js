@@ -1,4 +1,3 @@
-// Leaderbot/utility/vip-creater.js
 import fs from "fs";
 import { exec } from "child_process";
 import { MongoClient } from "mongodb";
@@ -11,15 +10,19 @@ const { adminsCfgPath, adminsCfgBackups, syncconfigPath } = options;
 const DB_URL = process.env.DATABASE_URL;
 const DB_NAME = "SquadJS";
 const DB_COLLECTION = "mainstats";
+
 const vipCreater = async (steamID, nickname, summ, discordId) => {
   if (!DB_URL) {
     console.error("[vipCreater] Не задан DATABASE_URL в окружении");
-    return;
+    return null;
   }
 
-  let daysToAdd = summ / 9.863;
-
+  const daysToAdd = summ / 9.863;
   const clientdb = new MongoClient(DB_URL);
+
+  let oldVipEndDate = null;
+  let newVipEndDate = null;
+  let isExtension = false;
 
   try {
     await clientdb.connect();
@@ -27,12 +30,15 @@ const vipCreater = async (steamID, nickname, summ, discordId) => {
     const collection = db.collection(DB_COLLECTION);
     const now = new Date();
     const user = await collection.findOne({ _id: steamID });
+
     let baseDate = now;
     if (user && user.vipEndDate instanceof Date && user.vipEndDate > now) {
       baseDate = user.vipEndDate;
+      oldVipEndDate = user.vipEndDate;
+      isExtension = true;
     }
 
-    const newVipEndDate = new Date(
+    newVipEndDate = new Date(
       baseDate.getTime() + daysToAdd * 24 * 60 * 60 * 1000
     );
 
@@ -123,8 +129,19 @@ const vipCreater = async (steamID, nickname, summ, discordId) => {
         });
       });
     });
+
+    return {
+      steamID,
+      nickname,
+      summ,
+      daysToAdd,
+      isExtension,
+      oldVipEndDate,
+      newVipEndDate,
+    };
   } catch (err) {
     console.error("[vipCreater] Ошибка работы с базой:", err);
+    return null;
   } finally {
     await clientdb.close().catch(() => {});
   }

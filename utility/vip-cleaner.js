@@ -1,7 +1,9 @@
+// Leaderbot/utility/vip-cleaner.js
 import fs from "fs";
 import { exec } from "child_process";
 import { MongoClient } from "mongodb";
 import { config as loadEnv } from "dotenv";
+import { EmbedBuilder } from "discord.js";
 import options from "../config.js";
 
 loadEnv();
@@ -15,6 +17,7 @@ const {
   discordServerId,
   vipRoleID,
   donationLink,
+  vipLogChannelId,
 } = options;
 const DB_URL = process.env.DATABASE_URL;
 const DB_NAME = "SquadJS";
@@ -44,7 +47,7 @@ async function runCycle(client) {
     const expiredUsers = await collection
       .find(
         { vipEndDate: { $lte: now } },
-        { projection: { _id: 1, discordid: 1 } }
+        { projection: { _id: 1, discordid: 1, name: 1, vipEndDate: 1 } }
       )
       .toArray();
 
@@ -200,6 +203,18 @@ async function runCycle(client) {
     const members = await guild.members.fetch();
     const vipRole = await guild.roles.fetch(vipRoleID);
 
+    let logChannel = null;
+    if (vipLogChannelId) {
+      try {
+        logChannel = await guild.channels.fetch(vipLogChannelId);
+      } catch (err) {
+        console.error(
+          "[vipCleaner] Не удалось получить vipLogChannelId из гильдии:",
+          err
+        );
+      }
+    }
+
     if (!vipRole) {
       console.error(
         "[vipCleaner] Не удалось найти VIP-роль по vipRoleID, синхронизация ролей пропущена."
@@ -253,6 +268,45 @@ async function runCycle(client) {
       console.log(
         `[vipCleaner] Синхронизация ролей завершена. Выдано: ${addedCount}, снято: ${removedCount}.`
       );
+    }
+
+    if (logChannel && expiredUsers.length) {
+      for (const u of expiredUsers) {
+        const embed = new EmbedBuilder()
+          .setTitle("VIP закончился")
+          .setColor(0xffa500)
+          .setDescription(
+            "Срок действия VIP для пользователя истёк и был очищен в БД/конфигах."
+          )
+          .addFields(
+            { name: "SteamID", value: u._id || "—", inline: true },
+            {
+              name: "Discord",
+              value: u.discordid ? `<@${u.discordid}>` : "—",
+              inline: true,
+            },
+            {
+              name: "Ник в БД",
+              value: u.name || "—",
+              inline: false,
+            },
+            {
+              name: "Дата окончания VIP",
+              value: u.vipEndDate ? u.vipEndDate.toLocaleString("ru-RU") : "—",
+              inline: false,
+            }
+          )
+          .setTimestamp();
+
+        try {
+          await logChannel.send({ embeds: [embed] });
+        } catch (err) {
+          console.error(
+            "[vipCleaner] Ошибка отправки embed об окончании VIP:",
+            err
+          );
+        }
+      }
     }
 
     if (expiredDiscordPairs.length && vipExpiredMessage) {
