@@ -35,7 +35,7 @@ const execute = async (interaction) => {
         ephemeral: true,
       });
     }
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply();
     const userParam = interaction.options.getString("steamid64");
     if (userParam) {
       await getStatsOnDiscord(db, userParam, interaction, steamApi);
