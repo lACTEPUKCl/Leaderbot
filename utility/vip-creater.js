@@ -11,7 +11,7 @@ const DB_URL = process.env.DATABASE_URL;
 const DB_NAME = "SquadJS";
 const DB_COLLECTION = "mainstats";
 
-const vipCreater = async (steamID, nickname, summ, discordId) => {
+const vipCreater = async (steamID, nickname, summ) => {
   if (!DB_URL) {
     console.error("[vipCreater] Не задан DATABASE_URL в окружении");
     return null;
@@ -47,8 +47,6 @@ const vipCreater = async (steamID, nickname, summ, discordId) => {
       {
         $set: {
           vipEndDate: newVipEndDate,
-          discordid: discordId,
-          name: nickname,
         },
       },
       { upsert: true }
