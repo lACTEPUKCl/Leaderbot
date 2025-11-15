@@ -14,6 +14,7 @@ const {
   vipExpiredMessage,
   discordServerId,
   vipRoleID,
+  donationLink,
 } = options;
 const DB_URL = process.env.DATABASE_URL;
 const DB_NAME = "SquadJS";
@@ -39,6 +40,7 @@ async function runCycle(client) {
     const db = clientdb.db(DB_NAME);
     const collection = db.collection(DB_COLLECTION);
     const now = new Date();
+
     const expiredUsers = await collection
       .find(
         { vipEndDate: { $lte: now } },
@@ -50,9 +52,17 @@ async function runCycle(client) {
       .map((u) => u._id)
       .filter((id) => typeof id === "string" && id.length > 0);
 
-    const expiredDiscordIds = expiredUsers
-      .map((u) => u.discordid)
-      .filter((id) => typeof id === "string" && id.length > 0);
+    const expiredDiscordPairs = expiredUsers
+      .filter(
+        (u) =>
+          typeof u.discordid === "string" &&
+          u.discordid.length > 0 &&
+          typeof u._id === "string" &&
+          u._id.length > 0
+      )
+      .map((u) => ({ discordId: u.discordid, steamId: u._id }));
+
+    const expiredDiscordIds = expiredDiscordPairs.map((p) => p.discordId);
 
     if (expiredSteamIds.length) {
       await collection.updateMany(
@@ -74,8 +84,8 @@ async function runCycle(client) {
     }
 
     const lines = originalData.split("\r\n");
-    let lastEndIndex = -1;
 
+    let lastEndIndex = -1;
     for (let i = 0; i < lines.length; i++) {
       if (lines[i].startsWith("//END")) {
         lastEndIndex = i;
@@ -85,32 +95,28 @@ async function runCycle(client) {
 
     const filteredLines = [];
     const removedLines = [];
-    const activeVipSteamSet = new Set();
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
 
       if (i >= playerStartIndex) {
-        const match = line.match(/^Admin=(\d+):Reserved/);
-        if (match) {
-          const steamIdInFile = match[1];
+        const matchVip = line.match(/^Admin=(\d+):Reserved/);
+        if (matchVip) {
+          const steamIdInFile = matchVip[1];
 
           if (expiredSteamIds.includes(steamIdInFile)) {
             removedLines.push(line);
             continue;
           }
-
-          activeVipSteamSet.add(steamIdInFile);
         }
       }
 
       filteredLines.push(line);
     }
 
-    const activeVipSteamIds = Array.from(activeVipSteamSet);
-
+    let newData = originalData;
     if (removedLines.length) {
-      const newData = filteredLines.join("\r\n");
+      newData = filteredLines.join("\r\n");
 
       await fsp.writeFile(adminsFilePath, newData);
       console.log(
@@ -149,16 +155,29 @@ async function runCycle(client) {
       });
     } else {
       console.log(
-        "[vipCleaner] В Admins.cfg никого не удалили, backup/sync не делаем."
+        "[vipCleaner] В VIP-блоке Admins.cfg никого не удалили, backup/sync не делаем."
       );
     }
 
+    const linesForSync = newData.split("\r\n");
+    const activeSteamSet = new Set();
+
+    for (const line of linesForSync) {
+      const matchAnyAdmin = line.match(/^Admin=(\d+):/);
+      if (matchAnyAdmin) {
+        const steamIdInFile = matchAnyAdmin[1];
+        activeSteamSet.add(steamIdInFile);
+      }
+    }
+
+    const activeSteamIds = Array.from(activeSteamSet);
+
     let validVipDiscordIds = [];
 
-    if (activeVipSteamIds.length) {
+    if (activeSteamIds.length) {
       const docs = await collection
         .find(
-          { _id: { $in: activeVipSteamIds } },
+          { _id: { $in: activeSteamIds } },
           { projection: { discordid: 1 } }
         )
         .toArray();
@@ -168,11 +187,11 @@ async function runCycle(client) {
         .filter((id) => typeof id === "string" && id.length > 0);
 
       console.log(
-        `[vipCleaner] Активных VIP по Admins.cfg: ${activeVipSteamIds.length}, с discordid в БД: ${validVipDiscordIds.length}`
+        `[vipCleaner] Всего Admin-строк в Admins.cfg: ${activeSteamIds.length}, с discordid в БД: ${validVipDiscordIds.length}`
       );
     } else {
       console.log(
-        "[vipCleaner] В Admins.cfg не найдено ни одной VIP-записи Admin=...:Reserved."
+        "[vipCleaner] В Admins.cfg не найдено ни одной строки Admin=...:..."
       );
     }
 
@@ -236,13 +255,18 @@ async function runCycle(client) {
       );
     }
 
-    if (expiredDiscordIds.length && vipExpiredMessage) {
-      for (const discordId of expiredDiscordIds) {
+    if (expiredDiscordPairs.length && vipExpiredMessage) {
+      for (const { discordId, steamId } of expiredDiscordPairs) {
         const member = members.get(discordId);
         if (!member) continue;
 
+        const text =
+          donationLink && steamId
+            ? `${vipExpiredMessage}\n${donationLink}?message=${steamId}`
+            : vipExpiredMessage;
+
         member
-          .send(vipExpiredMessage)
+          .send(text)
           .catch(() =>
             console.log(
               `[vipCleaner] Невозможно отправить сообщение пользователю ${discordId}`
