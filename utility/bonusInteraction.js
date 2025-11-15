@@ -1,18 +1,17 @@
 import { MongoClient } from "mongodb";
 import creater from "./vip-creater.js";
-import { ButtonBuilder, ActionRowBuilder } from "discord.js";
+import { ButtonBuilder, ActionRowBuilder, ButtonStyle } from "discord.js";
 import options from "../config.js";
+import jwt from "jsonwebtoken";
 
 async function updateUserBonuses(collection, steamID, count) {
   if (!steamID || !count) return;
+
+  const user = { _id: steamID };
   const doc = {
     $inc: {
       bonuses: count,
     },
-  };
-
-  const user = {
-    _id: steamID,
   };
 
   await collection.updateOne(user, doc);
@@ -23,11 +22,9 @@ async function bonusInteraction(interaction, db) {
   const dbName = "SquadJS";
   const dbCollection = "mainstats";
   const discordId = interaction.user.id;
-  const confirm = new ButtonBuilder()
-    .setCustomId("SteamID")
-    .setLabel("Привязать SteamID")
-    .setStyle("Success");
-  const row = new ActionRowBuilder().addComponents(confirm);
+  const LINK_STEAM_URL = process.env.LINK_STEAM_URL;
+  const LINK_SIGN_SECRET = process.env.LINK_SIGN_SECRET;
+
   try {
     await clientdb.connect();
     const database = clientdb.db(dbName);
@@ -37,9 +34,39 @@ async function bonusInteraction(interaction, db) {
     });
 
     if (!dbUser) {
+      if (!LINK_STEAM_URL || !LINK_SIGN_SECRET) {
+        console.error(
+          "[bonusInteraction] Нет LINK_STEAM_URL или LINK_SIGN_SECRET в окружении"
+        );
+        await interaction.reply({
+          content:
+            "Система привязки Steam через сайт сейчас недоступна. Сообщите администратору.",
+          ephemeral: true,
+        });
+        return;
+      }
+
+      const token = jwt.sign({ discordId }, LINK_SIGN_SECRET, {
+        algorithm: "HS256",
+        expiresIn: "30m",
+      });
+
+      let url = LINK_STEAM_URL;
+      const sep = url.includes("?") ? "&" : "?";
+      url = `${url}${sep}token=${encodeURIComponent(token)}`;
+
+      const confirm = new ButtonBuilder()
+        .setLabel("Привязать Steam через сайт")
+        .setStyle(ButtonStyle.Link)
+        .setURL(url);
+
+      const row = new ActionRowBuilder().addComponents(confirm);
+
       await interaction.reply({
         content:
-          "Привяжите ваш Steam профиль к дискорд аккаунту при помощи кнопки ниже!",
+          "Ваш Discord ещё не привязан к Steam.\n" +
+          "Нажмите кнопку ниже — откроется сайт, где нужно войти через Steam для привязки.\n" +
+          "После привязки вы сможете потратить бонусные баллы на VIP статус.",
         ephemeral: true,
         components: [row],
       });
@@ -48,10 +75,20 @@ async function bonusInteraction(interaction, db) {
 
     const { bonuses, _id, name } = dbUser;
 
-    if (bonuses < 15000) {
-      const changeBonuses = Math.abs(15000 - bonuses);
+    if (!_id) {
       await interaction.reply({
-        content: `Не хватает ${changeBonuses} бонусных баллов для получения VIP статуса, требуется 15000 бонусных баллов`,
+        content:
+          "В базе найден пользователь с вашим Discord, но без SteamID. Обратитесь к администратору.",
+        ephemeral: true,
+      });
+      return;
+    }
+
+    if (!bonuses || bonuses < 15000) {
+      const current = bonuses || 0;
+      const changeBonuses = Math.abs(15000 - current);
+      await interaction.reply({
+        content: `Не хватает ${changeBonuses} бонусных баллов для получения VIP статуса, требуется 15000 бонусных баллов.`,
         ephemeral: true,
       });
       return;
@@ -83,7 +120,7 @@ async function bonusInteraction(interaction, db) {
     await creater.vipCreater(_id, name, 300, discordId);
 
     await interaction.reply({
-      content: `VIP статус успешно получен, можно проверить состояние нажав кнопку выше!`,
+      content: `VIP статус успешно получен, можно проверить состояние, нажав кнопку проверки VIP!`,
       ephemeral: true,
     });
   } catch (e) {
