@@ -7,22 +7,26 @@ import options from "../config.js";
 loadEnv();
 
 const fsp = fs.promises;
-const { adminsCfgPath, adminsCfgBackups, syncconfigPath, vipExpiredMessage } =
-  options;
+const {
+  adminsCfgPath,
+  adminsCfgBackups,
+  syncconfigPath,
+  vipExpiredMessage,
+  discordServerId,
+  vipRoleID,
+} = options;
 const DB_URL = process.env.DATABASE_URL;
 const DB_NAME = "SquadJS";
 const DB_COLLECTION = "mainstats";
-const DISCORD_GUILD_ID = process.env.DISCORD_GUILD_ID;
-const VIP_ROLE_ID = process.env.VIP_ROLE_ID;
 
 async function runCycle(client) {
   if (!DB_URL) {
     console.error("[vipCleaner] Не задан DATABASE_URL в окружении");
     return;
   }
-  if (!DISCORD_GUILD_ID || !VIP_ROLE_ID) {
+  if (!discordServerId || !vipRoleID) {
     console.error(
-      "[vipCleaner] Не заданы DISCORD_GUILD_ID или VIP_ROLE_ID в окружении"
+      "[vipCleaner] Не заданы discordServerId или vipRoleID в config.js"
     );
     return;
   }
@@ -173,26 +177,26 @@ async function runCycle(client) {
     }
 
     const validVipSet = new Set(validVipDiscordIds);
-    const guild = await client.guilds.fetch(DISCORD_GUILD_ID);
+    const guild = await client.guilds.fetch(discordServerId);
     const members = await guild.members.fetch();
-    const vipRole = await guild.roles.fetch(VIP_ROLE_ID);
+    const vipRole = await guild.roles.fetch(vipRoleID);
 
     if (!vipRole) {
       console.error(
-        "[vipCleaner] Не удалось найти VIP-роль по VIP_ROLE_ID, синхронизация ролей пропущена."
+        "[vipCleaner] Не удалось найти VIP-роль по vipRoleID, синхронизация ролей пропущена."
       );
     } else {
       let removedCount = 0;
       let addedCount = 0;
 
       for (const member of members.values()) {
-        const hasRole = member.roles.cache.has(VIP_ROLE_ID);
+        const hasRole = member.roles.cache.has(vipRoleID);
         const shouldHave = validVipSet.has(member.id);
 
         if (hasRole && !shouldHave) {
           try {
             await member.roles.remove(
-              VIP_ROLE_ID,
+              vipRoleID,
               "VIP снят vipCleaner: нет в Admins.cfg или нет discordid в БД"
             );
             removedCount++;
@@ -211,10 +215,10 @@ async function runCycle(client) {
           continue;
         }
 
-        if (!member.roles.cache.has(VIP_ROLE_ID)) {
+        if (!member.roles.cache.has(vipRoleID)) {
           try {
             await member.roles.add(
-              VIP_ROLE_ID,
+              vipRoleID,
               "VIP выдан vipCleaner: есть в Admins.cfg и в БД (discordid)"
             );
             addedCount++;
