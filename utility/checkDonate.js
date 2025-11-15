@@ -300,7 +300,7 @@ async function main(guild, db, steamApi, donateUrl) {
                 "ru-RU"
               )}** по **${newVipEndDate.toLocaleDateString("ru-RU")}**.`
             : `VIP выдан на **${daysToAdd.toFixed(
-                2
+                0
               )}** дней.\nДата окончания: **${newVipEndDate.toLocaleDateString(
                 "ru-RU"
               )}**.`;
