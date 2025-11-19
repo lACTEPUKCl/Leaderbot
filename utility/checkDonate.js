@@ -295,7 +295,7 @@ async function main(guild, db, steamApi, donateUrl) {
 
           const description = isExtension
             ? `VIP продлён на **${daysToAdd.toFixed(
-                2
+                0
               )}** дней.\nС **${oldVipEndDate.toLocaleDateString(
                 "ru-RU"
               )}** по **${newVipEndDate.toLocaleDateString("ru-RU")}**.`
