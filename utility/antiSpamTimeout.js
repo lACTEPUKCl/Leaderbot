@@ -5,7 +5,7 @@ export function registerAntiSpamTimeout(
   logChannelId,
   notifyUserId,
   duplicateThresholdSingleChannel = 3,
-  windowMs = 90 * 1000,
+  windowMs = 10 * 1000,
   timeoutMs = 24 * 60 * 60 * 1000
 ) {
   const userRecent = new Map();
