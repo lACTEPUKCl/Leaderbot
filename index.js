@@ -35,6 +35,20 @@ import clanVipCleaner from "./utility/clanVipCleaner.js";
 import "./utility/fonts.js";
 import { initLobbyButtons } from "./utility/lobbyButtons.js";
 import { registerAntiSpamTimeout } from "./utility/antiSpamTimeout.js";
+import { HttpsProxyAgent } from "https-proxy-agent";
+import { ProxyAgent, setGlobalDispatcher } from "undici";
+
+const proxyUrl = process.env.DISCORD_PROXY_URL;
+let wsProxyAgent = null;
+
+if (proxyUrl) {
+  console.log("[BOT] Using Discord proxy:", proxyUrl);
+
+  const restProxy = new ProxyAgent(proxyUrl);
+  setGlobalDispatcher(restProxy);
+
+  wsProxyAgent = new HttpsProxyAgent(proxyUrl);
+}
 
 const client = new Client({
   intents: [
@@ -46,6 +60,7 @@ const client = new Client({
     GatewayIntentBits.GuildMessageReactions,
     GatewayIntentBits.GuildVoiceStates,
   ],
+  ...(wsProxyAgent ? { ws: { agent: wsProxyAgent } } : {}),
 });
 
 client.commands = new Collection();
