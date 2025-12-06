@@ -3,7 +3,28 @@ import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
 const JOIN_PATH = "/api/join-link";
 const REFRESH_MS = Number(process.env.REFRESH_MS || 30000);
 
-let SERVERS = [];
+const SERVERS = [
+  {
+    label: "RNS #1 Classic",
+    name: "Русский Народный Сервер #1",
+  },
+  {
+    label: "RNS #2 RAAS/AAS",
+    name: "Русский Народный Сервер #2",
+  },
+  {
+    label: "RNS #3 INV",
+    name: "Русский Народный Сервер #3",
+  },
+  {
+    label: "RNS #4",
+    name: "Русский Народный Сервер #4",
+  },
+  {
+    label: "RNS KOTH",
+    name: "Русский Народный Модовый #4",
+  },
+];
 
 export async function initLobbyButtons(
   client,
@@ -11,26 +32,6 @@ export async function initLobbyButtons(
   _steamApiKeyNotUsed,
   domain
 ) {
-  try {
-    SERVERS = JSON.parse(process.env.SERVERS_CONFIG || "[]");
-
-    if (!Array.isArray(SERVERS) || !SERVERS.length) {
-      throw new Error("SERVERS_CONFIG empty or not array");
-    }
-
-    for (const srv of SERVERS) {
-      if (!srv || typeof srv.name !== "string" || !srv.name.trim()) {
-        throw new Error("Each server must have non-empty 'name' field");
-      }
-    }
-  } catch (err) {
-    console.error(
-      "ERROR: SERVERS_CONFIG must be valid JSON array of { name, label? }",
-      err
-    );
-    process.exit(1);
-  }
-
   if (!domain) {
     console.error(
       "ERROR: domain is required (used to build http redirect links)"
@@ -78,7 +79,9 @@ async function editMessage(msg, domain) {
 function buildRow(domain) {
   const row = new ActionRowBuilder();
 
-  if (!SERVERS || !SERVERS.length) return row;
+  if (!SERVERS || !SERVERS.length) {
+    return row;
+  }
 
   for (const srv of SERVERS) {
     const fullName = (srv.name || "").trim();
