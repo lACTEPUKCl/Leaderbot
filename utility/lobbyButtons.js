@@ -32,6 +32,8 @@ export async function initLobbyButtons(
   _steamApiKeyNotUsed,
   domain
 ) {
+  console.log("[lobbyButtons] initLobbyButtons, SERVERS =", SERVERS.length);
+
   if (!domain) {
     console.error(
       "ERROR: domain is required (used to build http redirect links)"
@@ -69,6 +71,11 @@ async function editMessage(msg, domain) {
   const row = buildRow(domain);
   const rowData = row.toJSON();
 
+  console.log(
+    "[lobbyButtons] rowData.components.length =",
+    rowData.components.length
+  );
+
   if (rowData.components.length) {
     await msg.edit({ components: [row] });
   } else {
@@ -77,9 +84,12 @@ async function editMessage(msg, domain) {
 }
 
 function buildRow(domain) {
+  console.log("[lobbyButtons] buildRow, SERVERS.length =", SERVERS.length);
+
   const row = new ActionRowBuilder();
 
   if (!SERVERS || !SERVERS.length) {
+    console.warn("[lobbyButtons] SERVERS пустой, кнопки не создаём");
     return row;
   }
 
