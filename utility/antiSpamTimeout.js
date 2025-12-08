@@ -36,6 +36,13 @@ export function registerAntiSpamTimeout(
       const until = punishedUntil.get(key);
       if (until && now < until) return;
 
+      const analysis = analyzeMessage(message);
+      const isSuspicious =
+        analysis.hasLink ||
+        analysis.hasInvite ||
+        analysis.hasEveryoneMention ||
+        analysis.hasSuspiciousKeywords;
+
       const hash = makeHash(message);
       const recs = userRecent.get(key) ?? [];
       const fresh = recs.filter((r) => now - r.timestamp <= windowMs);
@@ -55,13 +62,29 @@ export function registerAntiSpamTimeout(
       if (same.length < 2) return;
 
       const perChannel = new Map();
-      for (const r of same)
+      for (const r of same) {
         perChannel.set(r.channelId, (perChannel.get(r.channelId) || 0) + 1);
+      }
       const distinctChannels = perChannel.size;
       const maxInOneChannel = Math.max(...perChannel.values());
-      const crossChannelTrigger = distinctChannels >= 3;
-      const singleChannelTrigger =
-        maxInOneChannel >= duplicateThresholdSingleChannel;
+
+      let crossChannelTrigger = false;
+      let singleChannelTrigger = false;
+
+      if (isSuspicious) {
+        crossChannelTrigger = distinctChannels >= 2 && same.length >= 2;
+        const suspiciousThreshold = Math.min(
+          2,
+          duplicateThresholdSingleChannel
+        );
+        singleChannelTrigger = maxInOneChannel >= suspiciousThreshold;
+      } else {
+        const extraBoost = analysis.length <= 8 ? 2 : 0;
+        const normalThreshold = duplicateThresholdSingleChannel + extraBoost;
+
+        crossChannelTrigger = distinctChannels >= 3 && same.length >= 3;
+        singleChannelTrigger = maxInOneChannel >= normalThreshold;
+      }
 
       if (crossChannelTrigger || singleChannelTrigger) {
         await deleteMessages(message.guild, same);
@@ -103,16 +126,19 @@ function isTrivialMessage(message) {
 
   if (hasAttachments) return false;
 
-  const noSpace = content.replace(/\s+/g, "");
-  if (!noSpace) return true;
-
-  if (noSpace.length <= 3) return true;
-
   const hasLink =
     /\bhttps?:\/\//i.test(content) ||
     /discord\.gg/i.test(content) ||
     /t\.me\//i.test(content);
-  if (!hasLink && noSpace.length <= 6) return true;
+  const hasEveryoneMention = /@everyone|@here/.test(content);
+  const hasInvite = /discord\.gg\/[A-Za-z0-9]+/i.test(content);
+
+  if (hasLink || hasEveryoneMention || hasInvite) return false;
+
+  const noSpace = content.replace(/\s+/g, "");
+  if (!noSpace) return true;
+
+  if (noSpace.length <= 3) return true;
 
   const uniqueChars = new Set(noSpace.toLowerCase()).size;
   if (noSpace.length <= 10 && uniqueChars <= 2) {
@@ -120,6 +146,32 @@ function isTrivialMessage(message) {
   }
 
   return false;
+}
+
+function analyzeMessage(message) {
+  const raw = (message.content || "").trim();
+  const content = raw.toLowerCase();
+  const noSpace = content.replace(/\s+/g, "");
+
+  const hasAttachments = message.attachments?.size > 0;
+  const hasLink =
+    /\bhttps?:\/\//i.test(content) || /discord\.gg/i.test(content);
+  const hasInvite = /discord\.gg\/[a-z0-9]+/i.test(content);
+  const hasEveryoneMention = /@everyone|@here/.test(content);
+
+  const hasSuspiciousKeywords =
+    /nitro|steam|скидк|розыгрыш|giveaway|crypto|крипт|биткоин|bitcoin/i.test(
+      content
+    );
+
+  return {
+    length: noSpace.length,
+    hasAttachments,
+    hasLink,
+    hasInvite,
+    hasEveryoneMention,
+    hasSuspiciousKeywords,
+  };
 }
 
 function makeHash(message) {
@@ -134,10 +186,11 @@ function makeHash(message) {
 
 async function deleteMessages(guild, list) {
   const map = new Map();
-  for (const r of list)
+  for (const r of list) {
     (map.get(r.channelId) ?? map.set(r.channelId, []).get(r.channelId)).push(
       r.messageId
     );
+  }
   for (const [channelId, ids] of map) {
     const ch = guild.channels.cache.get(channelId);
     if (!ch) continue;
