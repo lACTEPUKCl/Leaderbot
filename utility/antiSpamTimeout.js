@@ -29,6 +29,8 @@ export function registerAntiSpamTimeout(
       if (message.member.permissions.has(PermissionFlagsBits.Administrator))
         return;
 
+      if (isTrivialMessage(message)) return;
+
       const key = `${message.guild.id}:${message.author.id}`;
       const now = Date.now();
       const until = punishedUntil.get(key);
@@ -91,6 +93,33 @@ export function registerAntiSpamTimeout(
       console.error("[antiSpamTimeout]", e);
     }
   });
+}
+
+function isTrivialMessage(message) {
+  const content = (message.content || "").trim();
+  const hasAttachments = message.attachments?.size > 0;
+
+  if (!content && !hasAttachments) return true;
+
+  if (hasAttachments) return false;
+
+  const noSpace = content.replace(/\s+/g, "");
+  if (!noSpace) return true;
+
+  if (noSpace.length <= 3) return true;
+
+  const hasLink =
+    /\bhttps?:\/\//i.test(content) ||
+    /discord\.gg/i.test(content) ||
+    /t\.me\//i.test(content);
+  if (!hasLink && noSpace.length <= 6) return true;
+
+  const uniqueChars = new Set(noSpace.toLowerCase()).size;
+  if (noSpace.length <= 10 && uniqueChars <= 2) {
+    return true;
+  }
+
+  return false;
 }
 
 function makeHash(message) {
@@ -161,10 +190,10 @@ async function notify(guild, channelId, content) {
 }
 
 function toHuman(ms) {
-  const h = Math.floor(ms / 3_600_000),
-    m = Math.floor((ms % 3_600_000) / 60_000);
+  const h = Math.floor(ms / 3_600_000);
+  const m = Math.floor((ms % 3_600_000) / 60_000);
   if (h && m) return `${h}ч ${m}м`;
   if (h) return `${h}ч`;
-  if (m) return `${м}м`;
+  if (m) return `${m}м`;
   return `${Math.floor(ms / 1000)}с`;
 }
