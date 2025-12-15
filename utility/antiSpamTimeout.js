@@ -9,10 +9,10 @@ const DEFAULT_CONFIG = {
   // таймаут по умолчанию
   timeoutMs: 24 * 60 * 60 * 1000,
 
-  // минимум одинаковых сообщений (по hash), чтобы вообще начинать проверку
+  // минимум одинаковых сообщений, чтобы вообще начинать проверку
   minSameToCheck: 3,
 
-  // канал логов и кого тегать (можно переопределить в options.antiSpam)
+  // канал логов и кого тегать
   logChannelId: null,
   notifyUserId: null,
 
@@ -26,7 +26,7 @@ const DEFAULT_CONFIG = {
   attachmentOnly: {
     enabled: true,
     punishMode: "delete_only", // "delete_only" | "timeout"
-    duplicateThresholdSingleChannel: 6,
+    duplicateThresholdSingleChannel: 4,
     crossChannelDistinctMin: 4,
     crossChannelSameMin: 4,
     punishedCooldownMs: 10_000,
@@ -69,7 +69,6 @@ function mergeConfig(userCfg) {
 
 export function registerAntiSpamTimeout(client, options) {
   const config = mergeConfig(options?.antiSpam);
-
   if (!config.enabled) return;
 
   const logChannelId = config.logChannelId;
@@ -98,11 +97,18 @@ export function registerAntiSpamTimeout(client, options) {
 
   client.on("messageCreate", async (message) => {
     try {
-      if (!message.guild || message.author?.bot || !message.member) return;
+      if (!message.guild || message.author?.bot) return;
+
+      const member =
+        message.member ??
+        (await message.guild.members
+          .fetch(message.author.id)
+          .catch(() => null));
+
+      if (!member) return;
 
       if (config.ignoreAdmins) {
-        if (message.member.permissions.has(PermissionFlagsBits.Administrator))
-          return;
+        if (member.permissions.has(PermissionFlagsBits.Administrator)) return;
       }
 
       if (isTrivialMessage(message)) return;
@@ -121,9 +127,9 @@ export function registerAntiSpamTimeout(client, options) {
         analysis.hasEveryoneMention ||
         analysis.hasSuspiciousKeywords;
 
-      const hash = makeHash(message);
-      const recs = userRecent.get(key) ?? [];
+      const hash = makeHash(message, analysis);
 
+      const recs = userRecent.get(key) ?? [];
       const windowMs = config.windowMs ?? 10_000;
       const fresh = recs.filter((r) => now - r.timestamp <= windowMs);
 
@@ -167,7 +173,7 @@ export function registerAntiSpamTimeout(client, options) {
           same.length >= (a.crossChannelSameMin ?? 4);
 
         singleChannelTrigger =
-          maxInOneChannel >= (a.duplicateThresholdSingleChannel ?? 6);
+          maxInOneChannel >= (a.duplicateThresholdSingleChannel ?? 4);
       } else if (isSuspicious) {
         const s = config.suspicious;
 
@@ -222,7 +228,7 @@ export function registerAntiSpamTimeout(client, options) {
       }
 
       const timeoutMs = config.timeoutMs ?? 24 * 60 * 60 * 1000;
-      const ok = await timeoutMember(message.guild, message.member, timeoutMs);
+      const ok = await timeoutMember(message.guild, member, timeoutMs);
 
       if (!ok) {
         if (logChannelId) {
@@ -318,21 +324,32 @@ function analyzeMessage(message) {
   };
 }
 
-function makeHash(message) {
+function makeHash(message, analysis) {
   const text = (message.content || "").trim();
 
-  const attachments = Array.from(message.attachments?.values?.() || [])
-    .map((a) => a.url || a.proxyURL || a.name || "")
+  const attachmentsSig = Array.from(message.attachments?.values?.() || [])
+    .map((a) => {
+      const w = a.width ?? 0;
+      const h = a.height ?? 0;
+      const ct = a.contentType ?? "";
+      const name = a.name ?? "";
+      const size = a.size ?? 0;
+      return `${name}|${size}|${ct}|${w}x${h}`;
+    })
     .filter(Boolean)
     .sort()
     .join("|");
 
-  const stickers = Array.from(message.stickers?.values?.() || [])
+  const stickersSig = Array.from(message.stickers?.values?.() || [])
     .map((s) => `sticker:${s.id}`)
     .sort()
     .join("|");
 
-  return `${text}||${attachments}||${stickers}`;
+  if (analysis?.attachmentOnly) {
+    return `ATTACHMENT_ONLY||${attachmentsSig}||${stickersSig}`;
+  }
+
+  return `${text}||${attachmentsSig}||${stickersSig}`;
 }
 
 async function deleteMessages(guild, list) {
