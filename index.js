@@ -67,14 +67,7 @@ client.commands = new Collection();
 const commands = await getCommands();
 const userVoiceChannels = new Map();
 const interCollections = new Map();
-registerAntiSpamTimeout(
-  client,
-  "1214887967060004875",
-  "132225869698564096",
-  3,
-  90 * 1000,
-  24 * 60 * 60 * 1000
-);
+registerAntiSpamTimeout(client, options);
 
 for (const command of commands) {
   if ("data" in command && "execute" in command)
