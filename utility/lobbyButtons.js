@@ -20,10 +20,6 @@ const SERVERS = [
     label: "RNS #4",
     name: "Русский Народный Сервер #4",
   },
-  {
-    label: "RNS KOTH",
-    name: "Русский Народный Модовый #4",
-  },
 ];
 
 export async function initLobbyButtons(
