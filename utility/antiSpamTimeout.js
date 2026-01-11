@@ -327,7 +327,29 @@ function analyzeMessage(message) {
 function makeHash(message, analysis) {
   const text = (message.content || "").trim();
 
-  const attachmentsSig = Array.from(message.attachments?.values?.() || [])
+  const attachments = Array.from(message.attachments?.values?.() || []);
+  const stickers = Array.from(message.stickers?.values?.() || []);
+
+  if (analysis?.attachmentOnly) {
+    const attachmentsSig = attachments
+      .map((a) => {
+        const w = a.width ?? 0;
+        const h = a.height ?? 0;
+        const ct = (a.contentType ?? "").split(";")[0];
+        return `${ct}|${w}x${h}`;
+      })
+      .sort()
+      .join("|");
+
+    const stickersSig = stickers
+      .map((s) => `sticker:${s.id}`)
+      .sort()
+      .join("|");
+
+    return `ATTACHMENT_ONLY||count:${attachments.length}||${attachmentsSig}||${stickersSig}`;
+  }
+
+  const attachmentsSig = attachments
     .map((a) => {
       const w = a.width ?? 0;
       const h = a.height ?? 0;
@@ -340,14 +362,10 @@ function makeHash(message, analysis) {
     .sort()
     .join("|");
 
-  const stickersSig = Array.from(message.stickers?.values?.() || [])
+  const stickersSig = stickers
     .map((s) => `sticker:${s.id}`)
     .sort()
     .join("|");
-
-  if (analysis?.attachmentOnly) {
-    return `ATTACHMENT_ONLY||${attachmentsSig}||${stickersSig}`;
-  }
 
   return `${text}||${attachmentsSig}||${stickersSig}`;
 }
