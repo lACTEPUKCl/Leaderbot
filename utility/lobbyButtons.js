@@ -6,19 +6,19 @@ const REFRESH_MS = Number(process.env.REFRESH_MS || 30000);
 const SERVERS = [
   {
     label: "RNS #1 Classic",
-    name: "Русский Народный Сервер #1",
+    name: "  [ RU ] Русский Народный Сервер #1 [Classic] | https://discord.gg/rn-server",
   },
   {
     label: "RNS #2 RAAS/AAS",
-    name: "Русский Народный Сервер #2",
+    name: "  [ RU ] Русский Народный Сервер #2 [RAAS/AAS] | https://discord.gg/rn-server",
   },
   {
     label: "RNS #3 INV",
-    name: "Русский Народный Сервер #3",
+    name: "  [ RU ] Русский Народный Сервер #3 [INV] | https://discord.gg/rn-server",
   },
   {
     label: "RNS #4",
-    name: "Русский Народный Сервер #4",
+    name: "  [ RU ] Русский Народный Сервер #4 | ВС РФ против ВСУ 24/7",
   },
 ];
 
@@ -26,13 +26,13 @@ export async function initLobbyButtons(
   client,
   channelId,
   _steamApiKeyNotUsed,
-  domain
+  domain,
 ) {
   console.log("[lobbyButtons] initLobbyButtons, SERVERS =", SERVERS.length);
 
   if (!domain) {
     console.error(
-      "ERROR: domain is required (used to build http redirect links)"
+      "ERROR: domain is required (used to build http redirect links)",
     );
     process.exit(1);
   }
@@ -50,7 +50,7 @@ export async function initLobbyButtons(
 async function findOrCreateMessage(channel) {
   const fetched = await channel.messages.fetch({ limit: 50 });
   const existing = fetched.find(
-    (m) => m.author.id === channel.client.user.id && m.components.length
+    (m) => m.author.id === channel.client.user.id && m.components.length,
   );
   if (existing) return existing;
 
@@ -69,7 +69,7 @@ async function editMessage(msg, domain) {
 
   console.log(
     "[lobbyButtons] rowData.components.length =",
-    rowData.components.length
+    rowData.components.length,
   );
 
   if (rowData.components.length) {
@@ -100,7 +100,10 @@ function buildRow(domain) {
     const url = `http://${domain}${JOIN_PATH}?name=${encodedName}`;
 
     row.addComponents(
-      new ButtonBuilder().setLabel(label).setStyle(ButtonStyle.Link).setURL(url)
+      new ButtonBuilder()
+        .setLabel(label)
+        .setStyle(ButtonStyle.Link)
+        .setURL(url),
     );
   }
 
