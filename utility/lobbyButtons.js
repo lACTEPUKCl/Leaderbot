@@ -94,10 +94,10 @@ function buildRow(domain) {
   }
 
   for (const srv of SERVERS) {
-    const fullName = (srv.name || "").trim();
+    const fullName = srv.name || "";
     if (!fullName) continue;
 
-    const label = (srv.label || fullName || "").trim();
+    const label = srv.label || fullName || "";
     if (!label) continue;
 
     const encodedName = encodeURIComponent(fullName);
