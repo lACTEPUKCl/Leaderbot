@@ -2,11 +2,14 @@ import fs from "fs/promises";
 import options from "../config.js";
 
 const adminsCfgPath = options.adminsCfgPath || "./";
+
 const CLAN_BLOCK_START =
   /^\/\/CLAN \[([^\]\*]+)(\*?)]\s+(\d+)\s+(\d+)\s+do\s+(\d{2}\.\d{2}\.\d{4})$/;
-const CLAN_BLOCK_END = /^\/\/END/;
+
+const CLAN_BLOCK_END = /^\s*\/\/END\s*$/;
+
 const MEMBER_LINE =
-  /^\/?\/?Admin=(\d+):ClanVip\s*\/\/ DiscordID (\d+).*do\s+(\d{2}\.\d{2}\.\d{4})/;
+  /^\s*(?:\/\/\s*)?Admin=(\d+):ClanVip(?:\s*\/\/\s*DiscordID\s*(\d+))?(?:.*?\bdo\s+(\d{2}\.\d{2}\.\d{4}))?\s*$/i;
 
 export async function parseClansFile(path = adminsCfgPath + "Admins.cfg") {
   const data = await fs.readFile(path, "utf-8");
@@ -37,6 +40,7 @@ export async function parseClansFile(path = adminsCfgPath + "Admins.cfg") {
       };
       continue;
     }
+
     if (CLAN_BLOCK_END.test(line)) {
       if (current) {
         current.endIdx = i;
@@ -45,28 +49,31 @@ export async function parseClansFile(path = adminsCfgPath + "Admins.cfg") {
       }
       continue;
     }
+
     if (current) {
       current.lines.push({ value: line, idx: i });
+
       const mem = line.match(MEMBER_LINE);
       if (mem) {
         current.members.push({
           raw: line,
           commented: line.trim().startsWith("//"),
           steamId: mem[1],
-          discordId: mem[2],
-          until: mem[3],
+          discordId: mem[2] || null,
+          until: mem[3] || null,
           idx: i,
         });
       }
     }
   }
+
   return { lines, clans };
 }
 
 export async function updateClan(tag, addDays = 30) {
   const { lines, clans } = await parseClansFile();
   let clan = clans.find(
-    (c) => c.tag.trim().toLowerCase() === tag.trim().toLowerCase()
+    (c) => c.tag.trim().toLowerCase() === tag.trim().toLowerCase(),
   );
   if (!clan) return [];
 
@@ -80,12 +87,18 @@ export async function updateClan(tag, addDays = 30) {
   lines[clan.headerIdx] = headerLine;
 
   for (const m of clan.members) {
-    let newVal = m.raw.replace(/^\/\//, "");
-    newVal = newVal.replace(/do\s+\d{2}\.\d{2}\.\d{4}/, `do ${newDate}`);
+    let newVal = m.raw.replace(/^\s*\/\//, "");
+    if (/do\s+\d{2}\.\d{2}\.\d{4}/i.test(newVal)) {
+      newVal = newVal.replace(/do\s+\d{2}\.\d{2}\.\d{4}/i, `do ${newDate}`);
+    }
     lines[m.idx] = newVal;
   }
+
   await fs.writeFile(adminsCfgPath + "Admins.cfg", lines.join("\r\n"), "utf-8");
-  return clan.members.map((m) => m.discordId);
+
+  return clan.members
+    .map((m) => m.discordId)
+    .filter((id) => typeof id === "string" && id.length > 0);
 }
 
 function parseDate(str) {
@@ -96,7 +109,7 @@ function parseDate(str) {
 export async function freezeClan(tag) {
   const { lines, clans } = await parseClansFile();
   let clan = clans.find(
-    (c) => c.tag.trim().toLowerCase() === tag.trim().toLowerCase()
+    (c) => c.tag.trim().toLowerCase() === tag.trim().toLowerCase(),
   );
   if (!clan) return [];
 
@@ -106,8 +119,12 @@ export async function freezeClan(tag) {
   for (const m of clan.members) {
     if (!m.raw.trim().startsWith("//")) lines[m.idx] = "//" + m.raw;
   }
+
   await fs.writeFile(adminsCfgPath + "Admins.cfg", lines.join("\r\n"), "utf-8");
-  return clan.members.map((m) => m.discordId);
+
+  return clan.members
+    .map((m) => m.discordId)
+    .filter((id) => typeof id === "string" && id.length > 0);
 }
 
 function addDaysFromNow(date, days) {
@@ -115,6 +132,7 @@ function addDaysFromNow(date, days) {
   d.setDate(d.getDate() + days);
   return d;
 }
+
 function formatDate(date) {
   return date
     .toLocaleDateString("ru-RU", {
@@ -133,10 +151,13 @@ export async function getActiveClans() {
 export async function getClanMemberDiscordIds(tag) {
   const { clans } = await parseClansFile();
   let clan = clans.find(
-    (c) => c.tag.trim().toLowerCase() === tag.trim().toLowerCase()
+    (c) => c.tag.trim().toLowerCase() === tag.trim().toLowerCase(),
   );
   if (!clan) return [];
-  return clan.members.map((m) => m.discordId);
+
+  return clan.members
+    .map((m) => m.discordId)
+    .filter((id) => typeof id === "string" && id.length > 0);
 }
 
 export default {
