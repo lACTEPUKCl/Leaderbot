@@ -75,7 +75,8 @@ export async function updateClan(tag, addDays = 30) {
   let clan = clans.find(
     (c) => c.tag.trim().toLowerCase() === tag.trim().toLowerCase(),
   );
-  if (!clan) return [];
+  if (!clan)
+    return { found: false, discordIds: [], totalMembers: 0, newDate: null };
 
   const now = new Date();
   const clanUntil = clan.until ? parseDate(clan.until) : now;
@@ -96,9 +97,16 @@ export async function updateClan(tag, addDays = 30) {
 
   await fs.writeFile(adminsCfgPath + "Admins.cfg", lines.join("\r\n"), "utf-8");
 
-  return clan.members
+  const discordIds = clan.members
     .map((m) => m.discordId)
     .filter((id) => typeof id === "string" && id.length > 0);
+
+  return {
+    found: true,
+    discordIds,
+    totalMembers: clan.members.length,
+    newDate,
+  };
 }
 
 function parseDate(str) {
