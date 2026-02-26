@@ -20,10 +20,6 @@ const SERVERS = [
     label: "RNS #4",
     name: "  [ RU ] Русский Народный Сервер #4 | ВС РФ против ВСУ 24/7",
   },
-  {
-    label: "RNS KOTH",
-    name: "Русский Народный Модовый #4",
-  },
 ];
 
 export async function initLobbyButtons(
