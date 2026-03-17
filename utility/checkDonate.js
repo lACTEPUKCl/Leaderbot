@@ -11,10 +11,30 @@ const { vipLogChannelId, vipAdminUserId } = options;
 
 function toLatin(str) {
   const map = {
-    а: "a", А: "A", в: "b", В: "B", е: "e", Е: "E",
-    к: "k", К: "K", м: "m", М: "M", н: "h", Н: "H",
-    о: "o", О: "O", р: "p", Р: "P", с: "c", С: "C",
-    т: "t", Т: "T", у: "y", У: "Y", х: "x", Х: "X",
+    а: "a",
+    А: "A",
+    в: "b",
+    В: "B",
+    е: "e",
+    Е: "E",
+    к: "k",
+    К: "K",
+    м: "m",
+    М: "M",
+    н: "h",
+    Н: "H",
+    о: "o",
+    О: "O",
+    р: "p",
+    Р: "P",
+    с: "c",
+    С: "C",
+    т: "t",
+    Т: "T",
+    у: "y",
+    У: "Y",
+    х: "x",
+    Х: "X",
   };
   return str.replace(/[авекмнорстухАВЕКМНОРСТУХ]/g, (ch) => map[ch] || ch);
 }
@@ -37,12 +57,12 @@ async function main(guild, db, steamApi, donateUrl) {
       } catch (err) {
         console.error(
           "[vipDonate] Не удалось получить vipLogChannelId из гильдии:",
-          err
+          err,
         );
       }
     } else {
       console.warn(
-        "[vipDonate] vipLogChannelId не задан в config.js — логирование в канал отключено."
+        "[vipDonate] vipLogChannelId не задан в config.js — логирование в канал отключено.",
       );
     }
 
@@ -76,7 +96,7 @@ async function main(guild, db, steamApi, donateUrl) {
           {
             name: "Комментарий",
             value: rawComment && rawComment.length > 0 ? rawComment : "—",
-          }
+          },
         )
         .setTimestamp();
 
@@ -89,7 +109,10 @@ async function main(guild, db, steamApi, donateUrl) {
         // ═══════════════════════════════════════
         // КЛАНОВЫЙ ДОНАТ
         // ═══════════════════════════════════════
-        const slotOrderResult = await clanVipManager.processPendingSlotOrder(commentTag, sum);
+        const slotOrderResult = await clanVipManager.processPendingSlotOrder(
+          commentTag,
+          sum,
+        );
 
         if (slotOrderResult.applied) {
           const slotEmbed = new EmbedBuilder()
@@ -97,15 +120,15 @@ async function main(guild, db, steamApi, donateUrl) {
             .setColor(0x00ff00)
             .setDescription(
               `Найден ожидающий запрос на увеличение слотов для клана \`${commentTag}\`.\n` +
-              `Донат обработан как **увеличение слотов**, а не продление VIP.\n` +
-              `Слоты: **${slotOrderResult.oldSlots} → ${slotOrderResult.newSlots}**\n` +
-              `Добавлено слотов: **${slotOrderResult.extraSlots}**\n` +
-              `Сумма: **${sum}₽**`
+                `Донат обработан как **увеличение слотов**, а не продление VIP.\n` +
+                `Слоты: **${slotOrderResult.oldSlots} → ${slotOrderResult.newSlots}**\n` +
+                `Добавлено слотов: **${slotOrderResult.extraSlots}**\n` +
+                `Сумма: **${sum}₽**`,
             )
             .addFields(
               { name: "ID транзакции", value: String(id), inline: true },
               { name: "От", value: what || "—", inline: true },
-              { name: "Тег клана", value: String(commentTag), inline: true }
+              { name: "Тег клана", value: String(commentTag), inline: true },
             )
             .setTimestamp();
 
@@ -125,12 +148,15 @@ async function main(guild, db, steamApi, donateUrl) {
           await fs.writeFile(
             `./transaction/transactionId.json`,
             JSON.stringify(transaction, null, 2),
-            "utf-8"
+            "utf-8",
           );
           continue;
         }
 
-        const result = await clanVipManager.processClanDonation(commentTag, sum);
+        const result = await clanVipManager.processClanDonation(
+          commentTag,
+          sum,
+        );
 
         if (!result.found) {
           console.log(`Клан "${commentTag}" не найден в базе данных!`);
@@ -139,12 +165,12 @@ async function main(guild, db, steamApi, donateUrl) {
             .setTitle("Проблема с клановым донатом (VIP)")
             .setColor(0xff0000)
             .setDescription(
-              `Клан по тегу \`${commentTag}\` не найден в базе данных.\nКомментарий: \`${rawComment || "—"}\``
+              `Клан по тегу \`${commentTag}\` не найден в базе данных.\nКомментарий: \`${rawComment || "—"}\``,
             )
             .addFields(
               { name: "ID транзакции", value: String(id), inline: true },
               { name: "От", value: what || "—", inline: true },
-              { name: "Сумма", value: `${sum}₽`, inline: true }
+              { name: "Сумма", value: `${sum}₽`, inline: true },
             )
             .setTimestamp();
 
@@ -163,7 +189,7 @@ async function main(guild, db, steamApi, donateUrl) {
           await fs.writeFile(
             `./transaction/transactionId.json`,
             JSON.stringify(transaction, null, 2),
-            "utf-8"
+            "utf-8",
           );
           continue;
         }
@@ -174,7 +200,7 @@ async function main(guild, db, steamApi, donateUrl) {
 
         if (result.totalMembers === 0) {
           console.log(
-            `Клан "${commentTag}" найден, но не содержит участников!`
+            `Клан "${commentTag}" найден, но не содержит участников!`,
           );
 
           const errorEmbed = new EmbedBuilder()
@@ -182,15 +208,15 @@ async function main(guild, db, steamApi, donateUrl) {
             .setColor(0xffaa00)
             .setDescription(
               `Клан по тегу \`${commentTag}\` найден, но в нём нет участников.\n` +
-              `VIP клана обновлён до **${newDateStr}**, но роли никому не выданы.\n` +
-              `Слотов: **${result.slots}** | Цена/мес: **${result.pricePerMonth}₽**\n` +
-              `Начислено дней: **${result.daysAdded.toFixed(1)}**\n` +
-              `Комментарий: \`${rawComment || "—"}\``
+                `VIP клана обновлён до **${newDateStr}**, но роли никому не выданы.\n` +
+                `Слотов: **${result.slots}** | Цена/мес: **${result.pricePerMonth}₽**\n` +
+                `Начислено дней: **${result.daysAdded.toFixed(1)}**\n` +
+                `Комментарий: \`${rawComment || "—"}\``,
             )
             .addFields(
               { name: "ID транзакции", value: String(id), inline: true },
               { name: "От", value: what || "—", inline: true },
-              { name: "Сумма", value: `${sum}₽`, inline: true }
+              { name: "Сумма", value: `${sum}₽`, inline: true },
             )
             .setTimestamp();
 
@@ -200,7 +226,7 @@ async function main(guild, db, steamApi, donateUrl) {
           });
 
           // Обновляем Admins.cfg для синхронизации с игровым сервером
-          await clanVipManager.updateClanInAdminsCfg(commentTag, newDateStr);
+          await clanVipManager.triggerAdminsCfgRegen();
 
           transaction.transactions.push({
             id: `${id}`,
@@ -214,16 +240,13 @@ async function main(guild, db, steamApi, donateUrl) {
           await fs.writeFile(
             `./transaction/transactionId.json`,
             JSON.stringify(transaction, null, 2),
-            "utf-8"
+            "utf-8",
           );
           continue;
         }
 
         // Обновляем Admins.cfg
-        const cfgResult = await clanVipManager.updateClanInAdminsCfg(
-          commentTag,
-          newDateStr
-        );
+        await clanVipManager.triggerAdminsCfgRegen();
 
         // Выдаём Discord роли VIP
         const cfgDiscordIds = cfgResult.updated ? cfgResult.discordIds : [];
@@ -282,7 +305,7 @@ async function main(guild, db, steamApi, donateUrl) {
               value: mentions.length
                 ? mentions.join(", ")
                 : "Нет участников с DiscordID",
-            }
+            },
           )
           .setTimestamp();
 
@@ -303,7 +326,7 @@ async function main(guild, db, steamApi, donateUrl) {
         await fs.writeFile(
           `./transaction/transactionId.json`,
           JSON.stringify(transaction, null, 2),
-          "utf-8"
+          "utf-8",
         );
         continue;
       }
@@ -320,7 +343,7 @@ async function main(guild, db, steamApi, donateUrl) {
           .setTitle("Проблема с донатом (VIP)")
           .setColor(0xff0000)
           .setDescription(
-            "В донате не найден SteamID и ссылка на steamcommunity. VIP не выдан."
+            "В донате не найден SteamID и ссылка на steamcommunity. VIP не выдан.",
           )
           .addFields(
             { name: "ID транзакции", value: String(id), inline: true },
@@ -329,7 +352,7 @@ async function main(guild, db, steamApi, donateUrl) {
             {
               name: "Комментарий",
               value: rawComment && rawComment.length > 0 ? rawComment : "—",
-            }
+            },
           )
           .setTimestamp();
 
@@ -347,7 +370,7 @@ async function main(guild, db, steamApi, donateUrl) {
         await fs.writeFile(
           `./transaction/transactionId.json`,
           JSON.stringify(transaction, null, 2),
-          "utf-8"
+          "utf-8",
         );
         continue;
       }
@@ -384,7 +407,7 @@ async function main(guild, db, steamApi, donateUrl) {
         await fs.writeFile(
           `./transaction/transactionId.json`,
           JSON.stringify(transaction, null, 2),
-          "utf-8"
+          "utf-8",
         );
 
         let discordMention = "—";
@@ -393,7 +416,7 @@ async function main(guild, db, steamApi, donateUrl) {
           try {
             const discordUser = await guild.members.fetch(discordID);
             const vipRole = guild.roles.cache.find(
-              (role) => role.name === "VIP"
+              (role) => role.name === "VIP",
             );
             if (vipRole && discordUser) {
               await discordUser.roles.add(vipRole);
@@ -413,14 +436,14 @@ async function main(guild, db, steamApi, donateUrl) {
 
           const description = isExtension
             ? `VIP продлён на **${daysToAdd.toFixed(
-                2
+                2,
               )}** дней.\nС **${oldVipEndDate.toLocaleDateString(
-                "ru-RU"
+                "ru-RU",
               )}** по **${newVipEndDate.toLocaleDateString("ru-RU")}**.`
             : `VIP выдан на **${daysToAdd.toFixed(
-                0
+                0,
               )}** дней.\nДата окончания: **${newVipEndDate.toLocaleDateString(
-                "ru-RU"
+                "ru-RU",
               )}**.`;
 
           const vipEmbed = new EmbedBuilder()
@@ -431,7 +454,7 @@ async function main(guild, db, steamApi, donateUrl) {
               { name: "SteamID", value: steamId, inline: true },
               { name: "Discord", value: discordMention, inline: true },
               { name: "От", value: what || "—", inline: true },
-              { name: "Сумма", value: `${sum}₽`, inline: true }
+              { name: "Сумма", value: `${sum}₽`, inline: true },
             )
             .setTimestamp();
 
@@ -441,7 +464,7 @@ async function main(guild, db, steamApi, donateUrl) {
             .setTitle("Проблема с выдачей VIP")
             .setColor(0xff0000)
             .setDescription(
-              "vipCreater не вернул ожидаемый результат. Проверь лог."
+              "vipCreater не вернул ожидаемый результат. Проверь лог.",
             )
             .addFields(
               { name: "SteamID", value: steamId, inline: true },
@@ -451,7 +474,7 @@ async function main(guild, db, steamApi, donateUrl) {
                 inline: true,
               },
               { name: "От", value: what || "—", inline: true },
-              { name: "Сумма", value: `${sum}₽`, inline: true }
+              { name: "Сумма", value: `${sum}₽`, inline: true },
             )
             .setTimestamp();
 
