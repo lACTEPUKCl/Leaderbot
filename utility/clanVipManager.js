@@ -82,7 +82,6 @@ export async function findClanByTag(tag) {
   }
 }
 
-
 /**
  * Проверяет, есть ли для клана ожидающий заказ на увеличение слотов,
  * совпадающий по сумме доната, и если есть — применяет его вместо продления VIP.
@@ -126,7 +125,11 @@ export async function processPendingSlotOrder(tag, sum) {
     const expectedAmount = Number(order.expectedAmount || 0);
     const donationSum = Number(sum || 0);
 
-    if (!Number.isFinite(expectedAmount) || expectedAmount <= 0 || expectedAmount !== donationSum) {
+    if (
+      !Number.isFinite(expectedAmount) ||
+      expectedAmount <= 0 ||
+      expectedAmount !== donationSum
+    ) {
       return {
         matched: true,
         applied: false,
@@ -148,7 +151,7 @@ export async function processPendingSlotOrder(tag, sum) {
           slots: newSlots,
           updatedAt: now,
         },
-      }
+      },
     );
 
     await ordersCollection.updateOne(
@@ -158,7 +161,7 @@ export async function processPendingSlotOrder(tag, sum) {
           status: "completed",
           completedAt: now,
         },
-      }
+      },
     );
 
     return {
@@ -198,7 +201,12 @@ export async function processClanDonation(tag, sum) {
     });
 
     if (!clan) {
-      return { found: false, discordIds: [], totalMembers: 0, newExpires: null };
+      return {
+        found: false,
+        discordIds: [],
+        totalMembers: 0,
+        newExpires: null,
+      };
     }
 
     const slots = clan.slots || BASE_SLOTS;
@@ -213,7 +221,7 @@ export async function processClanDonation(tag, sum) {
     // Если VIP уже истёк — начинаем от текущей даты
     const baseDate = oldExpires > now ? oldExpires : now;
     const newExpires = new Date(
-      baseDate.getTime() + daysToAdd * 24 * 60 * 60 * 1000
+      baseDate.getTime() + daysToAdd * 24 * 60 * 60 * 1000,
     );
 
     // Обновляем в MongoDB
@@ -224,7 +232,7 @@ export async function processClanDonation(tag, sum) {
           expiresAt: newExpires,
           updatedAt: now,
         },
-      }
+      },
     );
 
     // Собираем discordId из members
@@ -391,13 +399,16 @@ export async function parseClansFile(path = adminsCfgPath + "Admins.cfg") {
 export async function updateClanInAdminsCfg(tag, newDateStr) {
   const { lines, clans } = await parseClansFile();
   const clan = clans.find(
-    (c) => c.tag.trim().toLowerCase() === tag.trim().toLowerCase()
+    (c) => c.tag.trim().toLowerCase() === tag.trim().toLowerCase(),
   );
   if (!clan) return { updated: false, discordIds: [], totalMembers: 0 };
 
   // Обновляем header — убираем звёздочку (активируем) и обновляем дату
   let headerLine = clan.header.replace(/\[([^\]\*]+)\*\]/, "[$1]");
-  headerLine = headerLine.replace(/do\s+\d{2}\.\d{2}\.\d{4}/, `do ${newDateStr}`);
+  headerLine = headerLine.replace(
+    /do\s+\d{2}\.\d{2}\.\d{4}/,
+    `do ${newDateStr}`,
+  );
   lines[clan.headerIdx] = headerLine;
 
   // Обновляем даты у всех мемберов и раскомментируем
@@ -424,7 +435,7 @@ export async function updateClanInAdminsCfg(tag, newDateStr) {
 export async function freezeClan(tag) {
   const { lines, clans } = await parseClansFile();
   let clan = clans.find(
-    (c) => c.tag.trim().toLowerCase() === tag.trim().toLowerCase()
+    (c) => c.tag.trim().toLowerCase() === tag.trim().toLowerCase(),
   );
   if (!clan) return [];
 
@@ -445,7 +456,7 @@ export async function freezeClan(tag) {
 export async function getClanMemberDiscordIds(tag) {
   const { clans } = await parseClansFile();
   let clan = clans.find(
-    (c) => c.tag.trim().toLowerCase() === tag.trim().toLowerCase()
+    (c) => c.tag.trim().toLowerCase() === tag.trim().toLowerCase(),
   );
   if (!clan) return [];
 
@@ -470,6 +481,29 @@ export function formatDateRu(date) {
       year: "numeric",
     })
     .replace(/\//g, ".");
+}
+
+export async function triggerAdminsCfgRegen() {
+  const SITE_API_URL = process.env.SITE_API_URL || "http://localhost:5000";
+  const INTERNAL_API_KEY = process.env.INTERNAL_API_KEY || "";
+  try {
+    const res = await fetch(`${SITE_API_URL}/internal/regenerate-admins-cfg`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Internal-Key": INTERNAL_API_KEY,
+      },
+    });
+    if (!res.ok) {
+      console.error(`[clanVipManager] Regen API failed: ${res.status}`);
+      return false;
+    }
+    console.log("[clanVipManager] admins.cfg regenerated via API");
+    return true;
+  } catch (e) {
+    console.error("[clanVipManager] Regen API error:", e.message);
+    return false;
+  }
 }
 
 export default {
