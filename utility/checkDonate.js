@@ -226,7 +226,11 @@ async function main(guild, db, steamApi, donateUrl) {
           });
 
           // Обновляем Admins.cfg для синхронизации с игровым сервером
-          await clanVipManager.triggerAdminsCfgRegen();
+          try {
+            await clanVipManager.triggerAdminsCfgRegen();
+          } catch (e) {
+            console.error("[vipDonate] triggerAdminsCfgRegen error:", e);
+          }
 
           transaction.transactions.push({
             id: `${id}`,
@@ -246,10 +250,28 @@ async function main(guild, db, steamApi, donateUrl) {
         }
 
         // Обновляем Admins.cfg
-        await clanVipManager.triggerAdminsCfgRegen();
+        // 1. Обновляем локальный Admins.cfg и получаем discordIds
+        let cfgResult = { updated: false, discordIds: [] };
 
-        // Выдаём Discord роли VIP
-        const cfgDiscordIds = cfgResult.updated ? cfgResult.discordIds : [];
+        try {
+          cfgResult = await clanVipManager.updateClanInAdminsCfg(
+            commentTag,
+            newDateStr,
+          );
+        } catch (e) {
+          console.error("[vipDonate] Ошибка updateClanInAdminsCfg:", e);
+        }
+
+        // 2. Синхронизируем с сервером (API)
+        try {
+          await clanVipManager.triggerAdminsCfgRegen();
+        } catch (e) {
+          console.error("[vipDonate] Ошибка triggerAdminsCfgRegen:", e);
+        }
+
+        // 3. Discord IDs из cfg
+        const cfgDiscordIds =
+          cfgResult && cfgResult.updated ? cfgResult.discordIds : [];
         // Также добавляем discordIds из MongoDB (members.addedBy)
         const allDiscordIds = [
           ...new Set([...cfgDiscordIds, ...result.discordIds]),
