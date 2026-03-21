@@ -521,4 +521,5 @@ export default {
   updateClanInAdminsCfg,
   freezeClan,
   getClanMemberDiscordIds,
+  triggerAdminsCfgRegen,
 };
