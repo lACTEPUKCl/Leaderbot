@@ -3,9 +3,18 @@ import { AttachmentBuilder } from "discord.js";
 import * as fs from "fs";
 import { loadImage, createCanvas, registerFont } from "canvas";
 import calcVehicleTime from "./calcVehicleTime.js";
-import calcVehicleKills from "./calcVehicleKills.js";
-import getTimePlayed from "./getTimePlayed.js";
 import getExp from "./getExp.js";
+import {
+  groupWeapons,
+  calcVehicleKillsFromGrouped,
+  calcArtilleryKills,
+  calcKnifeKills,
+} from "./weaponMapping.js";
+import {
+  parseFactions,
+  getFactionFlag,
+  parseGameMode,
+} from "./factionMapping.js";
 
 async function loadImageAndDraw(ctx, imgPath, x, y, width, height) {
   try {
@@ -15,12 +24,8 @@ async function loadImageAndDraw(ctx, imgPath, x, y, width, height) {
     console.log(`Image ${imgPath} not found`);
   }
 }
-async function getTimePlayedFromBM(steamId) {
-  const timePlayed = await getTimePlayed(steamId);
-  return await gettime(timePlayed / 60);
-}
 
-async function gettime(time, field) {
+function gettime(time, field) {
   if (field === "sec") {
     time = time / 1000;
     const h = Math.floor((time % (3600 * 24)) / 3600);
@@ -34,6 +39,33 @@ async function gettime(time, field) {
   const dDisplay = d > 0 ? d + "д " : "";
   const hDisplay = h > 0 ? h + "ч " : "";
   return dDisplay + hDisplay;
+}
+
+function getMatchDuration(startTime, endTime) {
+  if (!startTime || !endTime) return "—";
+  const diffMs = endTime - startTime;
+  const totalMin = Math.floor(diffMs / 60000);
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  if (h > 0) return `${h}ч${m > 0 ? m + "м" : ""}`;
+  return `${m}м`;
+}
+
+function translateResult(result) {
+  if (!result) return "—";
+  const lower = result.toLowerCase();
+  if (lower === "won") return "Победа";
+  if (lower === "lose" || lower === "lost") return "Поражение";
+  if (lower === "draw") return "Ничья";
+  return result;
+}
+
+function getResultColor(result) {
+  if (!result) return "#95a6b9";
+  const lower = result.toLowerCase();
+  if (lower === "won") return "#4ade80";
+  if (lower === "lose" || lower === "lost") return "#f87171";
+  return "#95a6b9";
 }
 
 async function getStatsOnDiscord(dblink, steamId, interaction, steamApi) {
@@ -57,52 +89,21 @@ async function getStatsOnDiscord(dblink, steamId, interaction, steamApi) {
     }
     const roles = Object.entries(user.roles);
     let sortRoles = roles.sort((a, b) => b[1] - a[1]);
-    const weapons = Object.entries(user.weapons);
-    const resultWeapons = {};
-    let artillerySum = 0;
-    let knifeSum = 0;
-
-    for (const [key, value] of weapons) {
-      let [prefix, suffix] = key.split("_")[1].includes("Projectile")
-        ? key.split("_").slice(1, 3)
-        : [key.split("_")[1]];
-
-      const weaponKey = suffix ? `${prefix} ${suffix}` : prefix;
-      if (weaponKey === "Projectile 155mm" || weaponKey === "Heavy") {
-        artillerySum += value;
-      } else {
-        resultWeapons[weaponKey] = (resultWeapons[weaponKey] || 0) + value;
-      }
-
-      if (
-        weaponKey === "SOCP" ||
-        weaponKey === "AK74Bayonet" ||
-        weaponKey === "M9Bayonet" ||
-        weaponKey === "G3Bayonet" ||
-        weaponKey === "Bayonet2000" ||
-        weaponKey === "AKMBayonet" ||
-        weaponKey === "SA80Bayonet" ||
-        weaponKey === "QNL-95" ||
-        weaponKey === "OKC-3S"
-      ) {
-        knifeSum += value;
-      }
-    }
-
-    const resultArray = Object.entries(resultWeapons).sort(
-      (a, b) => b[1] - a[1]
-    );
-    const time = (await getTimePlayedFromBM(steamId)) || 0;
-    const roleTime1 = await gettime(sortRoles[0][1].toString());
-    const roleTime2 = await gettime(sortRoles[1][1].toString());
+    const grouped = groupWeapons(user.weapons || {});
+    const vehicleKills = calcVehicleKillsFromGrouped(grouped);
+    const artillerySum = calcArtilleryKills(grouped);
+    const knifeSum = calcKnifeKills(grouped);
+    const topWeapons = grouped.slice(0, 2);
+    const time = gettime(user.squad?.timeplayed?.toString()) || "0";
+    const roleTime1 = gettime(sortRoles[0][1].toString());
+    const roleTime2 = gettime(sortRoles[1][1].toString());
     const role1Img = sortRoles[0][0].split("_").join("");
     const role2Img = sortRoles[1][0].split("_").join("");
-    const leader = (await gettime(user.squad.leader?.toString())) || 0;
-    const cmd = (await gettime(user.squad.cmd?.toString())) || 0;
+    const leader = gettime(user.squad.leader?.toString()) || "0";
+    const cmd = gettime(user.squad.cmd?.toString()) || "0";
     const vehicle = await calcVehicleTime(user.possess);
-    const vehicleKills = await calcVehicleKills(user.weapons);
-    const heliTime = (await gettime(vehicle[1])) || 0;
-    const heavyTime = (await gettime(vehicle[0])) || 0;
+    const heliTime = gettime(vehicle[1]) || "0";
+    const heavyTime = gettime(vehicle[0]) || "0";
     const killPerMatch = user.kills / user.matches.matches;
     const exp = getExp(user);
     const width = 1405;
@@ -118,7 +119,7 @@ async function getStatsOnDiscord(dblink, steamId, interaction, steamApi) {
       15,
       297,
       40,
-      40
+      40,
     );
     await loadImageAndDraw(
       ctx,
@@ -126,59 +127,73 @@ async function getStatsOnDiscord(dblink, steamId, interaction, steamApi) {
       15,
       393,
       40,
-      40
+      40,
     );
     await loadImageAndDraw(ctx, `./img/ranks/${rank}.png`, 69, 85, 170, 51);
 
     ctx.fillStyle = "#efefef";
     ctx.font = "18pt MyFont";
-    ctx.fillText(user.name, 393, 48); // Имя
+    ctx.fillText(user.name, 393, 48);
     ctx.textAlign = "center";
     ctx.fillText("Звание", 152, 37);
     ctx.fillText("Любимые киты", 152, 242);
     ctx.fillText("Любимое оружие", 152, 510);
     ctx.textAlign = "left";
     ctx.fillText("История", 393, 469);
-    ctx.fillText(sortRoles[0][0].split("_").join("").toUpperCase(), 60, 327); // Первая роль
-    ctx.fillText(sortRoles[1][0].split("_").join("").toUpperCase(), 60, 422); // Вторая роль
+    ctx.fillText(sortRoles[0][0].split("_").join("").toUpperCase(), 60, 327);
+    ctx.fillText(sortRoles[1][0].split("_").join("").toUpperCase(), 60, 422);
 
-    if (resultArray.length != 0) {
+    // ──── Top weapons (any category) ────
+    if (topWeapons.length > 0) {
+      const w1 = topWeapons[0];
       ctx.textAlign = "left";
-      //ctx.fillText(resultArray[0][0], 15, 600); // Первое оружие
-      await loadImageAndDraw(
-        ctx,
-        `./img/weapons/${resultArray[0][0].toLowerCase()}.png`,
-        5,
-        550,
-        160,
-        80
-      );
+      if (w1.image) {
+        await loadImageAndDraw(
+          ctx,
+          `./img/weapons/${w1.image}`,
+          5,
+          550,
+          160,
+          80,
+        );
+      } else {
+        ctx.font = "14pt MyFont";
+        ctx.fillText(w1.group, 15, 595);
+        ctx.font = "18pt MyFont";
+      }
       ctx.textAlign = "right";
-      ctx.fillText(resultArray[0][1], 290, 600); // Первое оружие
+      ctx.fillText(w1.kills, 290, 600);
     }
-    if (resultArray.length >= 2) {
-      ctx.fillText(resultArray[1][1], 290, 690); // Второе оружие
+    if (topWeapons.length >= 2) {
+      const w2 = topWeapons[1];
+      ctx.textAlign = "right";
+      ctx.fillText(w2.kills, 290, 690);
       ctx.textAlign = "left";
-      // ctx.fillText(resultArray[1][0], 15, 690); // Второе оружие
-      await loadImageAndDraw(
-        ctx,
-        `./img/weapons/${resultArray[1][0].toLowerCase()}.png`,
-        5,
-        640,
-        160,
-        80
-      );
+      if (w2.image) {
+        await loadImageAndDraw(
+          ctx,
+          `./img/weapons/${w2.image}`,
+          5,
+          640,
+          160,
+          80,
+        );
+      } else {
+        ctx.font = "14pt MyFont";
+        ctx.fillText(w2.group, 15, 685);
+        ctx.font = "18pt MyFont";
+      }
     }
 
     ctx.textAlign = "right";
     ctx.font = "15pt MyFont";
-    ctx.fillText(roleTime1, 290, 327); // Первая роль (время)
-    ctx.fillText(roleTime2, 290, 422); // Вторая роль (время)
+    ctx.fillText(roleTime1, 290, 327);
+    ctx.fillText(roleTime2, 290, 422);
 
     ctx.textAlign = "left";
     ctx.fillStyle = "#95a6b9";
     ctx.fillText(time, 1171, 45);
-    ctx.fillText(`${user.matches.matches} игр`, 1271, 45); // Всего игр
+    ctx.fillText(`${user.matches.matches} игр`, 1271, 45);
     ctx.fillText("Всего Убийств", 364, 188);
     ctx.fillText("Убийств на технике", 626, 188);
     ctx.fillText("У/С", 888, 188);
@@ -191,24 +206,24 @@ async function getStatsOnDiscord(dblink, steamId, interaction, steamApi) {
 
     ctx.fillStyle = "#efefef";
     ctx.font = "20pt MyFont";
-    ctx.fillText(user.kills.toString(), 364, 220); // Убийств
-    ctx.fillText(`${~~vehicleKills}`, 626, 220); // Убийств на технике
-    ctx.fillText(user.kd.toString(), 888, 220); // КД
-    ctx.fillText(`${~~user.matches.winrate.toString()}%`, 1151, 220); // % Побед
+    ctx.fillText(user.kills.toString(), 364, 220);
+    ctx.fillText(`${~~vehicleKills}`, 626, 220);
+    ctx.fillText(user.kd.toString(), 888, 220);
+    ctx.fillText(`${~~user.matches.winrate.toString()}%`, 1151, 220);
 
-    ctx.fillText(user.matches.won.toString(), 532, 303); //Побед
-    ctx.fillText(`${~~killPerMatch}`, 354, 303); // Убийств за игру
-    ctx.fillText(user.revives.toString(), 709, 303); // Помощь
-    ctx.fillText(user.teamkills.toString(), 887, 303); // Тимкилы
-    ctx.fillText(user.death.toString(), 1065, 303); // Смерти
-    ctx.fillText(user.bonuses.toString(), 1242, 303); // Бонусы
+    ctx.fillText(user.matches.won.toString(), 532, 303);
+    ctx.fillText(`${~~killPerMatch}`, 354, 303);
+    ctx.fillText(user.revives.toString(), 709, 303);
+    ctx.fillText(user.teamkills.toString(), 887, 303);
+    ctx.fillText(user.death.toString(), 1065, 303);
+    ctx.fillText(user.bonuses.toString(), 1242, 303);
 
-    ctx.fillText(leader, 354, 384); // Свадной
-    ctx.fillText(cmd || 0, 532, 384); // ЦМД
-    ctx.fillText(heliTime, 709, 384); // Пилот
-    ctx.fillText(heavyTime, 887, 384); // Мехвод
-    ctx.fillText(artillerySum || 0, 1065, 384); //
-    ctx.fillText(knifeSum, 1242, 384); //
+    ctx.fillText(leader, 354, 384);
+    ctx.fillText(cmd, 532, 384);
+    ctx.fillText(heliTime, 709, 384);
+    ctx.fillText(heavyTime, 887, 384);
+    ctx.fillText(artillerySum || 0, 1065, 384);
+    ctx.fillText(knifeSum, 1242, 384);
 
     ctx.fillStyle = "#95a6b9";
     ctx.font = "15pt MyFont";
@@ -231,47 +246,130 @@ async function getStatsOnDiscord(dblink, steamId, interaction, steamApi) {
     ctx.font = "15pt MyFont";
     ctx.fillText("Время", 290, 275);
     ctx.fillText("Убийств", 290, 545);
-    ctx.fillText("Карта", 424, 525);
-    ctx.fillText("Время игры", 780, 525);
-    ctx.fillText("Результат", 971, 525);
-    ctx.fillText("У/С", 1089, 525);
-    ctx.fillText("Убийств", 1218, 525);
-    ctx.fillText("Смертей", 1351, 525);
+
+    const colDeath = 1380;
+    const colKills = 1300;
+    const colKD = 1220;
+    const colResult = 1100;
+    const colTime = 950;
+
+    ctx.fillText("Карта", 600, 525);
+    ctx.fillText("Время", colTime, 525);
+    ctx.fillText("Результат", colResult, 525);
+    ctx.fillText("У/С", colKD, 525);
+    await loadImageAndDraw(
+      ctx,
+      "./img/T_role_dead.png",
+      colKills - 12,
+      507,
+      24,
+      24,
+    );
+    await loadImageAndDraw(
+      ctx,
+      "./img/request_incap-1.png",
+      colDeath - 12,
+      507,
+      24,
+      24,
+    );
+
+    const history = user.matchHistory || [];
+    const recentMatches = history.slice(-3).reverse();
+    const historyYPositions = [565, 615, 665];
+    const flagH = 34;
+    const flagW = 45;
+
+    for (let i = 0; i < recentMatches.length && i < 3; i++) {
+      const match = recentMatches[i];
+      const yPos = historyYPositions[i];
+      const factions = parseFactions(match.layer);
+      const rawLayer = match.layer || "";
+      const cleanLayer = rawLayer.split(",")[0];
+      const prettyLayer = cleanLayer
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (l) => l.toUpperCase());
+      const mapName = prettyLayer || match.level || factions.map || "???";
+      const displayText = mapName;
+      const t1tickets = parseInt(match.team1?.tickets) || 0;
+      const t2tickets = parseInt(match.team2?.tickets) || 0;
+      const team1Won = t1tickets > t2tickets;
+      const playerWon = match.result?.toLowerCase() === "won";
+      const playerIsTeam1 = playerWon ? team1Won : !team1Won;
+      const myFaction = playerIsTeam1 ? factions.team1 : factions.team2;
+      const enemyFaction = playerIsTeam1 ? factions.team2 : factions.team1;
+      const myTickets = playerIsTeam1 ? t1tickets : t2tickets;
+      const enemyTickets = playerIsTeam1 ? t2tickets : t1tickets;
+
+      let xCursor = 354;
+
+      if (myFaction) {
+        await loadImageAndDraw(
+          ctx,
+          `./img/${getFactionFlag(myFaction)}`,
+          xCursor,
+          yPos - flagH + 10,
+          flagW,
+          flagH,
+        );
+        xCursor += flagW + 8;
+      }
+
+      ctx.textAlign = "left";
+      ctx.font = "14pt MyFont";
+      const ticketStr = `${myTickets}:${enemyTickets}`;
+      ctx.fillStyle = "#95a6b9";
+      ctx.fillText(ticketStr, xCursor, yPos);
+      xCursor += ctx.measureText(ticketStr).width + 6;
+
+      if (enemyFaction) {
+        await loadImageAndDraw(
+          ctx,
+          `./img/${getFactionFlag(enemyFaction)}`,
+          xCursor,
+          yPos - flagH + 10,
+          flagW,
+          flagH,
+        );
+        xCursor += flagW + 12;
+      }
+
+      ctx.fillStyle = "#efefef";
+      ctx.font = "15pt MyFont";
+
+      const maxMapWidth = colTime - xCursor - 20;
+      let truncated = displayText;
+
+      while (
+        ctx.measureText(truncated).width > maxMapWidth &&
+        truncated.length > 3
+      ) {
+        truncated = truncated.slice(0, -1);
+      }
+
+      if (truncated !== displayText) truncated += "…";
+
+      ctx.fillText(truncated, xCursor, yPos);
+      ctx.textAlign = "right";
+      ctx.font = "15pt MyFont";
+      ctx.fillStyle = "#95a6b9";
+      ctx.fillText(
+        getMatchDuration(match.startTime, match.endTime),
+        colTime,
+        yPos,
+      );
+
+      ctx.fillStyle = getResultColor(match.result);
+      ctx.fillText(translateResult(match.result), colResult, yPos);
+      ctx.fillStyle = "#efefef";
+      ctx.fillText(match.kd?.toString() || "0", colKD, yPos);
+      ctx.fillText(match.kills?.toString() || "0", colKills, yPos);
+      ctx.fillText(match.death?.toString() || "0", colDeath, yPos);
+    }
 
     ctx.textAlign = "left";
     ctx.fillStyle = "#efefef";
     ctx.font = "20pt MyFont";
-    // if (player[0]?.layer) {
-    //   ctx.fillText(player[0].layer, 354, 575);
-    //   ctx.textAlign = "right";
-    //   ctx.fillText(historyTime1, 780, 575);
-    //   ctx.fillText(player[0].result, 971, 575);
-    //   ctx.fillText(player[0].kd, 1089, 575);
-    //   ctx.fillText(player[0].kills, 1218, 575);
-    //   ctx.fillText(player[0].death, 1351, 575);
-    // }
-
-    // if (player[1]?.layer) {
-    //   ctx.textAlign = "left";
-    //   ctx.fillText(player[1].layer, 354, 625);
-    //   ctx.textAlign = "right";
-    //   ctx.fillText(historyTime2, 780, 625);
-    //   ctx.fillText(player[1].result, 971, 625);
-    //   ctx.fillText(player[1].kd, 1089, 625);
-    //   ctx.fillText(player[1].kills, 1218, 625);
-    //   ctx.fillText(player[1].death, 1351, 625);
-    // }
-
-    // if (player[2]?.layer) {
-    //   ctx.textAlign = "left";
-    //   ctx.fillText(player[2].layer, 354, 675);
-    //   ctx.textAlign = "right";
-    //   ctx.fillText(historyTime3, 780, 675);
-    //   ctx.fillText(player[2].result, 971, 675);
-    //   ctx.fillText(player[2].kd, 1089, 675);
-    //   ctx.fillText(player[2].kills, 1218, 675);
-    //   ctx.fillText(player[2].death, 1351, 675);
-    // }
 
     const x0 = 20;
     const y0 = 150;
@@ -285,7 +383,6 @@ async function getStatsOnDiscord(dblink, steamId, interaction, steamApi) {
     ctx.fillStyle = gradient;
     ctx.fillRect(x0, y0, width1 * pct, height1);
 
-    // outline the full progress bar
     ctx.strokeStyle = "black";
     ctx.strokeRect(x0, y0, width1, height1);
     ctx.textAlign = "center";

@@ -101,7 +101,7 @@ client.on("ready", async () => {
     client,
     process.env.CHANNEL_ID,
     process.env.STEAM_API,
-    process.env.DOMAIN
+    process.env.DOMAIN,
   );
 
   setInterval(() => {
@@ -111,26 +111,26 @@ client.on("ready", async () => {
   setInterval(() => {
     top20StatsMain(
       client.channels.cache.get(options.leaderboadChannelIdMain),
-      db
+      db,
     );
     top20StatsTemp(
       client.channels.cache.get(options.leaderboadChannelIdTemp),
-      db
+      db,
     );
   }, 600000);
 
   cleaner.vipCleaner(client);
 
   client.on("messageReactionAdd", (reaction, user) =>
-    handleReactionAdd(reaction, user)
+    handleReactionAdd(reaction, user),
   );
 
   client.on("messageReactionRemove", (reaction, user) =>
-    handleReactionRemove(reaction, user)
+    handleReactionRemove(reaction, user),
   );
 
   client.on("voiceStateUpdate", (oldState, newState) =>
-    handleVoiceStateUpdate(oldState, newState, userVoiceChannels, options)
+    handleVoiceStateUpdate(oldState, newState, userVoiceChannels, options),
   );
 
   client.on(Events.InteractionCreate, (interaction) =>
@@ -143,8 +143,8 @@ client.on("ready", async () => {
       steamApi,
       dbName,
       dbCollection,
-      seedChannelId
-    )
+      seedChannelId,
+    ),
   );
 
   client.on("messageCreate", (message) => {
