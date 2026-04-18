@@ -24,6 +24,20 @@ export async function handleInteractionCreate(
     });
   }
 
+  if (interaction.isAutocomplete()) {
+    const autocompleteCommand = interaction.client.commands.get(
+      interaction.commandName
+    );
+    if (autocompleteCommand?.autocomplete) {
+      try {
+        await autocompleteCommand.autocomplete(interaction);
+      } catch (error) {
+        console.log("Autocomplete error:", error);
+      }
+    }
+    return;
+  }
+
   const command = interaction.client.commands.get(interaction.commandName);
 
   if (interaction.isChatInputCommand()) {
