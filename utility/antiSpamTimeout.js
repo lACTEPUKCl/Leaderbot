@@ -287,6 +287,12 @@ export function registerAntiSpamTimeout(client, options) {
           return;
       }
 
+      // Пропускаем каналы из игнорируемых категорий (тикеты обращений и т.д.)
+      if (config.ignoreCategories?.length) {
+        const parentId = message.channel.parentId || message.channel.parent?.id;
+        if (parentId && config.ignoreCategories.includes(parentId)) return;
+      }
+
       if (isTrivialMessage(message)) return;
 
       const key = message.guild.id + ":" + message.author.id;
