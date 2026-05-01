@@ -1,6 +1,5 @@
 import { MongoClient } from "mongodb";
 import { config as loadEnv } from "dotenv";
-import options from "../config.js";
 
 loadEnv();
 
@@ -9,7 +8,6 @@ const CLAN_DB = "ticketBotDB";
 const CLAN_COLLECTION = "clans";
 const STATS_DB = "SquadJS";
 const STATS_COLLECTION = "mainstats";
-const { discordServerId } = options;
 
 async function resolveDiscordIds(statsCollection, steamIds) {
   const map = new Map();
@@ -32,13 +30,13 @@ async function resolveDiscordIds(statsCollection, steamIds) {
   return map;
 }
 
-export async function syncClanRoles(client) {
+/**
+ * @param {import("discord.js").Guild} guild — уже загруженная гильдия
+ * @param {import("discord.js").Collection} guildMembers — уже загруженные мемберы
+ */
+export async function syncClanRoles(guild, guildMembers) {
   if (!DB_URL) {
     console.error("[clanRoleSync] Не задан DATABASE_URL в окружении");
-    return;
-  }
-  if (!discordServerId) {
-    console.error("[clanRoleSync] Не задан discordServerId в config.js");
     return;
   }
 
@@ -56,9 +54,6 @@ export async function syncClanRoles(client) {
         { projection: { tag: 1, discordRoleId: 1, members: 1, status: 1 } },
       )
       .toArray();
-
-    const guild = await client.guilds.fetch(discordServerId);
-    const guildMembers = await guild.members.fetch();
 
     let totalAdded = 0;
     let totalRemoved = 0;
