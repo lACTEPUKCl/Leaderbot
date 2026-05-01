@@ -5,6 +5,7 @@ import { MongoClient } from "mongodb";
 import { config as loadEnv } from "dotenv";
 import { EmbedBuilder } from "discord.js";
 import options from "../config.js";
+import { syncClanRoles } from "./clanRoleSync.js";
 
 loadEnv();
 
@@ -30,7 +31,7 @@ async function runCycle(client) {
   }
   if (!discordServerId || !vipRoleID) {
     console.error(
-      "[vipCleaner] Не заданы discordServerId или vipRoleID в config.js"
+      "[vipCleaner] Не заданы discordServerId или vipRoleID в config.js",
     );
     return;
   }
@@ -47,7 +48,7 @@ async function runCycle(client) {
     const expiredUsers = await collection
       .find(
         { vipEndDate: { $lte: now } },
-        { projection: { _id: 1, discordid: 1, name: 1, vipEndDate: 1 } }
+        { projection: { _id: 1, discordid: 1, name: 1, vipEndDate: 1 } },
       )
       .toArray();
 
@@ -61,7 +62,7 @@ async function runCycle(client) {
           typeof u.discordid === "string" &&
           u.discordid.length > 0 &&
           typeof u._id === "string" &&
-          u._id.length > 0
+          u._id.length > 0,
       )
       .map((u) => ({ discordId: u.discordid, steamId: u._id }));
 
@@ -70,10 +71,10 @@ async function runCycle(client) {
     if (expiredSteamIds.length) {
       await collection.updateMany(
         { _id: { $in: expiredSteamIds } },
-        { $unset: { vipEndDate: "" } }
+        { $unset: { vipEndDate: "" } },
       );
       console.log(
-        `[vipCleaner] Найдено и очищено просроченных VIP в БД: ${expiredSteamIds.length}`
+        `[vipCleaner] Найдено и очищено просроченных VIP в БД: ${expiredSteamIds.length}`,
       );
     } else {
       console.log("[vipCleaner] Просроченных VIP в БД не найдено.");
@@ -124,7 +125,7 @@ async function runCycle(client) {
       await fsp.writeFile(adminsFilePath, newData);
       console.log(
         "\x1b[33m",
-        "\r\n[vipCleaner] Removed VIP users from Admins.cfg:\r\n"
+        "\r\n[vipCleaner] Removed VIP users from Admins.cfg:\r\n",
       );
       removedLines.forEach((e) => {
         console.log("\x1b[36m", e);
@@ -139,7 +140,7 @@ async function runCycle(client) {
         "\x1b[33m",
         "\r\n[vipCleaner] Backup created",
         backupName,
-        "\r\n"
+        "\r\n",
       );
 
       await new Promise((resolve, reject) => {
@@ -147,7 +148,7 @@ async function runCycle(client) {
           if (execErr) {
             console.error(
               "[vipCleaner] Ошибка запуска syncconfig.sh:",
-              execErr
+              execErr,
             );
             return reject(execErr);
           }
@@ -158,7 +159,7 @@ async function runCycle(client) {
       });
     } else {
       console.log(
-        "[vipCleaner] В VIP-блоке Admins.cfg никого не удалили, backup/sync не делаем."
+        "[vipCleaner] В VIP-блоке Admins.cfg никого не удалили, backup/sync не делаем.",
       );
     }
 
@@ -181,7 +182,7 @@ async function runCycle(client) {
       const docs = await collection
         .find(
           { _id: { $in: activeSteamIds } },
-          { projection: { discordid: 1 } }
+          { projection: { discordid: 1 } },
         )
         .toArray();
 
@@ -190,11 +191,11 @@ async function runCycle(client) {
         .filter((id) => typeof id === "string" && id.length > 0);
 
       console.log(
-        `[vipCleaner] Всего Admin-строк в Admins.cfg: ${activeSteamIds.length}, с discordid в БД: ${validVipDiscordIds.length}`
+        `[vipCleaner] Всего Admin-строк в Admins.cfg: ${activeSteamIds.length}, с discordid в БД: ${validVipDiscordIds.length}`,
       );
     } else {
       console.log(
-        "[vipCleaner] В Admins.cfg не найдено ни одной строки Admin=...:..."
+        "[vipCleaner] В Admins.cfg не найдено ни одной строки Admin=...:...",
       );
     }
 
@@ -210,14 +211,14 @@ async function runCycle(client) {
       } catch (err) {
         console.error(
           "[vipCleaner] Не удалось получить vipLogChannelId из гильдии:",
-          err
+          err,
         );
       }
     }
 
     if (!vipRole) {
       console.error(
-        "[vipCleaner] Не удалось найти VIP-роль по vipRoleID, синхронизация ролей пропущена."
+        "[vipCleaner] Не удалось найти VIP-роль по vipRoleID, синхронизация ролей пропущена.",
       );
     } else {
       let removedCount = 0;
@@ -231,13 +232,13 @@ async function runCycle(client) {
           try {
             await member.roles.remove(
               vipRoleID,
-              "VIP снят vipCleaner: нет в Admins.cfg или нет discordid в БД"
+              "VIP снят vipCleaner: нет в Admins.cfg или нет discordid в БД",
             );
             removedCount++;
           } catch (err) {
             console.error(
               `[vipCleaner] Не удалось снять VIP с ${member.id}:`,
-              err
+              err,
             );
           }
         }
@@ -253,20 +254,20 @@ async function runCycle(client) {
           try {
             await member.roles.add(
               vipRoleID,
-              "VIP выдан vipCleaner: есть в Admins.cfg и в БД (discordid)"
+              "VIP выдан vipCleaner: есть в Admins.cfg и в БД (discordid)",
             );
             addedCount++;
           } catch (err) {
             console.error(
               `[vipCleaner] Не удалось выдать VIP ${discordId}:`,
-              err
+              err,
             );
           }
         }
       }
 
       console.log(
-        `[vipCleaner] Синхронизация ролей завершена. Выдано: ${addedCount}, снято: ${removedCount}.`
+        `[vipCleaner] Синхронизация ролей завершена. Выдано: ${addedCount}, снято: ${removedCount}.`,
       );
     }
 
@@ -276,7 +277,7 @@ async function runCycle(client) {
           .setTitle("VIP закончился")
           .setColor(0xffa500)
           .setDescription(
-            "Срок действия VIP для пользователя истёк и был очищен в БД/конфигах."
+            "Срок действия VIP для пользователя истёк и был очищен в БД/конфигах.",
           )
           .addFields(
             { name: "SteamID", value: u._id || "—", inline: true },
@@ -294,7 +295,7 @@ async function runCycle(client) {
               name: "Дата окончания VIP",
               value: u.vipEndDate ? u.vipEndDate.toLocaleString("ru-RU") : "—",
               inline: false,
-            }
+            },
           )
           .setTimestamp();
 
@@ -303,7 +304,7 @@ async function runCycle(client) {
         } catch (err) {
           console.error(
             "[vipCleaner] Ошибка отправки embed об окончании VIP:",
-            err
+            err,
           );
         }
       }
@@ -323,8 +324,8 @@ async function runCycle(client) {
           .send(text)
           .catch(() =>
             console.log(
-              `[vipCleaner] Невозможно отправить сообщение пользователю ${discordId}`
-            )
+              `[vipCleaner] Невозможно отправить сообщение пользователю ${discordId}`,
+            ),
           );
       }
     }
@@ -332,8 +333,8 @@ async function runCycle(client) {
     if (expiredDiscordIds.length) {
       console.log(
         `[vipCleaner] Просроченный VIP у Discord ID: ${expiredDiscordIds.join(
-          ", "
-        )}`
+          ", ",
+        )}`,
       );
     }
   } catch (err) {
@@ -343,16 +344,21 @@ async function runCycle(client) {
   }
 }
 
-const vipCleaner = (client) => {
-  const INTERVAL_MS = 36000000;
+async function fullSync(client) {
+  await runCycle(client);
+  await syncClanRoles(client);
+}
 
-  runCycle(client).catch((err) =>
-    console.error("[vipCleaner] Ошибка при стартовом прогоне:", err)
+const vipCleaner = (client) => {
+  const INTERVAL_MS = 3600000;
+
+  fullSync(client).catch((err) =>
+    console.error("[vipCleaner] Ошибка при стартовом прогоне:", err),
   );
 
   setInterval(() => {
-    runCycle(client).catch((err) =>
-      console.error("[vipCleaner] Ошибка при очередном прогоне:", err)
+    fullSync(client).catch((err) =>
+      console.error("[vipCleaner] Ошибка при очередном прогоне:", err),
     );
   }, INTERVAL_MS);
 };
