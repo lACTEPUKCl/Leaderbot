@@ -337,16 +337,21 @@ async function runCycle(client) {
         )}`,
       );
     }
+
+    return { guild, members };
   } catch (err) {
     console.error("[vipCleaner] Общая ошибка работы:", err);
+    return null;
   } finally {
     await clientdb.close().catch(() => {});
   }
 }
 
 async function fullSync(client) {
-  await runCycle(client);
-  await syncClanRoles(client);
+  const result = await runCycle(client);
+  if (result) {
+    await syncClanRoles(result.guild, result.members);
+  }
 }
 
 const vipCleaner = (client) => {
