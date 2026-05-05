@@ -273,22 +273,10 @@ export function registerAntiSpamTimeout(client, options) {
         if (member.permissions.has(PermissionFlagsBits.Administrator)) return;
       }
 
-      // Пропускаем каналы из игнорируемых категорий (тикеты обращений и т.д.)
       if (config.ignoreCategories?.length) {
         const parentId = message.channel.parentId || message.channel.parent?.id;
-        console.log(
-          `[DEBUG] Категория канала "${message.channel.name}": ${parentId}`,
-        );
-        console.log(
-          `[DEBUG] Игнорируемые категории: ${JSON.stringify(config.ignoreCategories)}`,
-        );
         if (parentId && config.ignoreCategories.includes(parentId)) {
-          console.log(`[DEBUG] Сообщение ИГНОРИРУЕТСЯ (категория совпала)`);
           return;
-        } else {
-          console.log(
-            `[DEBUG] Сообщение НЕ игнорируется (причина: parentId=${parentId}, includes=${config.ignoreCategories.includes(parentId)})`,
-          );
         }
       }
 
