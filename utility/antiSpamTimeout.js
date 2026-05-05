@@ -73,19 +73,13 @@ export function registerAntiSpamTimeout(client, options) {
   setInterval(() => {
     const now = Date.now();
     for (const [k, arr] of userMessages) {
-      const fresh = arr.filter(
-        (r) => now - r.timestamp <= config.windowMs
-      );
-      if (fresh.length)
-        userMessages.set(k, fresh.slice(-MAX_PER_USER));
+      const fresh = arr.filter((r) => now - r.timestamp <= config.windowMs);
+      if (fresh.length) userMessages.set(k, fresh.slice(-MAX_PER_USER));
       else userMessages.delete(k);
     }
     for (const [k, arr] of userAllRecent) {
-      const fresh = arr.filter(
-        (r) => now - r.timestamp <= ALL_WINDOW_MS
-      );
-      if (fresh.length)
-        userAllRecent.set(k, fresh.slice(-ALL_MAX));
+      const fresh = arr.filter((r) => now - r.timestamp <= ALL_WINDOW_MS);
+      if (fresh.length) userAllRecent.set(k, fresh.slice(-ALL_MAX));
       else userAllRecent.delete(k);
     }
     for (const [k, t] of punishedUntil) {
@@ -120,7 +114,7 @@ export function registerAntiSpamTimeout(client, options) {
       (m) =>
         m.analysis.hasLink ||
         m.analysis.hasInvite ||
-        m.analysis.hasEveryoneMention
+        m.analysis.hasEveryoneMention,
     );
     if (anySusp) {
       score += sc.suspiciousContent;
@@ -158,7 +152,7 @@ export function registerAntiSpamTimeout(client, options) {
   async function runAnalysis(key, guild, member) {
     const now = Date.now();
     const msgs = (userMessages.get(key) || []).filter(
-      (r) => now - r.timestamp <= config.windowMs
+      (r) => now - r.timestamp <= config.windowMs,
     );
     if (msgs.length === 0) return;
 
@@ -211,18 +205,14 @@ export function registerAntiSpamTimeout(client, options) {
             "**.\n" +
             scoreLog +
             ping
-          : "Failed to timeout " +
-            tag +
-            ". Check perms.\n" +
-            scoreLog +
-            ping;
+          : "Failed to timeout " + tag + ". Check perms.\n" + scoreLog + ping;
         await notify(guild, logChannelId, txt);
       }
     } else if (logChannelId) {
       await notify(
         guild,
         logChannelId,
-        tag + " msgs deleted (no timeout).\n" + scoreLog + ping
+        tag + " msgs deleted (no timeout).\n" + scoreLog + ping,
       );
     }
   }
@@ -270,8 +260,7 @@ export function registerAntiSpamTimeout(client, options) {
   client.on("messageCreate", async (message) => {
     const now = Date.now();
     try {
-      if (!message.guild || !message.author || message.author.bot)
-        return;
+      if (!message.guild || !message.author || message.author.bot) return;
 
       const member =
         message.member ||
@@ -281,16 +270,26 @@ export function registerAntiSpamTimeout(client, options) {
       if (!member) return;
 
       if (config.ignoreAdmins) {
-        if (
-          member.permissions.has(PermissionFlagsBits.Administrator)
-        )
-          return;
+        if (member.permissions.has(PermissionFlagsBits.Administrator)) return;
       }
 
       // Пропускаем каналы из игнорируемых категорий (тикеты обращений и т.д.)
       if (config.ignoreCategories?.length) {
         const parentId = message.channel.parentId || message.channel.parent?.id;
-        if (parentId && config.ignoreCategories.includes(parentId)) return;
+        console.log(
+          `[DEBUG] Категория канала "${message.channel.name}": ${parentId}`,
+        );
+        console.log(
+          `[DEBUG] Игнорируемые категории: ${JSON.stringify(config.ignoreCategories)}`,
+        );
+        if (parentId && config.ignoreCategories.includes(parentId)) {
+          console.log(`[DEBUG] Сообщение ИГНОРИРУЕТСЯ (категория совпала)`);
+          return;
+        } else {
+          console.log(
+            `[DEBUG] Сообщение НЕ игнорируется (причина: parentId=${parentId}, includes=${config.ignoreCategories.includes(parentId)})`,
+          );
+        }
       }
 
       if (isTrivialMessage(message)) return;
@@ -300,9 +299,7 @@ export function registerAntiSpamTimeout(client, options) {
       // Always add to deletion buffer
       {
         const all = userAllRecent.get(key) || [];
-        const fresh = all.filter(
-          (r) => now - r.timestamp <= ALL_WINDOW_MS
-        );
+        const fresh = all.filter((r) => now - r.timestamp <= ALL_WINDOW_MS);
         fresh.push({
           timestamp: now,
           messageId: message.id,
@@ -310,7 +307,7 @@ export function registerAntiSpamTimeout(client, options) {
         });
         userAllRecent.set(
           key,
-          fresh.length > ALL_MAX ? fresh.slice(-ALL_MAX) : fresh
+          fresh.length > ALL_MAX ? fresh.slice(-ALL_MAX) : fresh,
         );
       }
 
@@ -326,9 +323,7 @@ export function registerAntiSpamTimeout(client, options) {
       const hash = makeHash(message, analysis);
       {
         const recs = userMessages.get(key) || [];
-        const fresh = recs.filter(
-          (r) => now - r.timestamp <= config.windowMs
-        );
+        const fresh = recs.filter((r) => now - r.timestamp <= config.windowMs);
         fresh.push({
           hash,
           timestamp: now,
@@ -338,9 +333,7 @@ export function registerAntiSpamTimeout(client, options) {
         });
         userMessages.set(
           key,
-          fresh.length > MAX_PER_USER
-            ? fresh.slice(-MAX_PER_USER)
-            : fresh
+          fresh.length > MAX_PER_USER ? fresh.slice(-MAX_PER_USER) : fresh,
         );
       }
 
