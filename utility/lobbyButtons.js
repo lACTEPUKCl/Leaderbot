@@ -3,7 +3,7 @@ import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
 const JOIN_PATH = "/api/sqb/join-link";
 const REFRESH_MS = Number(process.env.REFRESH_MS || 30000);
 
-const SERVERS = [
+const VANILLA_SERVERS = [
   {
     label: "RNS #1 Classic",
     name: "  [ RU ] Русский Народный Сервер #1 [Classic] | https://discord.gg/rn-server",
@@ -20,6 +20,9 @@ const SERVERS = [
     label: "RNS #4",
     name: "  [ RU ] Русский Народный Сервер #4 | ВС РФ против ВСУ 24/7",
   },
+];
+
+const MOD_SERVERS = [
   {
     label: "SuperMod",
     name: " [ SuperMod ] Русский Народный Модовый #1 [RU] [SPM] [SU]",
@@ -38,13 +41,26 @@ const SERVERS = [
   },
 ];
 
+const GROUPS = [
+  {
+    title: "Русский Народный Сервер",
+    servers: VANILLA_SERVERS,
+    tag: "vanilla",
+  },
+  {
+    title: "Русский Народный Модовый",
+    servers: MOD_SERVERS,
+    tag: "mod",
+  },
+];
+
 export async function initLobbyButtons(
   client,
   channelId,
   _steamApiKeyNotUsed,
   domain,
 ) {
-  console.log("[lobbyButtons] initLobbyButtons, SERVERS =", SERVERS.length);
+  console.log("[lobbyButtons] initLobbyButtons");
 
   if (!domain) {
     console.error(
@@ -54,38 +70,53 @@ export async function initLobbyButtons(
   }
 
   const channel = await client.channels.fetch(channelId);
-  const controlMsg = await findOrCreateMessage(channel);
+  const messages = {};
+  for (const group of GROUPS) {
+    messages[group.tag] = await findOrCreateMessage(channel, group);
+  }
 
-  await editMessage(controlMsg, domain);
+  for (const group of GROUPS) {
+    await editMessage(messages[group.tag], group, domain);
+  }
 
   setInterval(async () => {
-    await editMessage(controlMsg, domain);
+    for (const group of GROUPS) {
+      try {
+        await editMessage(messages[group.tag], group, domain);
+      } catch (err) {
+        console.error(
+          `[lobbyButtons] refresh error (${group.tag}):`,
+          err.message,
+        );
+      }
+    }
   }, REFRESH_MS);
 }
 
-async function findOrCreateMessage(channel) {
+async function findOrCreateMessage(channel, group) {
   const fetched = await channel.messages.fetch({ limit: 50 });
   const existing = fetched.find(
-    (m) => m.author.id === channel.client.user.id && m.components.length,
+    (m) =>
+      m.author.id === channel.client.user.id && m.content.includes(group.title),
   );
   if (existing) return existing;
 
   return channel.send({
     content: [
-      "**Как подключиться к серверу Squad:**",
+      `**${group.title}**`,
+      "",
       "1) Запустите игру **Squad**.",
       "2) Нажмите на кнопку нужного сервера ниже.",
     ].join("\n"),
   });
 }
 
-async function editMessage(msg, domain) {
-  const row = buildRow(domain);
+async function editMessage(msg, group, domain) {
+  const row = buildRow(group.servers, domain);
   const rowData = row.toJSON();
 
   console.log(
-    "[lobbyButtons] rowData.components.length =",
-    rowData.components.length,
+    `[lobbyButtons] ${group.tag}: ${rowData.components.length} buttons`,
   );
 
   if (rowData.components.length) {
@@ -95,17 +126,10 @@ async function editMessage(msg, domain) {
   }
 }
 
-function buildRow(domain) {
-  console.log("[lobbyButtons] buildRow, SERVERS.length =", SERVERS.length);
-
+function buildRow(servers, domain) {
   const row = new ActionRowBuilder();
 
-  if (!SERVERS || !SERVERS.length) {
-    console.warn("[lobbyButtons] SERVERS пустой, кнопки не создаём");
-    return row;
-  }
-
-  for (const srv of SERVERS) {
+  for (const srv of servers) {
     const fullName = srv.name || "";
     if (!fullName) continue;
 
