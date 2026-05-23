@@ -1,6 +1,6 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
 
-const JOIN_PATH = "/api/join-link";
+const JOIN_PATH = "/api/sqb/join-link";
 const REFRESH_MS = Number(process.env.REFRESH_MS || 30000);
 
 const SERVERS = [
@@ -21,8 +21,20 @@ const SERVERS = [
     name: "  [ RU ] Русский Народный Сервер #4 | ВС РФ против ВСУ 24/7",
   },
   {
-    label: "RNS KOTH",
-    name: "Русский Народный Модовый #4",
+    label: "SuperMod",
+    name: " [ SuperMod ] Русский Народный Модовый #1 [RU] [SPM] [SU]",
+  },
+  {
+    label: "WARZONE #2",
+    name: " [ WARZONE ] Русский Народный Модовый #2 | НОВЫЙ МОД!!!",
+  },
+  {
+    label: "WARZONE #3",
+    name: " [ WARZONE ] Русский Народный Модовый #3 | НОВЫЙ МОД!!! | 24/7 |",
+  },
+  {
+    label: "WARZONE #4",
+    name: " [ WARZONE ] Русский Народный Модовый #4 | ВС РФ против ВСУ 24/7",
   },
 ];
 
