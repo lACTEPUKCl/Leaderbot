@@ -137,7 +137,7 @@ function buildRow(servers, domain) {
     if (!label) continue;
 
     const encodedName = encodeURIComponent(fullName);
-    const url = `http://${domain}${JOIN_PATH}?name=${encodedName}`;
+    const url = `${domain}${JOIN_PATH}?name=${encodedName}`;
 
     row.addComponents(
       new ButtonBuilder()
