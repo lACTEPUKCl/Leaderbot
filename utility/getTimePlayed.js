@@ -34,7 +34,8 @@ const getTimePlayed = async (steamID) => {
     for (let i = 0; i < serverId.length; i++) {
       try {
         const res = await axios.get(
-          `https://api.battlemetrics.com/players/${BMPlayerId}/servers/${serverId[i]}`
+          `https://api.battlemetrics.com/players/${BMPlayerId}/servers/${serverId[i]}`,
+          headers
         );
         playedTimeAllServersBM += res.data.data.attributes.timePlayed;
       } catch (err) {}
