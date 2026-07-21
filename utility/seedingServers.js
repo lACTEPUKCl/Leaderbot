@@ -21,13 +21,27 @@ async function closeConnection() {
 }
 
 async function getServerInfo(serverId) {
+  const apiKey = process.env.BATTLEMETRICS_API_KEY;
+
+  if (!apiKey) {
+    console.error(
+      "Отсутствует ключ API для Battlemetrics. Проверьте настройки."
+    );
+    return null;
+  }
+
   let attempt = 0;
   let delay = 30000;
 
   while (true) {
     try {
       const response = await axios.get(
-        `https://api.battlemetrics.com/servers/${serverId}`
+        `https://api.battlemetrics.com/servers/${serverId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+          },
+        }
       );
       return {
         name: response.data.data.attributes.name,
