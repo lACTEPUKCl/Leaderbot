@@ -162,9 +162,11 @@ client.on("ready", async () => {
     await endSeeding(guildId);
   });
 
-  schedule.scheduleJob("0 1 * * *", async () => {
-    await adminsactivity(guildId);
-  });
+  // Отключено 15.08.2026: ежедневный постинг активности админов (спам).
+  // Учёт админов переносится в админ-панель сайта. Чтобы вернуть — раскомментировать.
+  // schedule.scheduleJob("0 1 * * *", async () => {
+  //   await adminsactivity(guildId);
+  // });
 
   schedule.scheduleJob("0 4 * * *", async () => {
     await clanVipCleaner(client.guilds.cache.get(discordServerId));
