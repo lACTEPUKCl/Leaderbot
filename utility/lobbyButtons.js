@@ -28,8 +28,8 @@ const MOD_SERVERS = [
     name: " [ SuperMod ] Русский Народный Модовый #1 [RU] [SPM] [SU]",
   },
   {
-    label: "Galactic Contention",
-    name: " [ GC ] Русский Народный Модовый #2 | НОВЫЙ МОД!!! Galactic Contention",
+    label: "Vietnam SuperMod",
+    name: " [ VIETNAM | SUPERMOD ] Русский Народный Модовый #2 | PLAYTEST",
   },
   {
     label: "WARZONE #3",
