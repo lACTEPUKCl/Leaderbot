@@ -11,7 +11,7 @@ function getExp(user) {
     timeplayed: expForTime,
   } = user.squad;
   const { won: expForWin, lose: expForLose } = user.matches;
-  let exp =
+  const calculatedExp =
     expForTime +
     expForKills * 2 +
     expForRevives * 2 -
@@ -21,6 +21,13 @@ function getExp(user) {
     expForCmd * 4 +
     expForWin * 10 -
     expForLose * 5;
+  // EXP is cumulative and survives a statistics reset. Prefer the persisted
+  // value; calculate it from combat stats only for legacy documents.
+  const storedExp = user?.exp;
+  const exp = storedExp !== null && storedExp !== undefined && storedExp !== ""
+    && Number.isFinite(Number(storedExp))
+    ? Number(storedExp)
+    : calculatedExp;
   if (exp > 0 && exp < 5000) {
     const rankPct = exp / 5000;
     const rankStr = "Рядовой";
