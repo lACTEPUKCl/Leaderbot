@@ -6,6 +6,8 @@ import options from "../config.js";
 const { donationLink } = options;
 
 async function donateInteraction(interaction, db) {
+  await interaction.deferReply({ ephemeral: true });
+
   const clientdb = new MongoClient(db);
   const dbName = "SquadJS";
   const dbCollection = "mainstats";
@@ -24,7 +26,7 @@ async function donateInteraction(interaction, db) {
         console.error(
           "[donateInteraction] Нет LINK_STEAM_URL или LINK_SIGN_SECRET в окружении"
         );
-        await interaction.reply({
+        await interaction.editReply({
           content:
             "Система привязки Steam через сайт сейчас недоступна. Сообщите администратору.",
           ephemeral: true,
@@ -48,7 +50,7 @@ async function donateInteraction(interaction, db) {
 
       const row = new ActionRowBuilder().addComponents(linkButton);
 
-      await interaction.reply({
+      await interaction.editReply({
         content:
           "Ваш Discord ещё не привязан к Steam.\n" +
           "Нажмите кнопку ниже — откроется сайт, где нужно войти через Steam для привязки.\n" +
@@ -62,7 +64,7 @@ async function donateInteraction(interaction, db) {
     const steamId = user._id;
 
     if (!steamId) {
-      await interaction.reply({
+      await interaction.editReply({
         content:
           "В базе найден пользователь с вашим Discord, но без SteamID. Обратитесь к администратору.",
         ephemeral: true,
@@ -77,7 +79,7 @@ async function donateInteraction(interaction, db) {
 
     const donateRow = new ActionRowBuilder().addComponents(donateButton);
 
-    await interaction.reply({
+    await interaction.editReply({
       content: `Скопируйте ваш SteamID: **${steamId}**\nИли просто нажмите кнопку ниже и вставьте его в поле "Комментарий" при оформлении доната (если нужно).`,
       components: [donateRow],
       ephemeral: true,
@@ -85,7 +87,7 @@ async function donateInteraction(interaction, db) {
   } catch (e) {
     console.error("[donateInteraction] Ошибка:", e);
     try {
-      await interaction.reply({
+      await interaction.editReply({
         content: "Произошла ошибка при подготовке ссылки на донат.",
         ephemeral: true,
       });

@@ -36,17 +36,16 @@ import "./utility/fonts.js";
 import { initLobbyButtons } from "./utility/lobbyButtons.js";
 import { registerAntiSpamTimeout } from "./utility/antiSpamTimeout.js";
 import { HttpsProxyAgent } from "https-proxy-agent";
-import { ProxyAgent, setGlobalDispatcher } from "undici";
+import { ProxyAgent } from "undici";
 
 const proxyUrl = process.env.DISCORD_PROXY_URL;
 let wsProxyAgent = null;
+let restProxyAgent = null;
 
 if (proxyUrl) {
   console.log("[BOT] Using Discord proxy:", proxyUrl);
 
-  const restProxy = new ProxyAgent(proxyUrl);
-  setGlobalDispatcher(restProxy);
-
+  restProxyAgent = new ProxyAgent(proxyUrl);
   wsProxyAgent = new HttpsProxyAgent(proxyUrl);
 }
 
@@ -60,6 +59,7 @@ const client = new Client({
     GatewayIntentBits.GuildMessageReactions,
     GatewayIntentBits.GuildVoiceStates,
   ],
+  ...(restProxyAgent ? { rest: { agent: restProxyAgent } } : {}),
   ...(wsProxyAgent ? { ws: { agent: wsProxyAgent } } : {}),
 });
 
