@@ -51,6 +51,7 @@ export async function syncWardogsRole(client, logger = console) {
   const result = { added: 0, removed: 0, failed: 0 };
   for (const member of members.values()) {
     const wanted = reactors.has(member.id);
+    if (!wanted) continue; // Keep existing roles; automatic removal disabled at user request.
     if (member.roles.cache.has(roleId) === wanted) continue;
     try {
       if (wanted) {

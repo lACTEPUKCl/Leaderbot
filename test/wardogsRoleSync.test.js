@@ -34,10 +34,10 @@ function fixture({ reactions = [{ emoji: { id: "77", name: "wardogs" } }], pages
   return { client, changes, requests, members };
 }
 
-test("adds missing role, removes stale role, and leaves others alone", async () => {
+test("adds missing role and preserves existing roles without reactions", async () => {
   const f = fixture();
-  assert.deepEqual(await syncWardogsRole(f.client, logger), { added: 1, removed: 1, failed: 0 });
-  assert.deepEqual(f.changes, [["add", "1", WARDOGS.roleId], ["remove", "2", WARDOGS.roleId]]);
+  assert.deepEqual(await syncWardogsRole(f.client, logger), { added: 1, removed: 0, failed: 0 });
+  assert.deepEqual(f.changes, [["add", "1", WARDOGS.roleId]]);
 });
 
 test("all reaction pages are read, including Super Reactions", async () => {
@@ -54,10 +54,10 @@ test("all reaction pages are read, including Super Reactions", async () => {
   assert.deepEqual(f.changes, [["add", "1", WARDOGS.roleId]]);
 });
 
-test("absent wardogs reaction removes role even if another emoji is present", async () => {
+test("absent wardogs reaction preserves existing roles", async () => {
   const f = fixture({ reactions: [{ emoji: { id: "88", name: "other" } }] });
   await syncWardogsRole(f.client, logger);
-  assert.deepEqual(f.changes, [["remove", "2", WARDOGS.roleId]]);
+  assert.deepEqual(f.changes, []);
   assert.equal(f.requests.length, 0);
 });
 
@@ -69,10 +69,10 @@ test("failed reaction or member fetch never changes roles", async () => {
   }
 });
 
-test("one member failure does not prevent remaining changes", async () => {
+test("member failure is reported without removing existing roles", async () => {
   const f = fixture();
   f.members.get("1").roles.add = async () => { throw new Error("forbidden"); };
-  assert.deepEqual(await syncWardogsRole(f.client, logger), { added: 0, removed: 1, failed: 1 });
+  assert.deepEqual(await syncWardogsRole(f.client, logger), { added: 0, removed: 0, failed: 1 });
 });
 
 test("startup is immediate and repeated ready events reuse the minute timer", async () => {
@@ -82,7 +82,7 @@ test("startup is immediate and repeated ready events reuse the minute timer", as
     assert.equal(startWardogsRoleSync(f.client, logger), timer);
     assert.equal(timer._idleTimeout, 60_000);
     await new Promise(resolve => setImmediate(resolve));
-    assert.equal(f.changes.length, 2);
+    assert.equal(f.changes.length, 1);
   } finally {
     clearInterval(timer);
   }
