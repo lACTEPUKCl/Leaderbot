@@ -37,6 +37,7 @@ import { initLobbyButtons } from "./utility/lobbyButtons.js";
 import { registerAntiSpamTimeout } from "./utility/antiSpamTimeout.js";
 import { HttpsProxyAgent } from "https-proxy-agent";
 import { ProxyAgent, setGlobalDispatcher } from "undici";
+import { startWardogsRoleSync } from "./utility/wardogsRoleSync.js";
 
 const proxyUrl = process.env.DISCORD_PROXY_URL;
 let wsProxyAgent = null;
@@ -77,6 +78,7 @@ for (const command of commands) {
 
 client.on("ready", async () => {
   console.log(`Logged in as ${client.user.tag}!`);
+  startWardogsRoleSync(client);
   const threadChannelId = client.channels.cache.get("1204124602230374471");
   const vipChannelId = client.channels.cache.get("1189653903738949723");
   const {
