@@ -2,6 +2,7 @@ import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
 
 const JOIN_PATH = "/api/sqb/join-link";
 const REFRESH_MS = Number(process.env.REFRESH_MS || 30000);
+const lastPayload = new WeakMap();
 
 const VANILLA_SERVERS = [
   {
@@ -28,8 +29,8 @@ const MOD_SERVERS = [
     name: " [ SuperMod ] Русский Народный Модовый #1 [RU] [SPM] [SU]",
   },
   {
-    label: "Galactic Contention",
-    name: " [ GC ] Русский Народный Модовый #2 | НОВЫЙ МОД!!! Galactic Contention",
+    label: "Vietnam SuperMod",
+    name: " [ VIETNAM | SUPERMOD ] Русский Народный Модовый #2 | PLAYTEST",
   },
   {
     label: "WARZONE #3",
@@ -42,6 +43,7 @@ const MOD_SERVERS = [
 ];
 
 const GROUPS = [
+  ...(process.env.WARDOGS_LOBBY_ENABLED === 'true' ? [{title:'Wardogs | Русский Народный Сервер',game:'Wardogs',tag:'wardogs',servers:[{label:'Играть в Wardogs',name:'Wardogs',path:'/api/wardogs/join-link'}]}] : []),
   {
     title: "Русский Народный Сервер",
     servers: VANILLA_SERVERS,
@@ -79,25 +81,34 @@ export async function initLobbyButtons(
     await editMessage(messages[group.tag], group, domain);
   }
 
+  let refreshing = false;
   setInterval(async () => {
-    for (const group of GROUPS) {
-      try {
-        await editMessage(messages[group.tag], group, domain);
-      } catch (err) {
-        console.error(
-          `[lobbyButtons] refresh error (${group.tag}):`,
-          err.message,
-        );
+    if (refreshing) return;
+    refreshing = true;
+    try {
+      for (const group of GROUPS) {
+        try {
+          await editMessage(messages[group.tag], group, domain);
+        } catch (err) {
+          console.error(
+            `[lobbyButtons] refresh error (${group.tag}):`,
+            err.message,
+          );
+        }
       }
-    }
+    } finally { refreshing = false; }
   }, REFRESH_MS);
+}
+
+export function matchesLobbyMessage(message, botId, title) {
+  return message.author?.id === botId && message.content?.split(/\r?\n/, 1)[0].trim() === `**${title}**`;
 }
 
 async function findOrCreateMessage(channel, group) {
   const fetched = await channel.messages.fetch({ limit: 50 });
   const existing = fetched.find(
     (m) =>
-      m.author.id === channel.client.user.id && m.content.includes(group.title),
+      matchesLobbyMessage(m, channel.client.user.id, group.title),
   );
   if (existing) return existing;
 
@@ -105,15 +116,17 @@ async function findOrCreateMessage(channel, group) {
     content: [
       `**${group.title}**`,
       "",
-      "1) Запустите игру **Squad**.",
+      `1) Запустите игру **${group.game || 'Squad'}**.`,
       "2) Нажмите на кнопку нужного сервера ниже.",
     ].join("\n"),
   });
 }
 
-async function editMessage(msg, group, domain) {
+export async function editMessage(msg, group, domain) {
   const row = buildRow(group.servers, domain);
   const rowData = row.toJSON();
+  const signature = JSON.stringify(rowData);
+  if (lastPayload.get(msg) === signature) return;
 
   console.log(
     `[lobbyButtons] ${group.tag}: ${rowData.components.length} buttons`,
@@ -124,9 +137,10 @@ async function editMessage(msg, group, domain) {
   } else {
     await msg.edit({ components: [] });
   }
+  lastPayload.set(msg, signature);
 }
 
-function buildRow(servers, domain) {
+export function buildRow(servers, domain) {
   const row = new ActionRowBuilder();
 
   for (const srv of servers) {
@@ -136,8 +150,12 @@ function buildRow(servers, domain) {
     const label = srv.label || fullName || "";
     if (!label) continue;
 
-    const encodedName = encodeURIComponent(fullName);
-    const url = `${domain}${JOIN_PATH}?name=${encodedName}`;
+    const target = new URL(srv.path || JOIN_PATH, domain);
+    if (!['https:', 'http:'].includes(target.protocol) || target.username || target.password) {
+      throw new Error('Lobby domain must be an HTTP(S) URL without credentials');
+    }
+    target.searchParams.set('name', fullName);
+    const url = target.href;
 
     row.addComponents(
       new ButtonBuilder()
