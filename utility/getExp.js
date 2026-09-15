@@ -11,7 +11,7 @@ function getExp(user) {
     timeplayed: expForTime,
   } = user.squad;
   const { won: expForWin, lose: expForLose } = user.matches;
-  let exp =
+  const calculatedExp =
     expForTime +
     expForKills * 2 +
     expForRevives * 2 -
@@ -21,6 +21,14 @@ function getExp(user) {
     expForCmd * 4 +
     expForWin * 10 -
     expForLose * 5;
+  // `mainstats.exp` — накопительный опыт и единый источник правды. Статистика
+  // может быть сброшена отдельно, поэтому повторный расчёт из kills/matches
+  // после сброса ошибочно понижал звание и прогресс игрока.
+  const storedExp = user?.exp;
+  const exp = storedExp !== null && storedExp !== undefined && storedExp !== ""
+    && Number.isFinite(Number(storedExp))
+    ? Number(storedExp)
+    : calculatedExp;
   if (exp > 0 && exp < 5000) {
     const rankPct = exp / 5000;
     const rankStr = "Рядовой";
