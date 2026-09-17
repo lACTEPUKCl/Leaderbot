@@ -1,176 +1,66 @@
-import axios from "axios";
-import { EmbedBuilder } from "discord.js";
-import options from "../config.js";
-import { MongoClient } from "mongodb";
-import { config } from "dotenv";
-config();
+import { EmbedBuilder } from 'discord.js';
+import { MongoClient } from 'mongodb';
+import options from '../config.js';
+import 'dotenv/config';
 
 const client = new MongoClient(process.env.DATABASE_URL);
-const { seedRoleId, dbName, dbCollectionServers } = options;
-const servers = options.serversSeedID;
-let alreadyNotified = false;
-let inProgress = {};
+let busy = false;
+let notifiedTarget = null;
+let timer;
 
-async function connectToDatabase() {
-  await client.connect();
-  return client.db(dbName).collection(dbCollectionServers);
-}
-
-async function closeConnection() {
-  await client.close();
-}
-
-async function getServerInfo(serverId) {
-  const apiKey = process.env.BATTLEMETRICS_API_KEY;
-
-  if (!apiKey) {
-    console.error(
-      "Отсутствует ключ API для Battlemetrics. Проверьте настройки."
-    );
-    return null;
-  }
-
-  let attempt = 0;
-  let delay = 30000;
-
-  while (true) {
-    try {
-      const response = await axios.get(
-        `https://api.battlemetrics.com/servers/${serverId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-          },
-        }
-      );
-      return {
-        name: response.data.data.attributes.name,
-        players: response.data.data.attributes.players,
-      };
-    } catch (error) {
-      attempt++;
-      console.error(
-        `Ошибка при получении данных с сервера ${serverId} (попытка ${attempt}):`,
-        error
-      );
-
-      console.log(`Повторная попытка через ${delay / 1000} секунд...`);
-      await new Promise((resolve) => setTimeout(resolve, delay));
-    }
-  }
-}
-
-async function updateSeedingStatus(collection, serverIndex, seeding) {
-  const serverIndexString = (serverIndex + 1).toString();
-  await collection.updateOne({ _id: serverIndexString }, { $set: { seeding } });
-}
-
-async function notifyUsers(guild, message, serverName, serverId) {
-  const role = guild.roles.cache.get(seedRoleId);
-  if (!role) return;
-
-  const embed = new EmbedBuilder()
-    .setColor("#0099ff")
-    .setTitle(serverName)
-    .setURL(`https://www.battlemetrics.com/servers/squad/${serverId}`)
-    .setDescription(message)
-    .setThumbnail("https://example.com/server-icon.png")
-    .addFields({
-      name: "Как отписаться от рассылки",
-      value:
-        "Уберите эмодзи в канале по [ссылке](https://discord.com/channels/735515208348598292/1270808177700507729).",
-      inline: false,
-    })
-    .setFooter({
-      text: "Спасибо за вашу помощь!",
-      iconURL:
-        "https://cdn.discordapp.com/attachments/1179711462197968896/1271584403826540705/0000.png",
-    })
-    .setTimestamp();
-  await guild.members.fetch();
-  const membersWithRole = role.members;
-  membersWithRole.forEach((member) => {
-    member.send({ embeds: [embed] }).catch(() => {});
-  });
-}
-
+// Site and Companion use this same target; never choose one independently.
 async function seedingServers(guild) {
-  const collection = await connectToDatabase();
-
+  if (busy || !guild) return;
+  busy = true;
   try {
-    for (let i = 0; i < servers.length; i++) {
-      let server = servers[i];
-
-      if (inProgress[server.id]) {
-        console.log(
-          `Запрос к серверу ${server.id} уже выполняется, пропускаем.`
-        );
-        continue;
+    await client.connect();
+    const collection = client.db(options.dbName).collection('seeders');
+    const target = await collection.findOne({ _id: '__target' });
+    const age = Date.now() - new Date(target?.updatedAt || 0).getTime();
+    if (!target?.active || age < 0 || age > 90000) return;
+    const notificationKey = `${new Date(Date.now() + 3 * 3600000).toISOString().slice(0, 10)}:${target.serverKey}`;
+    if (notifiedTarget === notificationKey) return;
+    const previous = await collection.findOne({ _id: '__discordNotification' });
+    if (previous?.key === notificationKey) { notifiedTarget = notificationKey; return; }
+    const role = await guild.roles.fetch(options.seedRoleId);
+    if (!role) return;
+    // REST pagination avoids Gateway opcode 8 contention with role/VIP workers.
+    const recipients = new Map();
+    let after;
+    for (;;) {
+      const page = await guild.members.list({ limit: 1000, ...(after ? { after } : {}) });
+      for (const member of page.values()) {
+        if (member.roles.cache.has(options.seedRoleId)) recipients.set(member.id, member);
       }
-
-      inProgress[server.id] = true;
-      let serverInfo = await getServerInfo(server.id);
-      let notified = false;
-
-      while (serverInfo && serverInfo.players < 60) {
-        const { name } = serverInfo;
-
-        if (!notified) {
-          const message = `Мы начинаем сидить сервер ${name}`;
-          await notifyUsers(guild, message, name, server.id);
-          await updateSeedingStatus(collection, i, true);
-          notified = true;
-        }
-
-        await new Promise((resolve) => setTimeout(resolve, 5 * 60 * 1000));
-        serverInfo = await getServerInfo(server.id);
-      }
-
-      await updateSeedingStatus(collection, i, false);
-      inProgress[server.id] = false;
+      if (page.size < 1000) break;
+      const next = page.lastKey();
+      if (!next || next === after) throw new Error('member pagination did not advance');
+      after = next;
     }
-
-    if (!alreadyNotified) {
-      const message = `Огромное спасибо за вашу помощь!`;
-      await notifyUsers(guild, message, "Все сервера успешно подняты!", "");
-      alreadyNotified = true;
+    const embed = new EmbedBuilder().setColor('#0099ff')
+      .setTitle(target.name || target.serverKey)
+      .setURL('https://rnserver.ru/seed')
+      .setDescription('Сидим этот сервер вместе с компаньоном. Подключиться: https://rnserver.ru/seed\nЗа присутствие на целевом сервере с ролью сидера или включённым набором — 5 бонусов в минуту.')
+      .addFields({ name: 'Отписаться', value: 'Снимите роль сидера в канале получения роли.' });
+    // Persist before sending: restart must not duplicate a mass notification.
+    await collection.updateOne({ _id: '__discordNotification' }, { $set: { key: notificationKey, serverKey: target.serverKey, updatedAt: new Date() } }, { upsert: true });
+    notifiedTarget = notificationKey;
+    let delivered = 0;
+    for (const member of recipients.values()) {
+      await member.send({ embeds: [embed] }).then(() => delivered++).catch(() => {});
     }
+    console.log('[seed] target notification', target.serverKey, 'delivered', delivered, 'of', recipients.size);
   } catch (error) {
-    console.error("Ошибка при выполнении команды seedingServers:", error);
-  } finally {
-    await closeConnection();
-  }
+    console.error('[seed] target sync failed:', error.message);
+  } finally { busy = false; }
 }
 
-async function endSeeding(guild) {
-  const collection = await connectToDatabase();
-
-  try {
-    await collection.updateMany({}, { $set: { seeding: false } });
-    inProgress = {};
-    if (!alreadyNotified) {
-      const role = await guild.roles.cache.get(seedRoleId);
-
-      if (role) {
-        const embed = new EmbedBuilder()
-          .setColor("#FF0000")
-          .setTitle("Сидинг завершен")
-          .setDescription("Спасибо за вашу помощь!")
-          .setTimestamp();
-
-        await guild.members.fetch();
-        const membersWithRole = role.members;
-        membersWithRole.forEach((member) => {
-          member.send({ embeds: [embed] }).catch(() => {});
-        });
-      }
-    }
-  } catch (error) {
-    console.error("Ошибка при завершении сидинга:", error);
-  } finally {
-    await closeConnection();
-    alreadyNotified = false;
-  }
+function startSeedingMonitor(guild) {
+  if (timer) return;
+  void seedingServers(guild);
+  timer = setInterval(() => void seedingServers(guild), 30000);
+  timer.unref?.();
 }
-
-export { seedingServers, endSeeding };
+// Legacy scheduler must not change the site's target or bonus flags.
+async function endSeeding() { notifiedTarget = null; }
+export { seedingServers, endSeeding, startSeedingMonitor };

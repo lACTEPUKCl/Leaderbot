@@ -27,7 +27,7 @@ import {
 import { createTemporaryVoiceManager } from "./events/handleVoiceState.js";
 import { handleInteractionCreate } from "./events/handleInteraction.js";
 import { handleMessageCreate } from "./events/handleMessage.js";
-import { seedingServers, endSeeding } from "./utility/seedingServers.js";
+import { seedingServers, endSeeding, startSeedingMonitor } from "./utility/seedingServers.js";
 import schedule from "node-schedule";
 import adminsactivity from "./utility/adminsactivity.js";
 import rulesSquad from "./utility/rulesSquad.js";
@@ -92,6 +92,7 @@ client.once("ready", safeBotEvent("ready", async () => {
     vipExpiredMessage,
   } = options;
   const guildId = client.guilds.cache.get(discordServerId);
+  startSeedingMonitor(guildId);
   const db = process.env.DATABASE_URL;
   const steamApi = process.env.STEAM_API;
   const seedChannel = await client.channels.fetch(seedChannelId).catch(() => null);
