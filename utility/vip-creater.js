@@ -1,13 +1,11 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
+import { runConfigSync } from './runConfigSync.js';
 import { randomUUID } from 'node:crypto';
 import { MongoClient } from 'mongodb';
 import { config as loadEnv } from 'dotenv';
 import options from '../config.js';
 loadEnv();
-const execFileAsync = promisify(execFile);
 let configQueue = Promise.resolve();
 
 // Serialize in-process read/modify/write and await backup, write and propagation.
@@ -22,7 +20,7 @@ export function syncVipConfig(steamID) {
       await fs.copyFile(target, path.join(options.adminsCfgBackups, 'Admins-' + Date.now() + '-' + steamID + '.cfg'));
       await fs.writeFile(target, data.replace(/\s*$/, '') + '\r\nAdmin=' + steamID + ':Reserved\r\n');
     }
-    await execFileAsync(path.join(options.syncconfigPath, 'syncconfig.sh'), [], { timeout: 30000 });
+    await runConfigSync(options.syncconfigPath);
   });
   configQueue = work;
   return work;
