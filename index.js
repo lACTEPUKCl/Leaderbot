@@ -36,6 +36,8 @@ import "./utility/fonts.js";
 import { initLobbyButtons } from "./utility/lobbyButtons.js";
 import { registerAntiSpamTimeout } from "./utility/antiSpamTimeout.js";
 import { installDiscordTransport } from './utility/discordTransport.js';
+import { installInteractionReliability } from './utility/interactionReliability.js';
+import { startVipDeliveryRecovery } from './utility/vipDeliveryRecovery.js';
 import { safeBotEvent } from './utility/safeBotEvent.js';
 import { startWardogsRoleSync } from './utility/wardogsRoleSync.js';
 const discordTransport = installDiscordTransport();
@@ -53,6 +55,7 @@ const client = new Client({
   ...discordTransport,
 });
 
+installInteractionReliability(client);
 client.commands = new Collection();
 const commands = await getCommands();
 const temporaryVoice = createTemporaryVoiceManager(client, options);
@@ -77,6 +80,7 @@ client.once("ready", safeBotEvent("ready", async () => {
   temporaryVoice.start();
   await temporaryVoice.sweep();
   console.log(`Logged in as ${client.user.tag}!`);
+  startVipDeliveryRecovery();
   startWardogsRoleSync(client);
   const threadChannelId = client.channels.cache.get("1204124602230374471");
   const vipChannelId = client.channels.cache.get("1189653903738949723");

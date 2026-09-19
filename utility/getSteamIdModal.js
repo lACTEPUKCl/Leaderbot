@@ -1,52 +1,14 @@
-import {
-  ActionRowBuilder,
-  TextInputBuilder,
-  ModalBuilder,
-  TextInputStyle,
-} from "discord.js";
-import { MongoClient } from "mongodb";
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import jwt from 'jsonwebtoken';
 
-async function getSteamIdModal(interaction, db, dbName, dbCollection) {
-  const discordId = interaction.user.id;
-  const client = new MongoClient(db);
-  try {
-    await client.connect();
-    const database = client.db(dbName);
-    const collection = database.collection(dbCollection);
-    const user = await collection.findOne({ discordid: discordId });
-
-    if (user) {
-      await interaction.reply({
-        content: `Ваш Discord уже привязан к Steam ${user._id} - ${user.name}!`,
-        ephemeral: true,
-      });
-    } else {
-      const modal = new ModalBuilder()
-        .setCustomId("steamidModal")
-        .setTitle("Привязать Steam профиль");
-
-      const steamID64Input = new TextInputBuilder()
-        .setCustomId("steamid64input")
-        .setLabel("Введите ссылку на Steam профиль!")
-        .setStyle(TextInputStyle.Short)
-        .setRequired(true);
-
-      const steamRow = new ActionRowBuilder().addComponents(steamID64Input);
-
-      modal.addComponents(steamRow);
-
-      await interaction.showModal(modal);
-    }
-  } catch (error) {
-    console.error("Ошибка при подключении к MongoDB:", error);
-    await interaction.reply({
-      content:
-        "Произошла ошибка при проверке вашего аккаунта. Пожалуйста, попробуйте позже.",
-      ephemeral: true,
-    });
-  } finally {
-    await client.close();
-  }
+// Linking must prove Steam ownership on the site, not accept somebody else's ID.
+export default async function getSteamIdModal(interaction) {
+  await interaction.deferReply({ flags: 64 });
+  const base = process.env.LINK_STEAM_URL;
+  const secret = process.env.LINK_SIGN_SECRET;
+  if (!base || !secret) return interaction.editReply('Привязка Steam временно недоступна. Обратитесь к администрации.');
+  const url = new URL(base);
+  url.searchParams.set('token', jwt.sign({ discordId: interaction.user.id }, secret, { algorithm: 'HS256', expiresIn: '30m' }));
+  const button = new ButtonBuilder().setLabel('Привязать Steam через сайт').setStyle(ButtonStyle.Link).setURL(url.toString());
+  return interaction.editReply({ content: 'Войдите через Steam на сайте, чтобы подтвердить владение аккаунтом.', components: [new ActionRowBuilder().addComponents(button)] });
 }
-
-export default getSteamIdModal;

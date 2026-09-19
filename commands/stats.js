@@ -43,7 +43,7 @@ const execute = async (interaction) => {
       await getStatsOnDiscordWithoutSteamID(db, interaction, steamApi);
     }
   } catch (error) {
-    await interaction.reply({
+    await (interaction.deferred ? interaction.editReply.bind(interaction) : interaction.reply.bind(interaction))({
       content: "Произошла ошибка.",
       ephemeral: true,
     });

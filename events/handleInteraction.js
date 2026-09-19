@@ -97,7 +97,7 @@ export async function handleInteractionCreate(
 
     if (steamLink) {
       if (interaction.customId === "steamidModal") {
-        steamIdFormSubmit(interaction, steamLink, db, steamApi, seedChannelId);
+        await steamIdFormSubmit(interaction, steamLink, db, steamApi, seedChannelId);
       }
     }
   }

@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
-import dateDonateExpires from "../utility/dateDonateExpires.js";
+import checkVipInteraction from "../utility/checkVipInteraction.js";
 import options from "../config.js";
 
 const { adminsCfgPath, allowedChannelId } = options;
@@ -19,9 +19,9 @@ const execute = async (interaction) => {
         ephemeral: true,
       });
     }
-    await dateDonateExpires(adminsCfgPath, interaction);
+    await checkVipInteraction(interaction, adminsCfgPath);
   } catch (error) {
-    await interaction.reply({
+    await (interaction.deferred ? interaction.editReply.bind(interaction) : interaction.reply.bind(interaction))({
       content: "Произошла ошибка.",
       ephemeral: true,
     });

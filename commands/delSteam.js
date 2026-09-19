@@ -13,13 +13,11 @@ delSteam.addUserOption((option) =>
   option.setName("name").setDescription("Напишите имя игрока").setRequired(true)
 );
 const execute = async (interaction) => {
+  await interaction.deferReply({ flags: 64 });
+  const client = new MongoClient(db);
   try {
     const user = interaction.options.getUser("name");
     const discordID = user.id;
-    const client = new MongoClient(db, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
     await client.connect();
     const database = client.db("SquadJS");
     const collection = database.collection("mainstats");
@@ -35,12 +33,12 @@ const execute = async (interaction) => {
         { $unset: { discordid: "" } }
       );
 
-      await interaction.reply({
+      await interaction.editReply({
         content: `DiscordID игрока ${name} со SteamID:${_id} удален из базы данных`,
         ephemeral: true,
       });
     } else {
-      await interaction.reply({
+      await interaction.editReply({
         content: `Discord ID: ${discordID} не найден в базе данных.`,
         ephemeral: true,
       });
@@ -48,11 +46,11 @@ const execute = async (interaction) => {
     await client.close();
   } catch (error) {
     console.log(error);
-    await interaction.reply({
+    await interaction.editReply({
       content: "Произошла ошибка.",
       ephemeral: true,
     });
-  }
+  } finally { await client.close().catch(() => {}); }
 };
 
 export default { data: delSteam, execute };
