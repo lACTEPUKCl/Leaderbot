@@ -91,7 +91,7 @@ async function main(guild, db, steamApi, donateUrl) {
       if (!claimed) continue;
 
       const rawComment = (comment || "").trim();
-      const lowerComment = rawComment.toLowerCase();
+      const lowerComment = rawComment.normalize('NFC').toLowerCase();
       const transl = toLatin(lowerComment);
       const tokens = transl.split(/\s+/);
 
@@ -112,7 +112,9 @@ async function main(guild, db, steamApi, donateUrl) {
       await sendLogEmbed(logChannel, { embeds: [baseEmbed] });
 
       // Ищем клановый тег в комментарии
-      const commentTag = tokens.find((tok) => clanTags.includes(tok));
+      // An exact Cyrillic tag takes precedence over legacy lookalike conversion.
+      const commentTag = lowerComment.split(/\s+/).find(tok => clanTags.includes(tok))
+        || tokens.find((tok) => clanTags.includes(tok));
 
       if (commentTag) {
         // ═══════════════════════════════════════
