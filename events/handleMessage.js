@@ -1,4 +1,4 @@
-import getBansFromBattlemetrics from "../utility/getBansFromBattlemetrics.js";
+import getBansFromPanel from "../utility/getBansFromPanel.js";
 import getDonate from "../utility/getDonate.js";
 
 export async function handleMessageCreate(message, options, client) {
@@ -36,7 +36,7 @@ export async function handleMessageCreate(message, options, client) {
   }
 
   if (bansChannelId.includes(message.channelId)) {
-    await getBansFromBattlemetrics(message);
+    await getBansFromPanel(message);
   }
 
   if (memeChannelId.includes(message.channelId)) {
