@@ -49,3 +49,4 @@ export async function claimDonationTransaction(
     await handle?.close().catch(() => {});
   }
 }
+
