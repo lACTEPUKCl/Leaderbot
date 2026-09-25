@@ -24,10 +24,10 @@ import {
   handleReactionAdd,
   handleReactionRemove,
 } from "./events/handleReaction.js";
-import { handleVoiceStateUpdate } from "./events/handleVoiceState.js";
+import { createTemporaryVoiceManager } from "./events/handleVoiceState.js";
 import { handleInteractionCreate } from "./events/handleInteraction.js";
 import { handleMessageCreate } from "./events/handleMessage.js";
-import { seedingServers, endSeeding } from "./utility/seedingServers.js";
+import { seedingServers, endSeeding, startSeedingMonitor } from "./utility/seedingServers.js";
 import schedule from "node-schedule";
 import adminsactivity from "./utility/adminsactivity.js";
 import rulesSquad from "./utility/rulesSquad.js";
@@ -35,21 +35,12 @@ import clanVipCleaner from "./utility/clanVipCleaner.js";
 import "./utility/fonts.js";
 import { initLobbyButtons } from "./utility/lobbyButtons.js";
 import { registerAntiSpamTimeout } from "./utility/antiSpamTimeout.js";
-import { HttpsProxyAgent } from "https-proxy-agent";
-import { ProxyAgent, setGlobalDispatcher } from "undici";
-import { startWardogsRoleSync } from "./utility/wardogsRoleSync.js";
-
-const proxyUrl = process.env.DISCORD_PROXY_URL;
-let wsProxyAgent = null;
-
-if (proxyUrl) {
-  console.log("[BOT] Using Discord proxy:", proxyUrl);
-
-  const restProxy = new ProxyAgent(proxyUrl);
-  setGlobalDispatcher(restProxy);
-
-  wsProxyAgent = new HttpsProxyAgent(proxyUrl);
-}
+import { installDiscordTransport } from './utility/discordTransport.js';
+import { installInteractionReliability } from './utility/interactionReliability.js';
+import { startVipDeliveryRecovery } from './utility/vipDeliveryRecovery.js';
+import { safeBotEvent } from './utility/safeBotEvent.js';
+import { startWardogsRoleSync } from './utility/wardogsRoleSync.js';
+const discordTransport = installDiscordTransport();
 
 const client = new Client({
   intents: [
@@ -61,12 +52,13 @@ const client = new Client({
     GatewayIntentBits.GuildMessageReactions,
     GatewayIntentBits.GuildVoiceStates,
   ],
-  ...(wsProxyAgent ? { ws: { agent: wsProxyAgent } } : {}),
+  ...discordTransport,
 });
 
+installInteractionReliability(client);
 client.commands = new Collection();
 const commands = await getCommands();
-const userVoiceChannels = new Map();
+const temporaryVoice = createTemporaryVoiceManager(client, options);
 const interCollections = new Map();
 registerAntiSpamTimeout(client, options);
 
@@ -76,8 +68,19 @@ for (const command of commands) {
   else console.log(`The command is missing required properties!`);
 }
 
-client.on("ready", async () => {
+client.on('error', error => console.error(`[BOT] client error: ${error.code || error.name}`));
+client.on('shardError', error => console.error(`[BOT] gateway error: ${error.code || error.name}`));
+client.on('voiceStateUpdate', safeBotEvent('voiceStateUpdate', temporaryVoice.handle));
+client.on(Events.InteractionCreate, safeBotEvent('interaction', interaction => handleInteractionCreate(
+  interaction, client, interCollections, options, process.env.DATABASE_URL,
+  process.env.STEAM_API, options.dbName, options.dbCollection, options.seedChannelId
+)));
+
+client.once("ready", safeBotEvent("ready", async () => {
+  temporaryVoice.start();
+  await temporaryVoice.sweep();
   console.log(`Logged in as ${client.user.tag}!`);
+  startVipDeliveryRecovery();
   startWardogsRoleSync(client);
   const threadChannelId = client.channels.cache.get("1204124602230374471");
   const vipChannelId = client.channels.cache.get("1189653903738949723");
@@ -93,11 +96,12 @@ client.on("ready", async () => {
     vipExpiredMessage,
   } = options;
   const guildId = client.guilds.cache.get(discordServerId);
+  startSeedingMonitor(guildId);
   const db = process.env.DATABASE_URL;
   const steamApi = process.env.STEAM_API;
-  const seedChannel = await client.channels.fetch(seedChannelId);
+  const seedChannel = await client.channels.fetch(seedChannelId).catch(() => null);
 
-  await seedChannel.messages.fetch(seedMessageId);
+  await seedChannel?.messages.fetch(seedMessageId).catch(error => console.error(`[BOT] seed message unavailable: ${error.code || error.name}`));
 
   await initLobbyButtons(
     client,
@@ -131,24 +135,6 @@ client.on("ready", async () => {
     handleReactionRemove(reaction, user),
   );
 
-  client.on("voiceStateUpdate", (oldState, newState) =>
-    handleVoiceStateUpdate(oldState, newState, userVoiceChannels, options),
-  );
-
-  client.on(Events.InteractionCreate, (interaction) =>
-    handleInteractionCreate(
-      interaction,
-      client,
-      interCollections,
-      options,
-      db,
-      steamApi,
-      dbName,
-      dbCollection,
-      seedChannelId,
-    ),
-  );
-
   client.on("messageCreate", (message) => {
     // if (message.channelId === "1119060668046389308") {
     //   rulesSquad("vip", vipChannelId);
@@ -173,6 +159,6 @@ client.on("ready", async () => {
   schedule.scheduleJob("0 4 * * *", async () => {
     await clanVipCleaner(client.guilds.cache.get(discordServerId));
   });
-});
+}));
 
 await client.login(process.env.CLIENT_TOKEN);

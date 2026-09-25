@@ -1,23 +1,13 @@
 import { MongoClient } from "mongodb";
-import creater from "./vip-creater.js";
+import { syncVipConfig } from "./vip-creater.js";
+import { purchaseBonusVip } from "./bonusPurchase.js";
 import { ButtonBuilder, ActionRowBuilder, ButtonStyle } from "discord.js";
 import options from "../config.js";
 import jwt from "jsonwebtoken";
 
-async function updateUserBonuses(collection, steamID, count) {
-  if (!steamID || !count) return;
-
-  const user = { _id: steamID };
-  const doc = {
-    $inc: {
-      bonuses: count,
-    },
-  };
-
-  await collection.updateOne(user, doc);
-}
-
 async function bonusInteraction(interaction, db) {
+  await interaction.deferReply({ ephemeral: true });
+
   const clientdb = new MongoClient(db);
   const dbName = "SquadJS";
   const dbCollection = "mainstats";
@@ -38,7 +28,7 @@ async function bonusInteraction(interaction, db) {
         console.error(
           "[bonusInteraction] Нет LINK_STEAM_URL или LINK_SIGN_SECRET в окружении"
         );
-        await interaction.reply({
+        await interaction.editReply({
           content:
             "Система привязки Steam через сайт сейчас недоступна. Сообщите администратору.",
           ephemeral: true,
@@ -62,7 +52,7 @@ async function bonusInteraction(interaction, db) {
 
       const row = new ActionRowBuilder().addComponents(confirm);
 
-      await interaction.reply({
+      await interaction.editReply({
         content:
           "Ваш Discord ещё не привязан к Steam.\n" +
           "Нажмите кнопку ниже — откроется сайт, где нужно войти через Steam для привязки.\n" +
@@ -76,7 +66,7 @@ async function bonusInteraction(interaction, db) {
     const { bonuses, _id, name } = dbUser;
 
     if (!_id) {
-      await interaction.reply({
+      await interaction.editReply({
         content:
           "В базе найден пользователь с вашим Discord, но без SteamID. Обратитесь к администратору.",
         ephemeral: true,
@@ -87,14 +77,25 @@ async function bonusInteraction(interaction, db) {
     if (!bonuses || bonuses < 15000) {
       const current = bonuses || 0;
       const changeBonuses = Math.abs(15000 - current);
-      await interaction.reply({
+      await interaction.editReply({
         content: `Не хватает ${changeBonuses} бонусных баллов для получения VIP статуса, требуется 15000 бонусных баллов.`,
         ephemeral: true,
       });
       return;
     }
 
-    await updateUserBonuses(collection, _id, -15000);
+    const purchase = await purchaseBonusVip(collection, _id, interaction.id);
+    if (!purchase) {
+      await interaction.editReply('Покупка уже обрабатывается, недавно выполнена или баланс изменился. Повторного списания нет. Проверьте VIP через минуту.');
+      return;
+    }
+    try {
+      await syncVipConfig(_id);
+    } catch (error) {
+      console.error('[bonusInteraction] delivery pending: ' + (error.code || error.name));
+      await interaction.editReply('Бонусы списаны и срок VIP сохранён. Активация на серверах задерживается — бот повторит её автоматически. Повторно покупать не нужно.');
+      return;
+    }
 
     try {
       const member = await interaction.guild.members.fetch(discordId);
@@ -117,16 +118,16 @@ async function bonusInteraction(interaction, db) {
       console.log("[bonusInteraction] Ошибка при выдаче роли VIP:", err);
     }
 
-    await creater.vipCreater(_id, name, 300, discordId);
+    await collection.updateOne({ _id, vipDeliveryPending: interaction.id }, { $unset: { vipDeliveryPending: '' } });
 
-    await interaction.reply({
+    await interaction.editReply({
       content: `VIP статус успешно получен, можно проверить состояние, нажав кнопку проверки VIP!`,
       ephemeral: true,
     });
   } catch (e) {
     console.error("[bonusInteraction] Ошибка:", e);
     try {
-      await interaction.reply({
+      await interaction.editReply({
         content: "Произошла ошибка при попытке выдать VIP статус.",
         ephemeral: true,
       });

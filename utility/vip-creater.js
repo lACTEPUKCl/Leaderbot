@@ -1,150 +1,49 @@
-import fs from "fs";
-import { exec } from "child_process";
-import { MongoClient } from "mongodb";
-import { config as loadEnv } from "dotenv";
-import options from "../config.js";
-
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { runConfigSync } from './runConfigSync.js';
+import { randomUUID } from 'node:crypto';
+import { MongoClient } from 'mongodb';
+import { config as loadEnv } from 'dotenv';
+import options from '../config.js';
 loadEnv();
+let configQueue = Promise.resolve();
 
-const { adminsCfgPath, adminsCfgBackups, syncconfigPath } = options;
-const DB_URL = process.env.DATABASE_URL;
-const DB_NAME = "SquadJS";
-const DB_COLLECTION = "mainstats";
+// Serialize in-process read/modify/write and await backup, write and propagation.
+export function syncVipConfig(steamID) {
+  if (!/^\d{17}$/.test(String(steamID))) throw new Error('Invalid SteamID');
+  const work = configQueue.catch(() => {}).then(async () => {
+    const target = path.join(options.adminsCfgPath, 'Admins.cfg');
+    const data = await fs.readFile(target, 'utf8');
+    const lines = data.split(/\r?\n/);
+    if (!lines.some(line => line.startsWith('Admin=' + steamID + ':Reserved'))) {
+      await fs.mkdir(options.adminsCfgBackups, { recursive: true });
+      await fs.copyFile(target, path.join(options.adminsCfgBackups, 'Admins-' + Date.now() + '-' + steamID + '.cfg'));
+      await fs.writeFile(target, data.replace(/\s*$/, '') + '\r\nAdmin=' + steamID + ':Reserved\r\n');
+    }
+    await runConfigSync(options.syncconfigPath);
+  });
+  configQueue = work;
+  return work;
+}
 
 const vipCreater = async (steamID, nickname, summ) => {
-  if (!DB_URL) {
-    console.error("[vipCreater] Не задан DATABASE_URL в окружении");
-    return null;
-  }
-
-  const daysToAdd = summ / 9.863;
-  const clientdb = new MongoClient(DB_URL);
-
-  let oldVipEndDate = null;
-  let newVipEndDate = null;
-  let isExtension = false;
-
+  if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is required');
+  if (!/^\d{17}$/.test(String(steamID)) || !(Number(summ) > 0)) throw new Error('Invalid VIP grant');
+  const daysToAdd = Number(summ) / 9.863;
+  const client = new MongoClient(process.env.DATABASE_URL);
   try {
-    await clientdb.connect();
-    const db = clientdb.db(DB_NAME);
-    const collection = db.collection(DB_COLLECTION);
+    const collection = client.db('SquadJS').collection('mainstats');
     const now = new Date();
-    const user = await collection.findOne({ _id: steamID });
-
-    let baseDate = now;
-    if (user && user.vipEndDate instanceof Date && user.vipEndDate > now) {
-      baseDate = user.vipEndDate;
-      oldVipEndDate = user.vipEndDate;
-      isExtension = true;
-    }
-
-    newVipEndDate = new Date(
-      baseDate.getTime() + daysToAdd * 24 * 60 * 60 * 1000
-    );
-
-    await collection.updateOne(
-      { _id: steamID },
-      {
-        $set: {
-          vipEndDate: newVipEndDate,
-        },
-      },
-      { upsert: true }
-    );
-
-    fs.readFile(`${adminsCfgPath}Admins.cfg`, "utf-8", (err, data) => {
-      if (err) {
-        console.error("[vipCreater] Ошибка чтения Admins.cfg:", err);
-        return;
-      }
-
-      if (!data.match(/\r\n/gm)) {
-        data = data.replace(/\n/gm, "\r\n");
-      }
-
-      const lines = data.split("\r\n");
-      let lastEndIndex = -1;
-      for (let i = 0; i < lines.length; i++) {
-        if (lines[i].startsWith("//END")) {
-          lastEndIndex = i;
-        }
-      }
-      const playerStartIndex = lastEndIndex >= 0 ? lastEndIndex + 1 : 0;
-      let hasReserved = false;
-      const newLines = lines.map((line, idx) => {
-        if (
-          idx >= playerStartIndex &&
-          line.startsWith(`Admin=${steamID}:Reserved`)
-        ) {
-          hasReserved = true;
-          return `Admin=${steamID}:Reserved`;
-        }
-        return line;
-      });
-
-      if (!hasReserved) {
-        newLines.push(`Admin=${steamID}:Reserved`);
-      }
-
-      const newData = newLines.join("\r\n");
-
-      fs.writeFile(`${adminsCfgPath}Admins.cfg`, newData, (writeErr) => {
-        if (writeErr) {
-          console.error("[vipCreater] Ошибка записи Admins.cfg:", writeErr);
-          return;
-        }
-
-        console.log(
-          `[vipCreater] User ${nickname} (${steamID}) VIP обновлён/добавлен`
-        );
-
-        const backupName = `AdminsBackup${new Date().toLocaleString("ru-RU", {
-          timeZone: "Europe/Moscow",
-        })}.cfg`;
-
-        fs.writeFile(`${adminsCfgBackups}/${backupName}`, data, (backupErr) => {
-          if (backupErr) {
-            console.error(
-              "[vipCreater] Ошибка создания бэкапа Admins.cfg:",
-              backupErr
-            );
-            return;
-          }
-
-          console.log("[vipCreater] Backup created", backupName);
-
-          exec(`${syncconfigPath}syncconfig.sh`, (execErr, stdout, stderr) => {
-            if (execErr) {
-              console.error(
-                "[vipCreater] Ошибка запуска syncconfig.sh:",
-                execErr
-              );
-              return;
-            }
-            if (stdout) console.log(stdout);
-            if (stderr) console.error(stderr);
-          });
-        });
-      });
-    });
-
-    return {
-      steamID,
-      nickname,
-      summ,
-      daysToAdd,
-      isExtension,
-      oldVipEndDate,
-      newVipEndDate,
-    };
-  } catch (err) {
-    console.error("[vipCreater] Ошибка работы с базой:", err);
-    return null;
-  } finally {
-    await clientdb.close().catch(() => {});
-  }
+    const revision = randomUUID();
+    const before = await collection.findOneAndUpdate({ _id: steamID }, [{
+      $set: { vipDeliveryPending: { $literal: revision }, vipEndDate: { $add: [{ $max: [{ $ifNull: ['$vipEndDate', now] }, now] }, daysToAdd * 86400000] } }
+    }], { upsert: true, returnDocument: 'before', includeResultMetadata: false });
+    const oldVipEndDate = before?.vipEndDate instanceof Date ? before.vipEndDate : null;
+    const isExtension = oldVipEndDate > now;
+    const newVipEndDate = new Date(Math.max(now.getTime(), oldVipEndDate?.getTime() || 0) + daysToAdd * 86400000);
+    await syncVipConfig(steamID);
+    await collection.updateOne({ _id: steamID, vipDeliveryPending: revision }, { $unset: { vipDeliveryPending: '' } });
+    return { steamID, nickname, summ, daysToAdd, isExtension, oldVipEndDate, newVipEndDate };
+  } finally { await client.close(); }
 };
-
-export default {
-  vipCreater,
-};
+export default { vipCreater };

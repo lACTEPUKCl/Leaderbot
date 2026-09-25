@@ -32,6 +32,7 @@ addVipCommand.addStringOption((option) =>
 );
 
 const execute = async (interaction) => {
+  await interaction.deferReply({ flags: 64 });
   try {
     const steamid64 = interaction.options.getString("steamid64");
     const discordid = interaction.options.getString("discordid");
@@ -41,7 +42,7 @@ const execute = async (interaction) => {
     const sum = Number(sumString.replace(",", "."));
 
     if (!Number.isFinite(sum) || sum <= 0) {
-      await interaction.reply({
+      await interaction.editReply({
         content: "Сумма доната должна быть положительным числом.",
         ephemeral: true,
       });
@@ -71,13 +72,13 @@ const execute = async (interaction) => {
 
     await vipCreater.vipCreater(steamid64, name, sum, discordid);
 
-    await interaction.reply(
+    await interaction.editReply(
       `Игроку **${name}** (SteamID: \`${steamid64}\`, DiscordID: \`${discordid}\`) был выдан VIP слот и роль (если роль найдена).`
     );
   } catch (error) {
     console.error("[addvip] Ошибка выполнения команды:", error);
     if (interaction.deferred || interaction.replied) {
-      await interaction.followUp({
+      await interaction.editReply({
         content: "Произошла ошибка при выполнении команды.",
         ephemeral: true,
       });

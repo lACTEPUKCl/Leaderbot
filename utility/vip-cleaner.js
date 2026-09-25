@@ -201,7 +201,18 @@ async function runCycle(client) {
 
     const validVipSet = new Set(validVipDiscordIds);
     const guild = await client.guilds.fetch(discordServerId);
-    const members = await guild.members.fetch();
+    // REST pagination avoids Gateway member-chunk rate limits. Finish the entire
+    // snapshot before any role mutations; failures abort the synchronization.
+    const members = new Map();
+    let after;
+    for (;;) {
+      const page = await guild.members.list({ limit: 1000, ...(after ? { after } : {}) });
+      for (const [id, member] of page) members.set(id, member);
+      if (page.size < 1000) break;
+      const next = page.last().id;
+      if (after && BigInt(next) <= BigInt(after)) throw new Error('Member pagination did not advance');
+      after = next;
+    }
     const vipRole = await guild.roles.fetch(vipRoleID);
 
     let logChannel = null;

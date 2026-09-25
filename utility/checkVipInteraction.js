@@ -9,9 +9,11 @@ const DB_NAME = "SquadJS";
 const DB_COLLECTION = "mainstats";
 
 async function checkVipInteraction(interaction, _adminsCfgPath) {
+  await interaction.deferReply({ ephemeral: true });
+
   if (!DB_URL) {
     console.error("[checkVipInteraction] Не задан DATABASE_URL / MONGO_URL");
-    await interaction.reply({
+    await interaction.editReply({
       content: "Ошибка конфигурации сервера. Обратитесь к администрации.",
       ephemeral: true,
     });
@@ -30,7 +32,7 @@ async function checkVipInteraction(interaction, _adminsCfgPath) {
     const user = await collection.findOne({ discordid: discordId });
 
     if (!user || !user.vipEndDate || !(user.vipEndDate instanceof Date)) {
-      await interaction.reply({
+      await interaction.editReply({
         content: "VIP статус отсутствует или срок действия истёк.",
         ephemeral: true,
       });
@@ -41,7 +43,7 @@ async function checkVipInteraction(interaction, _adminsCfgPath) {
     const vipEndDate = user.vipEndDate;
 
     if (vipEndDate <= now) {
-      await interaction.reply({
+      await interaction.editReply({
         content: "Срок действия VIP статуса истёк.",
         ephemeral: true,
       });
@@ -61,14 +63,14 @@ async function checkVipInteraction(interaction, _adminsCfgPath) {
       text += `\nОсталось дней: ${daysLeft}`;
     }
 
-    await interaction.reply({
+    await interaction.editReply({
       content: text,
       ephemeral: true,
     });
   } catch (err) {
     console.error("[checkVipInteraction] Ошибка:", err);
     try {
-      await interaction.reply({
+      await interaction.editReply({
         content: "Произошла ошибка при проверке VIP статуса. Попробуйте позже.",
         ephemeral: true,
       });

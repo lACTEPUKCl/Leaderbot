@@ -56,9 +56,11 @@ export async function handleInteractionCreate(
           interCollections.delete(interaction.user.id);
         }, 300000);
       }
+      if (!command) return;
       await command.execute(interaction);
     } catch (error) {
-      console.log(error);
+      console.error(`[BOT] command failed: ${error.code || error.name}`);
+      if ([10062, 40060].includes(error.code)) return;
       if (interaction.replied || interaction.deferred) {
         await interaction.followUp({
           content: "There was an error while executing this command!",
@@ -95,7 +97,7 @@ export async function handleInteractionCreate(
 
     if (steamLink) {
       if (interaction.customId === "steamidModal") {
-        steamIdFormSubmit(interaction, steamLink, db, steamApi, seedChannelId);
+        await steamIdFormSubmit(interaction, steamLink, db, steamApi, seedChannelId);
       }
     }
   }

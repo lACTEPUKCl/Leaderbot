@@ -5,6 +5,7 @@ import { EmbedBuilder } from "discord.js";
 import creater from "./vip-creater.js";
 import getSteamId64 from "./getSteamID64.js";
 import clanVipManager from "./clanVipManager.js";
+import { claimDonationTransaction } from "./donationDeduper.js";
 import options from "../config.js";
 
 const { vipLogChannelId, vipAdminUserId } = options;
@@ -71,7 +72,9 @@ async function main(guild, db, steamApi, donateUrl) {
 
     const data = await fs.readFile(`./transaction/transactionId.json`, "utf-8");
     const transaction = JSON.parse(data);
-    const existingIds = transaction.transactions.map((e) => e.id);
+    const existingIds = new Set(
+      transaction.transactions.map((entry) => String(entry.id)),
+    );
 
     // Получаем теги кланов из MongoDB
     const clanTags = await clanVipManager.getAllClanTags();
@@ -79,10 +82,16 @@ async function main(guild, db, steamApi, donateUrl) {
     for (const jsonEl of json.data) {
       const { id, what, comment, sum } = jsonEl;
 
-      if (existingIds.includes(id.toString())) continue;
+      const transactionId = String(id);
+      if (existingIds.has(transactionId)) continue;
+
+      // Claim before Discord messages, VIP updates, or any other side effect.
+      // This is durable across restarts and atomic across overlapping pollers.
+      const { claimed } = await claimDonationTransaction(transactionId);
+      if (!claimed) continue;
 
       const rawComment = (comment || "").trim();
-      const lowerComment = rawComment.toLowerCase();
+      const lowerComment = rawComment.normalize('NFC').toLowerCase();
       const transl = toLatin(lowerComment);
       const tokens = transl.split(/\s+/);
 
@@ -103,7 +112,9 @@ async function main(guild, db, steamApi, donateUrl) {
       await sendLogEmbed(logChannel, { embeds: [baseEmbed] });
 
       // Ищем клановый тег в комментарии
-      const commentTag = tokens.find((tok) => clanTags.includes(tok));
+      // An exact Cyrillic tag takes precedence over legacy lookalike conversion.
+      const commentTag = lowerComment.split(/\s+/).find(tok => clanTags.includes(tok))
+        || tokens.find((tok) => clanTags.includes(tok));
 
       if (commentTag) {
         // ═══════════════════════════════════════
