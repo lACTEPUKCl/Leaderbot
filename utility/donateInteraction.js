@@ -1,6 +1,7 @@
 import { MongoClient } from "mongodb";
 import { ButtonBuilder, ActionRowBuilder, ButtonStyle } from "discord.js";
 import jwt from "jsonwebtoken";
+import { prepareDonationLink } from "./donationLinkAudit.js";
 import options from "../config.js";
 
 const { donationLink } = options;
@@ -72,18 +73,20 @@ async function donateInteraction(interaction, db) {
       return;
     }
 
+    const prepared = await prepareDonationLink(database, { platform: "discord", actorId: discordId, steamId, configuredUrl: donationLink });
     const donateButton = new ButtonBuilder()
       .setLabel("Оформить донат")
       .setStyle(ButtonStyle.Link)
-      .setURL(`${donationLink}?message=${steamId}`);
+      .setURL(prepared.url);
 
     const donateRow = new ActionRowBuilder().addComponents(donateButton);
 
     await interaction.editReply({
-      content: `Скопируйте ваш SteamID: **${steamId}**\nИли просто нажмите кнопку ниже и вставьте его в поле "Комментарий" при оформлении доната (если нужно).`,
+      content: `Ваш SteamID: **${steamId}**\nСкопируйте его. На DonatePay полностью очистите поле «Сообщение стримеру» и вставьте этот SteamID. Перед оплатой проверьте: в поле должен быть только ваш ID. Сайт может показывать чужой ID — не оставляйте его.`,
       components: [donateRow],
       ephemeral: true,
     });
+    await prepared.delivered();
   } catch (e) {
     console.error("[donateInteraction] Ошибка:", e);
     try {
