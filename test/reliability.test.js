@@ -7,6 +7,23 @@ import {createTemporaryVoiceManager} from '../events/handleVoiceState.js';
 import {safeBotEvent} from '../utility/safeBotEvent.js';
 import {isDiscordHost} from '../utility/discordTransport.js';
 
+test('configured admin roles can join private voice channels without admitting unrelated roles',async()=>{
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'leader-voice-admin-'));
+ const roles=[{id:'1',name:'@everyone'},{id:'6',name:'SQUAD'},{id:'7',name:'Admins'},{id:'8',name:'Admins'},{id:'9',name:'Guest'}];
+ let created;
+ const guild={id:'1',roles:{everyone:roles[0],cache:{find:fn=>roles.find(fn),values:()=>roles.values()}},channels:{create:async options=>{created=options;return{id:'11'}}}};
+ const manager=createTemporaryVoiceManager({}, {channelIdToCreateChannel:'2',categoryIdForCreateChannel:'4',adminsRoleName:['Admins','SQUAD','@everyone','']},{stateFile:path.join(dir,'state.json')});
+ try {
+  await manager.handle({channelId:null},{guild,id:'5',channelId:'2',member:{displayName:'Guest',voice:{channelId:'2'}},setChannel:async()=>{
+   for(const id of ['6','7','8'])assert.deepEqual(created.permissionOverwrites.find(row=>row.id===id).allow,['ViewChannel','Connect','Speak']);
+  }});
+  assert.deepEqual(created.permissionOverwrites.find(row=>row.id==='1'),{id:'1',deny:['ViewChannel']});
+  assert.equal(created.permissionOverwrites.some(row=>row.id==='9'),false);
+  assert.equal(new Set(created.permissionOverwrites.map(row=>row.id)).size,created.permissionOverwrites.length);
+  assert.ok(created.permissionOverwrites.find(row=>row.id==='5').allow.includes('Connect'));
+ } finally {fs.rmSync(dir,{recursive:true,force:true})}
+});
+
 test('Discord routing cannot capture unrelated hosts or lookalike suffixes',()=>{
  for(const host of ['gateway.discord.gg','discord.com','cdn.discordapp.com'])assert.equal(isDiscordHost(host),true);
  for(const host of ['api.steampowered.com','api.telegram.org','discord.com.evil.test','notdiscord.gg'])assert.equal(isDiscordHost(host),false);
@@ -35,7 +52,7 @@ test('temporary voice registry survives restart, retries deletion and never touc
 test('voice creation is deduplicated and permissions are set before moving the member',async()=>{
  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'leader-voice-'));const stateFile=path.join(dir,'state.json');let creates=0;let release;
  const waiting=new Promise(r=>{release=r});const member={displayName:'Guest',voice:{channelId:'2'}};
- const guild={id:'1',available:true,roles:{everyone:{id:'1'},cache:{find:()=>null}},channels:{create:async options=>{creates++;assert.equal(options.permissionOverwrites.length,2);await waiting;return{id:'11'};}},voiceStates:{cache:{some:()=>false}}};
+ const guild={id:'1',available:true,roles:{everyone:{id:'1'},cache:{find:()=>null,values:()=>[][Symbol.iterator]()}},channels:{create:async options=>{creates++;assert.equal(options.permissionOverwrites.length,2);await waiting;return{id:'11'};}},voiceStates:{cache:{some:()=>false}}};
  const manager=createTemporaryVoiceManager({isReady:()=>true,guilds:{cache:new Map([['1',guild]])}},{channelIdToCreateChannel:'2',categoryIdForCreateChannel:'4'},{stateFile});
  const state={guild,id:'5',member,channelId:'2',setChannel:async()=>{assert.equal(JSON.parse(fs.readFileSync(stateFile)).channels[0].id,'11');member.voice.channelId='11';}};
  const first=manager.handle({channelId:null},state);await manager.handle({channelId:null},state);release();await first;assert.equal(creates,1);

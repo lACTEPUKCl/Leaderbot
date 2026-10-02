@@ -45,6 +45,13 @@ export function createTemporaryVoiceManager(client, options, {stateFile=path.res
         const overwrites=[{id:newState.guild.roles.everyone.id,deny:['ViewChannel']}];
         const squad=newState.guild.roles.cache.find(role=>role.name==='SQUAD');
         if(squad)overwrites.push({id:squad.id,deny:['ViewChannel']});
+        const adminNames=new Set((Array.isArray(options.adminsRoleName)?options.adminsRoleName:[]).filter(name=>typeof name==='string' && name.trim()));
+        for(const role of newState.guild.roles.cache.values()) {
+          if(role.id===newState.guild.roles.everyone.id || !adminNames.has(role.name))continue;
+          const existing=overwrites.find(overwrite=>overwrite.id===role.id);
+          if(existing) {existing.deny=[];existing.allow=['ViewChannel','Connect','Speak'];}
+          else overwrites.push({id:role.id,allow:['ViewChannel','Connect','Speak']});
+        }
         overwrites.push({id:newState.id,allow:['ViewChannel','AddReactions','Stream','SendMessages','AttachFiles','Connect','Speak']});
         const channel=await newState.guild.channels.create({name:newState.member.displayName,type:2,parent:options.categoryIdForCreateChannel,permissionOverwrites:overwrites});
         records.set(channel.id,{kind:'leaderbot-temp-v1',id:channel.id,guildId:newState.guild.id,parentId:options.categoryIdForCreateChannel,createdAt:now()});
