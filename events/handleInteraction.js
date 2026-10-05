@@ -1,3 +1,4 @@
+import { handleManualDonation } from '../utility/manualDonation.js';
 import getSteamIdModal from "../utility/getSteamIdModal.js";
 import donateInteraction from "../utility/donateInteraction.js";
 import bonusInteraction from "../utility/bonusInteraction.js";
@@ -15,6 +16,10 @@ export async function handleInteractionCreate(
   dbCollection,
   seedChannelId
 ) {
+  if (interaction.customId?.startsWith('donationgrant:')) {
+    await handleManualDonation(interaction, process.env.DATABASE_URL, options);
+    return;
+  }
   if (
     interaction.commandName === "addtoclanvip" ||
     interaction.commandName === "removefromclanvip"

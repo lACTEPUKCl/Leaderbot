@@ -1,3 +1,4 @@
+import { prepareManualDonation, bindManualNotification } from './manualDonation.js';
 import fetch from "node-fetch";
 import fs from "fs/promises";
 import { MongoClient } from "mongodb";
@@ -43,7 +44,7 @@ function toLatin(str) {
 async function sendLogEmbed(channel, payload) {
   if (!channel) return;
   try {
-    await channel.send(payload);
+    return await channel.send(payload);
   } catch (err) {
     console.error("[vipDonate] Ошибка отправки сообщения в лог-канал:", err);
   }
@@ -372,6 +373,7 @@ async function main(guild, db, steamApi, donateUrl) {
         !!lowerComment.match(/\b[0-9]{17}\b/);
 
       if (!hasSteamInfo) {
+        const manual = await prepareManualDonation(db, jsonEl, transaction.transactions).catch(() => { console.error("[manualDonation] candidate preparation failed"); return null; });
         const errorEmbed = new EmbedBuilder()
           .setTitle("Проблема с донатом (VIP)")
           .setColor(0xff0000)
@@ -389,10 +391,14 @@ async function main(guild, db, steamApi, donateUrl) {
           )
           .setTimestamp();
 
-        await sendLogEmbed(logChannel, {
+        if (manual) errorEmbed.addFields(...manual.fields);
+        const notification = await sendLogEmbed(logChannel, {
           content: vipAdminUserId ? `<@${vipAdminUserId}>` : undefined,
           embeds: [errorEmbed],
+          components: manual?.components || [],
+          allowedMentions: { users: vipAdminUserId ? [vipAdminUserId] : [], roles: [], repliedUser: false },
         });
+        if (manual && notification) await bindManualNotification(db, manual.row._id, notification).catch(() => { console.error("[manualDonation] notification binding failed"); });
 
         transaction.transactions.push({
           id: `${id}`,
