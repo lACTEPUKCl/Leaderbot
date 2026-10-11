@@ -1,6 +1,5 @@
 import { MongoClient } from "mongodb";
 import { AttachmentBuilder } from "discord.js";
-import * as fs from "fs";
 import { loadImage, createCanvas, registerFont } from "canvas";
 import calcVehicleTime from "./calcVehicleTime.js";
 import getExp from "./getExp.js";
@@ -391,13 +390,12 @@ async function getStatsOnDiscord(dblink, steamId, interaction, steamApi) {
     ctx.fillText(exp.expProgress, 159, 170);
 
     const buffer = canvas.toBuffer("image/png");
-    fs.writeFileSync("./stats.png", buffer);
-    const imageToSend = new AttachmentBuilder("stats.png");
-    interaction.editReply({ files: [imageToSend] });
+    const imageToSend = new AttachmentBuilder(buffer, { name: "stats.png" });
+    await interaction.editReply({ files: [imageToSend] });
   } catch (e) {
-    console.log(e);
+    console.error(`[stats] failed: ${e?.code || e?.name || 'Error'}`);
     await interaction.editReply({
-      content: "Сыграно слишком мало игр для отображения статистики.",
+      content: "Не удалось получить или отправить статистику. Попробуйте ещё раз через минуту.",
       ephemeral: true,
     });
   } finally {
