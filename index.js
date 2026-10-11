@@ -40,6 +40,7 @@ import { installDiscordTransport } from './utility/discordTransport.js';
 import { installInteractionReliability } from './utility/interactionReliability.js';
 import { startVipDeliveryRecovery } from './utility/vipDeliveryRecovery.js';
 import { safeBotEvent } from './utility/safeBotEvent.js';
+import { retryConnection } from './utility/connectionRetry.js';
 const discordTransport = installDiscordTransport();
 
 const client = new Client({
@@ -151,4 +152,4 @@ client.once("ready", safeBotEvent("ready", async () => {
   });
 }));
 
-await client.login(process.env.CLIENT_TOKEN);
+await retryConnection(() => client.login(process.env.CLIENT_TOKEN), { attempts: Infinity, delay: () => new Promise(resolve => setTimeout(resolve, 5000)) });

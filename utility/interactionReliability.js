@@ -1,4 +1,5 @@
 import { ProxyAgent, Agent, request } from 'undici';
+import { retryConnection } from './connectionRetry.js';
 
 // Callback traffic gets its own small pool, separate from uploads and member sync.
 export function installInteractionReliability(client, { logger = console, proxyUrl = process.env.DISCORD_PROXY_URL, warmConnection = true } = {}) {
@@ -6,11 +7,17 @@ export function installInteractionReliability(client, { logger = console, proxyU
     ? new ProxyAgent({ uri: proxyUrl, connections: 2, connectTimeout: 2000 })
     : new Agent({ connections: 2, connectTimeout: 2000 });
   const originalRequest = client.rest.request.bind(client.rest);
-  client.rest.request = options => originalRequest(
+  client.rest.request = options => {
+    const callback = /^\/interactions\/[^/]+\/[^/]+\/callback$/.test(options.fullRoute || '');
+    const send = () => originalRequest(
     /^\/interactions\/[^/]+\/[^/]+\/callback$/.test(options.fullRoute || '')
       ? { ...options, dispatcher }
       : options
-  );
+    );
+    // Interaction callbacks have a three-second deadline; extra attempts cannot
+    // rescue an expired callback. Other calls can retry a failed connection.
+    return callback ? send() : retryConnection(send, { logger });
+  };
   let warming = false;
   const warm = async () => {
     if (warming) return;
