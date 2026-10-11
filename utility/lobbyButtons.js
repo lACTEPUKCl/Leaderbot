@@ -68,7 +68,7 @@ export async function initLobbyButtons(
     console.error(
       "ERROR: domain is required (used to build http redirect links)",
     );
-    process.exit(1);
+    throw new Error("Lobby buttons require DOMAIN");
   }
 
   const channel = await client.channels.fetch(channelId);

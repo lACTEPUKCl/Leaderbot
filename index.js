@@ -1,3 +1,4 @@
+import { startBackgroundTask } from "./utility/backgroundTask.js";
 import {
   Client,
   GatewayIntentBits,
@@ -76,10 +77,12 @@ client.on(Events.InteractionCreate, safeBotEvent('interaction', interaction => h
 )));
 
 client.once("ready", safeBotEvent("ready", async () => {
-  temporaryVoice.start();
-  await temporaryVoice.sweep();
+  startBackgroundTask("temporaryVoice", async () => {
+    temporaryVoice.start();
+    await temporaryVoice.sweep();
+  }, { stopAfterSuccess: true });
   console.log(`Logged in as ${client.user.tag}!`);
-  startVipDeliveryRecovery();
+  startBackgroundTask("vipRecovery", () => startVipDeliveryRecovery(), { stopAfterSuccess: true });
   const threadChannelId = client.channels.cache.get("1204124602230374471");
   const vipChannelId = client.channels.cache.get("1189653903738949723");
   const {
@@ -94,36 +97,25 @@ client.once("ready", safeBotEvent("ready", async () => {
     vipExpiredMessage,
   } = options;
   const guildId = client.guilds.cache.get(discordServerId);
-  startSeedingMonitor(guildId);
+  startBackgroundTask("seedingMonitor", () => startSeedingMonitor(guildId), { stopAfterSuccess: true });
   const db = process.env.DATABASE_URL;
   const steamApi = process.env.STEAM_API;
-  const seedChannel = await client.channels.fetch(seedChannelId).catch(() => null);
-
-  await seedChannel?.messages.fetch(seedMessageId).catch(error => console.error(`[BOT] seed message unavailable: ${error.code || error.name}`));
-
-  await initLobbyButtons(
-    client,
-    process.env.CHANNEL_ID,
-    process.env.STEAM_API,
-    process.env.DOMAIN,
-  );
-
-  setInterval(() => {
-    checkDonate(guildId, db, steamApi, process.env.DONATE_URL);
-  }, 60000);
-
-  setInterval(() => {
-    top20StatsMain(
-      client.channels.cache.get(options.leaderboadChannelIdMain),
-      db,
-    );
-    top20StatsTemp(
-      client.channels.cache.get(options.leaderboadChannelIdTemp),
-      db,
-    );
-  }, 600000);
-
-  cleaner.vipCleaner(client);
+  startBackgroundTask("donations", () =>
+    checkDonate(guildId, db, steamApi, process.env.DONATE_URL), { intervalMs: 60000 });
+  startBackgroundTask("seedMessage", async () => {
+    const channel = await client.channels.fetch(seedChannelId);
+    await channel.messages.fetch(seedMessageId);
+  }, { stopAfterSuccess: true });
+  startBackgroundTask("lobbyButtons", () => initLobbyButtons(
+    client, process.env.CHANNEL_ID, process.env.STEAM_API, process.env.DOMAIN,
+  ), { stopAfterSuccess: true });
+  startBackgroundTask("leaderboardMain", () => top20StatsMain(
+    client.channels.cache.get(options.leaderboadChannelIdMain), db,
+  ), { intervalMs: 600000 });
+  startBackgroundTask("leaderboardTemp", () => top20StatsTemp(
+    client.channels.cache.get(options.leaderboadChannelIdTemp), db,
+  ), { intervalMs: 600000 });
+  startBackgroundTask("vipCleaner", () => cleaner.vipCleaner(client), { stopAfterSuccess: true });
 
   client.on("messageReactionAdd", (reaction, user) =>
     handleReactionAdd(reaction, user),
