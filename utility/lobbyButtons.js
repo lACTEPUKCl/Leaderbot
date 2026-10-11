@@ -29,8 +29,8 @@ const MOD_SERVERS = [
     name: " [ SuperMod ] Русский Народный Модовый #1 [RU] [SPM] [SU]",
   },
   {
-    label: "Vietnam SuperMod",
-    name: " [ VIETNAM | SUPERMOD ] Русский Народный Модовый #2 | PLAYTEST",
+    label: "WARZONE #2",
+    name: " [ WARZONE ] Русский Народный Модовый #2 | ВС РФ против ВСУ 24/7",
   },
   {
     label: "WARZONE #3",
