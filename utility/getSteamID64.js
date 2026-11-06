@@ -1,4 +1,4 @@
-import fetch from "node-fetch";
+import { fetchJson } from "./fetchJson.js";
 
 async function getSteamId64(steamApi, content) {
   const steamID64 = content.match(/\b[0-9]{17}\b/)?.[0];
@@ -8,10 +8,9 @@ async function getSteamId64(steamApi, content) {
 
   if (groupsId) {
     try {
-      const responseSteam = await fetch(
+      const dataSteam = await fetchJson(
         `https://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/?key=${steamApi}&vanityurl=${splitSteamId}`
       );
-      const dataSteam = await responseSteam.json();
       if (dataSteam.response.success === 1) {
         return dataSteam.response.steamid;
       }

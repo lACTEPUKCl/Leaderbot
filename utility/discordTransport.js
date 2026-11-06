@@ -11,7 +11,7 @@ export function isDiscordHost(host) {
 // bypassing https.globalAgent. Inject an explicit agent only for Discord HTTPS
 // requests; never proxy unrelated Steam, Telegram or site traffic.
 export function installDiscordTransport(proxyUrl = process.env.DISCORD_PROXY_URL) {
-  if (!proxyUrl) return {};
+  if (!proxyUrl) return { rest: { timeout: 15000 } };
   const parsed = new URL(proxyUrl);
   if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error('Discord proxy must use HTTP CONNECT');
   const previous = https.request;
@@ -25,5 +25,5 @@ export function installDiscordTransport(proxyUrl = process.env.DISCORD_PROXY_URL
     return previous.call(this, {...settings, agent:proxy}, options);
   };
   console.log('[BOT] Discord REST and Gateway proxy enabled');
-  return { rest: { agent: new ProxyAgent({uri:proxyUrl,connections:8,connectTimeout:10_000}) } };
+  return { rest: { timeout:15000, agent: new ProxyAgent({uri:proxyUrl,connections:8,connectTimeout:10_000,headersTimeout:15000,bodyTimeout:15000}) } };
 }

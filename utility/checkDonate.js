@@ -1,5 +1,5 @@
 import { prepareManualDonation, bindManualNotification } from './manualDonation.js';
-import fetch from "node-fetch";
+import { fetchJson, donationMongoOptions } from "./fetchJson.js";
 import fs from "fs/promises";
 import { MongoClient } from "mongodb";
 import { EmbedBuilder } from "discord.js";
@@ -55,7 +55,8 @@ async function main(guild, db, steamApi, donateUrl) {
     let logChannel = null;
     if (vipLogChannelId) {
       try {
-        logChannel = await guild.channels.fetch(vipLogChannelId);
+        // The ready guild channel cache avoids a REST dependency before payment processing.
+        logChannel = guild.channels.cache.get(vipLogChannelId) || null;
       } catch (err) {
         console.error(
           "[vipDonate] Не удалось получить vipLogChannelId из гильдии:",
@@ -68,8 +69,8 @@ async function main(guild, db, steamApi, donateUrl) {
       );
     }
 
-    const response = await fetch(donateUrl);
-    const json = await response.json();
+    const json = await fetchJson(donateUrl);
+    if (!Array.isArray(json.data)) throw new Error("Invalid donation feed");
 
     const data = await fs.readFile(`./transaction/transactionId.json`, "utf-8");
     const transaction = JSON.parse(data);
@@ -77,10 +78,14 @@ async function main(guild, db, steamApi, donateUrl) {
       transaction.transactions.map((entry) => String(entry.id)),
     );
 
+    const pending = json.data.filter(row => row.status === 'success' && row.type === 'donation' && !existingIds.has(String(row.id)));
+    if (!pending.length) return;
+    console.log(`[vipDonate] processing ${pending.length} new payments`);
+
     // Получаем теги кланов из MongoDB
     const clanTags = await clanVipManager.getAllClanTags();
 
-    for (const jsonEl of json.data) {
+    for (const jsonEl of pending) {
       const { id, what, comment, sum } = jsonEl;
 
       const transactionId = String(id);
@@ -416,7 +421,7 @@ async function main(guild, db, steamApi, donateUrl) {
 
       const steamId = await getSteamId64(steamApi, comment);
       if (steamId) {
-        const clientdb = new MongoClient(db);
+        const clientdb = new MongoClient(db, donationMongoOptions);
         const dbName = "SquadJS";
         const dbCollection = "mainstats";
         let discordID;
@@ -435,7 +440,7 @@ async function main(guild, db, steamApi, donateUrl) {
           await clientdb.close().catch(() => {});
         }
 
-        const result = await creater.vipCreater(steamId, what, sum, discordID);
+        const result = await creater.vipCreater(steamId, what, sum, discordID, String(id));
 
         transaction.transactions.push({
           id: `${id}`,

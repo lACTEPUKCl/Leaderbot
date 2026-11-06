@@ -1,3 +1,4 @@
+import { donationMongoOptions } from "./fetchJson.js";
 import fs from "fs/promises";
 import { MongoClient } from "mongodb";
 import { config as loadEnv } from "dotenv";
@@ -66,7 +67,7 @@ export function calcDaysFromDonation(sum, slots, bonusSlots = 0) {
  * Тег ищется case-insensitive.
  */
 export async function findClanByTag(tag) {
-  const client = new MongoClient(DB_URL);
+  const client = new MongoClient(DB_URL, donationMongoOptions);
   try {
     await client.connect();
     const db = client.db(DB_NAME);
@@ -95,7 +96,7 @@ export async function findClanByTag(tag) {
  * @returns {{ matched: boolean, applied?: boolean, clan?: any, order?: any, oldSlots?: number, newSlots?: number, bonusSlots?: number }}
  */
 export async function processPendingSlotOrder(tag, sum) {
-  const client = new MongoClient(DB_URL);
+  const client = new MongoClient(DB_URL, donationMongoOptions);
   try {
     await client.connect();
     const db = client.db(DB_NAME);
@@ -190,7 +191,7 @@ export async function processPendingSlotOrder(tag, sum) {
  * @returns {{ found, clan, oldExpires, newExpires, daysAdded, slots, pricePerMonth, members, discordIds }}
  */
 export async function processClanDonation(tag, sum) {
-  const client = new MongoClient(DB_URL);
+  const client = new MongoClient(DB_URL, donationMongoOptions);
   try {
     await client.connect();
     const db = client.db(DB_NAME);
@@ -274,7 +275,7 @@ export async function processClanDonation(tag, sum) {
  * Получает все активные кланы (expiresAt > now).
  */
 export async function getActiveClans() {
-  const client = new MongoClient(DB_URL);
+  const client = new MongoClient(DB_URL, donationMongoOptions);
   try {
     await client.connect();
     const db = client.db(DB_NAME);
@@ -291,7 +292,7 @@ export async function getActiveClans() {
  * Получает все кланы с истёкшим VIP.
  */
 export async function getExpiredClans() {
-  const client = new MongoClient(DB_URL);
+  const client = new MongoClient(DB_URL, donationMongoOptions);
   try {
     await client.connect();
     const db = client.db(DB_NAME);
@@ -308,7 +309,7 @@ export async function getExpiredClans() {
  * Получает все теги кланов из БД (для матчинга доната).
  */
 export async function getAllClanTags() {
-  const client = new MongoClient(DB_URL);
+  const client = new MongoClient(DB_URL, donationMongoOptions);
   try {
     await client.connect();
     const db = client.db(DB_NAME);
@@ -489,6 +490,7 @@ export async function triggerAdminsCfgRegen() {
   try {
     const res = await fetch(`${SITE_API_URL}/internal/regenerate-admins-cfg`, {
       method: "POST",
+      signal: AbortSignal.timeout(15000),
       headers: {
         "Content-Type": "application/json",
         "X-Internal-Key": INTERNAL_API_KEY,

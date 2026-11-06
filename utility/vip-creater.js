@@ -1,3 +1,4 @@
+import { donationMongoOptions } from './fetchJson.js';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { runConfigSync } from './runConfigSync.js';
@@ -26,24 +27,32 @@ export function syncVipConfig(steamID) {
   return work;
 }
 
-const vipCreater = async (steamID, nickname, summ) => {
+const vipCreater = async (steamID, nickname, summ, discordID, transactionId) => {
   if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is required');
   if (!/^\d{17}$/.test(String(steamID)) || !(Number(summ) > 0)) throw new Error('Invalid VIP grant');
   const daysToAdd = Number(summ) / 9.863;
-  const client = new MongoClient(process.env.DATABASE_URL);
+  const client = new MongoClient(process.env.DATABASE_URL, donationMongoOptions);
   try {
     const collection = client.db('SquadJS').collection('mainstats');
     const now = new Date();
     const revision = randomUUID();
+    if (transactionId !== undefined && !/^\d+$/.test(String(transactionId))) throw new Error('Invalid donation transaction');
+    const donationId = transactionId === undefined ? null : String(transactionId);
+    const alreadyApplied = donationId ? { $in: [donationId, { $ifNull: ['$vipDonationIds', []] }] } : false;
     const before = await collection.findOneAndUpdate({ _id: steamID }, [{
-      $set: { vipDeliveryPending: { $literal: revision }, vipEndDate: { $add: [{ $max: [{ $ifNull: ['$vipEndDate', now] }, now] }, daysToAdd * 86400000] } }
+      $set: {
+        vipDeliveryPending: { $cond: [alreadyApplied, '$vipDeliveryPending', { $literal: revision }] },
+        vipEndDate: { $cond: [alreadyApplied, '$vipEndDate', { $add: [{ $max: [{ $ifNull: ['$vipEndDate', now] }, now] }, daysToAdd * 86400000] }] },
+        ...(donationId ? { vipDonationIds: { $setUnion: [{ $ifNull: ['$vipDonationIds', []] }, [donationId]] } } : {})
+      }
     }], { upsert: true, returnDocument: 'before', includeResultMetadata: false });
     const oldVipEndDate = before?.vipEndDate instanceof Date ? before.vipEndDate : null;
+    const duplicate = donationId !== null && before?.vipDonationIds?.includes(donationId);
     const isExtension = oldVipEndDate > now;
-    const newVipEndDate = new Date(Math.max(now.getTime(), oldVipEndDate?.getTime() || 0) + daysToAdd * 86400000);
+    const newVipEndDate = duplicate ? oldVipEndDate : new Date(Math.max(now.getTime(), oldVipEndDate?.getTime() || 0) + daysToAdd * 86400000);
     await syncVipConfig(steamID);
     await collection.updateOne({ _id: steamID, vipDeliveryPending: revision }, { $unset: { vipDeliveryPending: '' } });
-    return { steamID, nickname, summ, daysToAdd, isExtension, oldVipEndDate, newVipEndDate };
+    return { steamID, nickname, summ, duplicate, daysToAdd: duplicate ? 0 : daysToAdd, isExtension, oldVipEndDate, newVipEndDate };
   } finally { await client.close(); }
 };
 export default { vipCreater };
