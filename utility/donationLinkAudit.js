@@ -1,12 +1,8 @@
 import { randomUUID } from 'node:crypto';
 
 export function donationDiscordName(interaction) {
-  const user = interaction.user;
-  const member = interaction.member;
-  const sameUser = !member?.user?.id || member.user.id === user.id;
-  const names = sameUser ? [member?.nickname, member?.nick, member?.displayName] : [];
-  return [...names, user.globalName, user.username]
-    .find(value => typeof value === 'string' && value.trim())?.trim() || '';
+  const username = interaction.user?.username;
+  return typeof username === 'string' ? username.trim() : '';
 }
 
 export async function prepareDonationLink(db, { platform, actorId, steamId, configuredUrl, discordName = '' }) {

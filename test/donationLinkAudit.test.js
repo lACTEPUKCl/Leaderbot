@@ -2,13 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { donationDiscordName, prepareDonationLink } from '../utility/donationLinkAudit.js';
 
-test('Discord name belongs to the interaction caller and prefers the server nickname',()=>{
- const user={id:'111',globalName:'Global',username:'Login'};
- assert.equal(donationDiscordName({user,member:{nickname:'Guild nick',displayName:'Display',user}}),'Guild nick');
- assert.equal(donationDiscordName({user,member:{nick:'Raw member nick'}}),'Raw member nick');
- assert.equal(donationDiscordName({user,member:{user:{id:'222'},nickname:'Other person'}}),'Global');
- assert.equal(donationDiscordName({user}),'Global');
+test('uses the caller Discord username regardless of guild or global display names',()=>{
+ const user={id:'111',globalName:'АСТЕРИКС',username:'actepukc'};
+ assert.equal(donationDiscordName({user,member:{nickname:'Guild nick',displayName:'Display',user}}),'actepukc');
+ assert.equal(donationDiscordName({user,member:{nick:'Raw member nick'}}),'actepukc');
+ assert.equal(donationDiscordName({user,member:{user:{id:'222'},nickname:'Other person'}}),'actepukc');
+ assert.equal(donationDiscordName({user}),'actepukc');
  assert.equal(donationDiscordName({user:{id:'111',username:'Login'}}),'Login');
+ assert.equal(donationDiscordName({user:{id:'111',globalName:'Decorated name'}}),'');
  assert.equal(donationDiscordName({user:{id:'111'}}),'');
 });
 test('concurrent links replace stale form fields with each caller and persist delivery state', async()=>{
