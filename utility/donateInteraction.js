@@ -1,7 +1,7 @@
 import { MongoClient } from "mongodb";
 import { ButtonBuilder, ActionRowBuilder, ButtonStyle } from "discord.js";
 import jwt from "jsonwebtoken";
-import { prepareDonationLink } from "./donationLinkAudit.js";
+import { donationDiscordName, prepareDonationLink } from "./donationLinkAudit.js";
 import options from "../config.js";
 
 const { donationLink } = options;
@@ -20,7 +20,15 @@ async function donateInteraction(interaction, db) {
     await clientdb.connect();
     const database = clientdb.db(dbName);
     const collection = database.collection(dbCollection);
-    const user = await collection.findOne({ discordid: discordId });
+    const matches = await collection.find({ discordid: discordId }, { projection: { _id: 1 } }).limit(2).toArray();
+    if (matches.length > 1) {
+      await interaction.editReply({
+        content: "К вашему Discord привязано несколько SteamID. Обратитесь к администратору для уточнения привязки.",
+        ephemeral: true,
+      });
+      return;
+    }
+    const user = matches[0];
 
     if (!user) {
       if (!LINK_STEAM_URL || !LINK_SIGN_SECRET) {
@@ -64,7 +72,7 @@ async function donateInteraction(interaction, db) {
 
     const steamId = user._id;
 
-    if (!steamId) {
+    if (typeof steamId !== 'string' || !/^7656119\d{10}$/.test(steamId)) {
       await interaction.editReply({
         content:
           "В базе найден пользователь с вашим Discord, но без SteamID. Обратитесь к администратору.",
@@ -73,7 +81,10 @@ async function donateInteraction(interaction, db) {
       return;
     }
 
-    const prepared = await prepareDonationLink(database, { platform: "discord", actorId: discordId, steamId, configuredUrl: donationLink });
+    const prepared = await prepareDonationLink(database, {
+      platform: "discord", actorId: discordId, steamId,
+      configuredUrl: donationLink, discordName: donationDiscordName(interaction),
+    });
     const donateButton = new ButtonBuilder()
       .setLabel("Оформить донат")
       .setStyle(ButtonStyle.Link)
@@ -82,7 +93,7 @@ async function donateInteraction(interaction, db) {
     const donateRow = new ActionRowBuilder().addComponents(donateButton);
 
     await interaction.editReply({
-      content: `Ваш SteamID: **${steamId}**\nСкопируйте его. На DonatePay полностью очистите поле «Сообщение стримеру» и вставьте этот SteamID. Перед оплатой проверьте: в поле должен быть только ваш ID. Сайт может показывать чужой ID — не оставляйте его.`,
+      content: `Ваш SteamID: **${steamId}**\nВ кнопке ниже уже указаны ваш Discord-ник, SteamID и сумма 300 ₽. Сумму можно изменить на DonatePay.`,
       components: [donateRow],
       ephemeral: true,
     });
