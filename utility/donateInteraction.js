@@ -1,5 +1,5 @@
 import { MongoClient } from "mongodb";
-import { ButtonBuilder, ActionRowBuilder, ButtonStyle } from "discord.js";
+import { ButtonBuilder, ActionRowBuilder, ButtonStyle, EmbedBuilder } from "discord.js";
 import jwt from "jsonwebtoken";
 import { donationDiscordName, prepareDonationLink } from "./donationLinkAudit.js";
 import options from "../config.js";
@@ -91,9 +91,18 @@ async function donateInteraction(interaction, db) {
       .setURL(prepared.url);
 
     const donateRow = new ActionRowBuilder().addComponents(donateButton);
+    const instructions = new EmbedBuilder()
+      .setColor(0xf59e0b)
+      .setTitle("⚠️ Перед оплатой обязательно проверьте данные")
+      .setDescription(
+        "В поле **«Сообщение стримеру»** на DonatePay должен быть **только ваш SteamID**.\n\n" +
+        "Если поле пустое или указан другой ID, очистите его и вставьте свой SteamID из этого сообщения."
+      )
+      .addFields({ name: "Ваш SteamID", value: `\`\`\`\n${steamId}\n\`\`\`` });
 
     await interaction.editReply({
-      content: `Ваш SteamID: **${steamId}**\nВ кнопке ниже уже указаны ваш Discord-ник, SteamID и сумма 300 ₽. Сумму можно изменить на DonatePay.`,
+      content: "",
+      embeds: [instructions],
       components: [donateRow],
       ephemeral: true,
     });
