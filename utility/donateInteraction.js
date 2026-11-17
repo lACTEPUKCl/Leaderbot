@@ -2,6 +2,7 @@ import { MongoClient } from "mongodb";
 import { ButtonBuilder, ActionRowBuilder, ButtonStyle, EmbedBuilder } from "discord.js";
 import jwt from "jsonwebtoken";
 import { donationDiscordName, prepareDonationLink } from "./donationLinkAudit.js";
+import { createTelegramSupportLink } from "./telegramSupportLink.js";
 import options from "../config.js";
 
 const { donationLink } = options;
@@ -86,11 +87,16 @@ async function donateInteraction(interaction, db) {
       configuredUrl: donationLink, discordName: donationDiscordName(interaction),
     });
     const donateButton = new ButtonBuilder()
-      .setLabel("Поддержать проект")
+      .setLabel("DonatePay")
       .setStyle(ButtonStyle.Link)
       .setURL(prepared.url);
 
-    const donateRow = new ActionRowBuilder().addComponents(donateButton);
+    const telegramUrl = await createTelegramSupportLink(database, discordId, steamId);
+    const telegramButton = new ButtonBuilder()
+      .setLabel("Telegram Stars")
+      .setStyle(ButtonStyle.Link)
+      .setURL(telegramUrl);
+    const donateRow = new ActionRowBuilder().addComponents(donateButton, telegramButton);
     const instructions = new EmbedBuilder()
       .setColor(0xf59e0b)
       .setTitle("⚠️ Перед оплатой обязательно проверьте данные")
