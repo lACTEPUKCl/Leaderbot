@@ -86,7 +86,7 @@ async function donateInteraction(interaction, db) {
       configuredUrl: donationLink, discordName: donationDiscordName(interaction),
     });
     const donateButton = new ButtonBuilder()
-      .setLabel("Оформить донат")
+      .setLabel("Поддержать проект")
       .setStyle(ButtonStyle.Link)
       .setURL(prepared.url);
 
