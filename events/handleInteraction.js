@@ -1,3 +1,4 @@
+import { handleRecipientReview } from '../utility/donationReviewDiscord.js';
 import { handleManualDonation } from '../utility/manualDonation.js';
 import getSteamIdModal from "../utility/getSteamIdModal.js";
 import donateInteraction from "../utility/donateInteraction.js";
@@ -16,6 +17,10 @@ export async function handleInteractionCreate(
   dbCollection,
   seedChannelId
 ) {
+  if (interaction.customId?.startsWith('dpreview:')) {
+    await handleRecipientReview(interaction, options);
+    return;
+  }
   if (interaction.customId?.startsWith('donationgrant:')) {
     await handleManualDonation(interaction, process.env.DATABASE_URL, options);
     return;
@@ -85,6 +90,8 @@ export async function handleInteractionCreate(
 
     if (buttonId === "SteamID")
       await getSteamIdModal(interaction, db, dbName, dbCollection);
+
+    if (buttonId === "selectDonatePay") return donateInteraction(interaction, process.env.DATABASE_URL, true);
 
     if (buttonId === "donatVip")
       await donateInteraction(interaction, process.env.DATABASE_URL);

@@ -18,6 +18,7 @@ import getCommands from "./commands/getCommands.js";
 import { config } from "dotenv";
 config();
 import cleaner from "./utility/vip-cleaner.js";
+import { createRecipientMonitor } from './utility/donationReviewDiscord.js';
 import checkDonate from "./utility/checkDonate.js";
 import options from "./config.js";
 import top20StatsMain from "./utility/top20StatsMain.js";
@@ -101,6 +102,7 @@ client.once("ready", safeBotEvent("ready", async () => {
   const guildId = client.guilds.cache.get(discordServerId);
   startBackgroundTask("seedingMonitor", () => startSeedingMonitor(guildId), { stopAfterSuccess: true });
   const db = process.env.DATABASE_URL;
+  startBackgroundTask('donatePayReview', createRecipientMonitor(client, db, options), { intervalMs: 30000 });
   startBackgroundTask('starsDonations', createStarsDonationNotifier(client, db, options.vipLogChannelId), { intervalMs: 60000 });
   const steamApi = process.env.STEAM_API;
   startBackgroundTask("donations", () =>

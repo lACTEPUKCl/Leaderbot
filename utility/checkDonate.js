@@ -4,7 +4,7 @@ import fs from "fs/promises";
 import { MongoClient } from "mongodb";
 import { EmbedBuilder } from "discord.js";
 import creater from "./vip-creater.js";
-import getSteamId64 from "./getSteamID64.js";
+import { resolveDonationSteamId } from "./donationSteamId.js";
 import clanVipManager from "./clanVipManager.js";
 import { claimDonationTransaction } from "./donationDeduper.js";
 import options from "../config.js";
@@ -96,7 +96,7 @@ async function main(guild, db, steamApi, donateUrl) {
       const { claimed } = await claimDonationTransaction(transactionId);
       if (!claimed) continue;
 
-      const rawComment = (comment || "").trim();
+      const rawComment = typeof comment === "string" ? comment.trim() : "";
       const lowerComment = rawComment.normalize('NFC').toLowerCase();
       const transl = toLatin(lowerComment);
       const tokens = transl.split(/\s+/);
@@ -373,17 +373,16 @@ async function main(guild, db, steamApi, donateUrl) {
       // ═══════════════════════════════════════
       // ПЕРСОНАЛЬНЫЙ ДОНАТ (Steam VIP)
       // ═══════════════════════════════════════
-      const hasSteamInfo =
-        lowerComment.includes("steamcommunity") ||
-        !!lowerComment.match(/\b[0-9]{17}\b/);
+      const steamResolution = await resolveDonationSteamId({ comment, what }, steamApi);
+      const { steamId } = steamResolution;
 
-      if (!hasSteamInfo) {
+      if (!steamId) {
         const manual = await prepareManualDonation(db, jsonEl, transaction.transactions).catch(() => { console.error("[manualDonation] candidate preparation failed"); return null; });
         const errorEmbed = new EmbedBuilder()
           .setTitle("Проблема с донатом (VIP)")
           .setColor(0xff0000)
           .setDescription(
-            "В донате не найден SteamID и ссылка на steamcommunity. VIP не выдан.",
+            `В комментарии и нике не найден однозначный SteamID либо проверка Steam недоступна. VIP не выдан. Код: ${steamResolution.error}`,
           )
           .addFields(
             { name: "ID транзакции", value: String(id), inline: true },
@@ -409,7 +408,8 @@ async function main(guild, db, steamApi, donateUrl) {
           id: `${id}`,
           username: what,
           comment: rawComment,
-          error: "NO_STEAM_INFO",
+          error: steamResolution.error,
+          steamIdSource: steamResolution.source,
         });
         await fs.writeFile(
           `./transaction/transactionId.json`,
@@ -419,7 +419,6 @@ async function main(guild, db, steamApi, donateUrl) {
         continue;
       }
 
-      const steamId = await getSteamId64(steamApi, comment);
       if (steamId) {
         const clientdb = new MongoClient(db, donationMongoOptions);
         const dbName = "SquadJS";
@@ -440,12 +439,13 @@ async function main(guild, db, steamApi, donateUrl) {
           await clientdb.close().catch(() => {});
         }
 
-        const result = await creater.vipCreater(steamId, what, sum, discordID, String(id));
+        const result = await creater.vipCreater(steamId, what, sum, discordID, String(id), jsonEl.created_at);
 
         transaction.transactions.push({
           id: `${id}`,
           username: what,
           steamID: steamId,
+          steamIdSource: steamResolution.source,
         });
 
         await fs.writeFile(

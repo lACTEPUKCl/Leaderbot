@@ -7,7 +7,7 @@ import options from "../config.js";
 
 const { donationLink } = options;
 
-async function donateInteraction(interaction, db) {
+async function donateInteraction(interaction, db, selectDonatePay = false) {
   await interaction.deferReply({ ephemeral: true });
 
   const clientdb = new MongoClient(db);
@@ -82,21 +82,27 @@ async function donateInteraction(interaction, db) {
       return;
     }
 
+    if (!selectDonatePay) {
+      const telegramUrl = await createTelegramSupportLink(database, discordId, steamId);
+      const buttons = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId('selectDonatePay').setLabel('DonatePay').setStyle(ButtonStyle.Primary),
+        new ButtonBuilder().setLabel('Telegram Stars').setStyle(ButtonStyle.Link).setURL(telegramUrl),
+      );
+      await interaction.editReply({content: 'Как хотите поддержать сервер?', components: [buttons]});
+      return;
+    }
+
     const prepared = await prepareDonationLink(database, {
       platform: "discord", actorId: discordId, steamId,
       configuredUrl: donationLink, discordName: donationDiscordName(interaction),
+      selectedAt: new Date(interaction.createdTimestamp),
     });
     const donateButton = new ButtonBuilder()
-      .setLabel("DonatePay")
+      .setLabel("Открыть DonatePay")
       .setStyle(ButtonStyle.Link)
       .setURL(prepared.url);
 
-    const telegramUrl = await createTelegramSupportLink(database, discordId, steamId);
-    const telegramButton = new ButtonBuilder()
-      .setLabel("Telegram Stars")
-      .setStyle(ButtonStyle.Link)
-      .setURL(telegramUrl);
-    const donateRow = new ActionRowBuilder().addComponents(donateButton, telegramButton);
+    const donateRow = new ActionRowBuilder().addComponents(donateButton);
     const instructions = new EmbedBuilder()
       .setColor(0xf59e0b)
       .setTitle("⚠️ Перед оплатой обязательно проверьте данные")

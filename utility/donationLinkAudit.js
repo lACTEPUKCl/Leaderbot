@@ -5,7 +5,7 @@ export function donationDiscordName(interaction) {
   return typeof username === 'string' ? username.trim() : '';
 }
 
-export async function prepareDonationLink(db, { platform, actorId, steamId, configuredUrl, discordName = '' }) {
+export async function prepareDonationLink(db, { platform, actorId, steamId, configuredUrl, discordName = '', selectedAt }) {
   if (typeof steamId !== 'string' || !/^7656119\d{10}$/.test(steamId)) throw new Error('Invalid donation Steam ID');
   const url = new URL(configuredUrl);
   if (url.protocol !== 'https:' || !['new.donatepay.ru', 'donatepay.ru'].includes(url.hostname)) throw new Error('Unexpected donation provider');
@@ -17,7 +17,7 @@ export async function prepareDonationLink(db, { platform, actorId, steamId, conf
   url.searchParams.set('name', typeof discordName === 'string' ? discordName.trim() : '');
   url.searchParams.set('amount', '300');
   url.searchParams.set('message', steamId);
-  const record = { _id: randomUUID(), createdAt: new Date(), platform, actorId: String(actorId), steamId, url: url.href, autofill: true, status: 'prepared' };
+  const record = { _id: randomUUID(), createdAt: new Date(), platform, actorId: String(actorId), steamId, url: url.href, autofill: true, ...(selectedAt ? {selectedAt} : {}), status: 'prepared' };
   await db.collection('donationLinkAudit').insertOne(record);
   return { url: record.url, delivered: () => db.collection('donationLinkAudit').updateOne({ _id: record._id }, { $set: { status: 'delivered', deliveredAt: new Date() } }) };
 }
