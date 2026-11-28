@@ -4,42 +4,12 @@ import fs from "fs/promises";
 import { MongoClient } from "mongodb";
 import { EmbedBuilder } from "discord.js";
 import creater from "./vip-creater.js";
-import { resolveDonationSteamId } from "./donationSteamId.js";
+import { resolveDonationRecipient } from "./donationRecipient.js";
 import clanVipManager from "./clanVipManager.js";
 import { claimDonationTransaction } from "./donationDeduper.js";
 import options from "../config.js";
 
 const { vipLogChannelId, vipAdminUserId } = options;
-
-function toLatin(str) {
-  const map = {
-    а: "a",
-    А: "A",
-    в: "b",
-    В: "B",
-    е: "e",
-    Е: "E",
-    к: "k",
-    К: "K",
-    м: "m",
-    М: "M",
-    н: "h",
-    Н: "H",
-    о: "o",
-    О: "O",
-    р: "p",
-    Р: "P",
-    с: "c",
-    С: "C",
-    т: "t",
-    Т: "T",
-    у: "y",
-    У: "Y",
-    х: "x",
-    Х: "X",
-  };
-  return str.replace(/[авекмнорстухАВЕКМНОРСТУХ]/g, (ch) => map[ch] || ch);
-}
 
 async function sendLogEmbed(channel, payload) {
   if (!channel) return;
@@ -97,10 +67,6 @@ async function main(guild, db, steamApi, donateUrl) {
       if (!claimed) continue;
 
       const rawComment = typeof comment === "string" ? comment.trim() : "";
-      const lowerComment = rawComment.normalize('NFC').toLowerCase();
-      const transl = toLatin(lowerComment);
-      const tokens = transl.split(/\s+/);
-
       const baseEmbed = new EmbedBuilder()
         .setTitle("Новый донат (VIP)")
         .setColor(0x00aeff)
@@ -117,10 +83,8 @@ async function main(guild, db, steamApi, donateUrl) {
 
       await sendLogEmbed(logChannel, { embeds: [baseEmbed] });
 
-      // Ищем клановый тег в комментарии
-      // An exact Cyrillic tag takes precedence over legacy lookalike conversion.
-      const commentTag = lowerComment.split(/\s+/).find(tok => clanTags.includes(tok))
-        || tokens.find((tok) => clanTags.includes(tok));
+      const recipient = await resolveDonationRecipient({ comment, what }, clanTags, steamApi);
+      const commentTag = recipient.clanTag;
 
       if (commentTag) {
         // ═══════════════════════════════════════
@@ -373,8 +337,7 @@ async function main(guild, db, steamApi, donateUrl) {
       // ═══════════════════════════════════════
       // ПЕРСОНАЛЬНЫЙ ДОНАТ (Steam VIP)
       // ═══════════════════════════════════════
-      const steamResolution = await resolveDonationSteamId({ comment, what }, steamApi);
-      const { steamId } = steamResolution;
+      const { steamId } = recipient;
 
       if (!steamId) {
         const manual = await prepareManualDonation(db, jsonEl, transaction.transactions).catch(() => { console.error("[manualDonation] candidate preparation failed"); return null; });
@@ -382,7 +345,7 @@ async function main(guild, db, steamApi, donateUrl) {
           .setTitle("Проблема с донатом (VIP)")
           .setColor(0xff0000)
           .setDescription(
-            `В комментарии и нике не найден однозначный SteamID либо проверка Steam недоступна. VIP не выдан. Код: ${steamResolution.error}`,
+            `Не удалось однозначно определить получателя. Требуется ручная проверка. Код: ${recipient.error}`,
           )
           .addFields(
             { name: "ID транзакции", value: String(id), inline: true },
@@ -408,8 +371,8 @@ async function main(guild, db, steamApi, donateUrl) {
           id: `${id}`,
           username: what,
           comment: rawComment,
-          error: steamResolution.error,
-          steamIdSource: steamResolution.source,
+          error: recipient.error,
+          steamIdSource: recipient.source,
         });
         await fs.writeFile(
           `./transaction/transactionId.json`,
@@ -445,7 +408,7 @@ async function main(guild, db, steamApi, donateUrl) {
           id: `${id}`,
           username: what,
           steamID: steamId,
-          steamIdSource: steamResolution.source,
+          steamIdSource: recipient.source,
         });
 
         await fs.writeFile(

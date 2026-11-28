@@ -5,6 +5,7 @@ import { MongoClient } from "mongodb";
 import { config as loadEnv } from "dotenv";
 import { EmbedBuilder } from "discord.js";
 import options from "../config.js";
+import { DONATEPAY_URL } from "./donationLinkAudit.js";
 import { syncClanRoles } from "./clanRoleSync.js";
 
 loadEnv();
@@ -328,7 +329,7 @@ async function runCycle(client) {
 
         const text =
           donationLink && steamId
-            ? `${vipExpiredMessage}\n${donationLink}?message=${steamId}`
+            ? `${vipExpiredMessage}\n${DONATEPAY_URL}\nУдалите чужие данные и вставьте свой SteamID в «Ваше имя» или «Сообщение стримеру»: \`${steamId}\``
             : vipExpiredMessage;
 
         member

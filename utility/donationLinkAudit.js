@@ -1,23 +1,11 @@
 import { randomUUID } from 'node:crypto';
+import { isSteamId64 } from './donationSteamId.js';
 
-export function donationDiscordName(interaction) {
-  const username = interaction.user?.username;
-  return typeof username === 'string' ? username.trim() : '';
-}
+export const DONATEPAY_URL = 'https://new.donatepay.ru/donate/RNSquad';
 
-export async function prepareDonationLink(db, { platform, actorId, steamId, configuredUrl, discordName = '', selectedAt }) {
-  if (typeof steamId !== 'string' || !/^7656119\d{10}$/.test(steamId)) throw new Error('Invalid donation Steam ID');
-  const url = new URL(configuredUrl);
-  if (url.protocol !== 'https:' || !['new.donatepay.ru', 'donatepay.ru'].includes(url.hostname)) throw new Error('Unexpected donation provider');
-  // Always replace all form fields so provider/browser state cannot retain
-  // another donor's name, amount or comment.
-  url.search = '';
-  url.hash = '';
-  if (url.hostname === 'new.donatepay.ru') url.pathname = url.pathname.replace(/^\/@([^/]+)\/?$/, '/donate/$1');
-  url.searchParams.set('name', typeof discordName === 'string' ? discordName.trim() : '');
-  url.searchParams.set('amount', '300');
-  url.searchParams.set('message', steamId);
-  const record = { _id: randomUUID(), createdAt: new Date(), platform, actorId: String(actorId), steamId, url: url.href, autofill: true, ...(selectedAt ? {selectedAt} : {}), status: 'prepared' };
+export async function prepareDonationLink(db, { platform, actorId, steamId, selectedAt }) {
+  if (!isSteamId64(steamId)) throw new Error('Invalid donation Steam ID');
+  const record = { _id: randomUUID(), createdAt: new Date(), platform, actorId: String(actorId), steamId, url: DONATEPAY_URL, autofill: false, ...(selectedAt ? {selectedAt} : {}), status: 'prepared' };
   await db.collection('donationLinkAudit').insertOne(record);
   return { url: record.url, delivered: () => db.collection('donationLinkAudit').updateOne({ _id: record._id }, { $set: { status: 'delivered', deliveredAt: new Date() } }) };
 }

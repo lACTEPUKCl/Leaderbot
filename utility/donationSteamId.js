@@ -49,9 +49,15 @@ async function parseField(value, resolve) {
 export async function resolveDonationSteamId({ comment, what } = {}, steamApi, {
   resolve = name => resolveVanity(name, steamApi),
 } = {}) {
+  let candidate;
   for (const [source, value] of [['comment', comment], ['nickname', what]]) {
     const result = await parseField(value, resolve);
-    if (result.error || result.steamId) return { ...result, source };
+    if (result.error) return { ...result, source };
+    if (!result.steamId) continue;
+    if (candidate && candidate.steamId !== result.steamId) {
+      return { steamId: null, source: 'both', error: 'AMBIGUOUS_STEAM_INFO' };
+    }
+    candidate ??= { ...result, source };
   }
-  return { steamId: null, source: null, error: 'NO_STEAM_INFO' };
+  return candidate || { steamId: null, source: null, error: 'NO_STEAM_INFO' };
 }

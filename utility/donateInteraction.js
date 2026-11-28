@@ -1,11 +1,9 @@
 import { MongoClient } from "mongodb";
 import { ButtonBuilder, ActionRowBuilder, ButtonStyle, EmbedBuilder } from "discord.js";
 import jwt from "jsonwebtoken";
-import { donationDiscordName, prepareDonationLink } from "./donationLinkAudit.js";
+import { prepareDonationLink } from "./donationLinkAudit.js";
 import { createTelegramSupportLink } from "./telegramSupportLink.js";
-import options from "../config.js";
-
-const { donationLink } = options;
+import { isSteamId64 } from "./donationSteamId.js";
 
 async function donateInteraction(interaction, db, selectDonatePay = false) {
   await interaction.deferReply({ ephemeral: true });
@@ -73,7 +71,7 @@ async function donateInteraction(interaction, db, selectDonatePay = false) {
 
     const steamId = user._id;
 
-    if (typeof steamId !== 'string' || !/^7656119\d{10}$/.test(steamId)) {
+    if (!isSteamId64(steamId)) {
       await interaction.editReply({
         content:
           "В базе найден пользователь с вашим Discord, но без SteamID. Обратитесь к администратору.",
@@ -94,7 +92,6 @@ async function donateInteraction(interaction, db, selectDonatePay = false) {
 
     const prepared = await prepareDonationLink(database, {
       platform: "discord", actorId: discordId, steamId,
-      configuredUrl: donationLink, discordName: donationDiscordName(interaction),
       selectedAt: new Date(interaction.createdTimestamp),
     });
     const donateButton = new ButtonBuilder()
@@ -107,8 +104,7 @@ async function donateInteraction(interaction, db, selectDonatePay = false) {
       .setColor(0xf59e0b)
       .setTitle("⚠️ Перед оплатой обязательно проверьте данные")
       .setDescription(
-        "В поле **«Сообщение стримеру»** на DonatePay должен быть **только ваш SteamID**.\n\n" +
-        "Если поле пустое или указан другой ID, очистите его и вставьте свой SteamID из этого сообщения."
+        "Удалите чужие данные из формы DonatePay. Скопируйте свой SteamID ниже и вставьте в **«Ваше имя»** или **«Сообщение стримеру»**."
       )
       .addFields({ name: "Ваш SteamID", value: `\`\`\`\n${steamId}\n\`\`\`` });
 
